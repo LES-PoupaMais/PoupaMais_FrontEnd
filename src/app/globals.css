@@ -1,0 +1,161 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tema do PoupaMais sobre as variáveis do shadcn/ui (seção "Design" do CLAUDE.md).
+ * - Claro (:root) = área logada. Escuro (.dark) = landing e telas de autenticação (os templates aplicam a classe).
+ * - Use as classes semânticas: bg-primary, bg-success, bg-destructive, bg-card, text-muted-foreground, border-border…
+ *   e os tokens de domínio: text-receita, text-despesa, bg-categoria-fundo text-categoria, text-atencao.
+ * - Nunca hex solto em componente.
+ */
+
+:root {
+  --radius: 0.75rem;
+
+  --background: var(--color-slate-50);
+  --foreground: var(--color-slate-900);
+  --card: var(--color-white);
+  --card-foreground: var(--color-slate-900);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-slate-900);
+
+  /* ação primária da área logada: "Importar em lote", "Salvar lançamento" */
+  --primary: var(--color-indigo-600);
+  --primary-foreground: var(--color-white);
+  /* verde da marca: botões das telas escuras, receitas */
+  --success: var(--color-emerald-600);
+  --success-foreground: var(--color-white);
+  /* despesas, excluir conta */
+  --destructive: var(--color-rose-600);
+  --destructive-foreground: var(--color-white);
+
+  --secondary: var(--color-slate-100);
+  --secondary-foreground: var(--color-slate-900);
+  --muted: var(--color-slate-100);
+  --muted-foreground: var(--color-slate-500);
+  --accent: var(--color-slate-100);
+  --accent-foreground: var(--color-slate-900);
+  --border: var(--color-slate-200);
+  --input: var(--color-slate-200);
+  --ring: var(--color-indigo-500);
+
+  /* gráficos (Recharts via componente chart) */
+  --chart-1: var(--color-emerald-600);
+  --chart-2: var(--color-rose-600);
+  --chart-3: var(--color-indigo-600);
+  --chart-4: var(--color-violet-600);
+  --chart-5: var(--color-amber-500);
+
+  --sidebar: var(--color-slate-900);
+  --sidebar-foreground: var(--color-slate-100);
+  --sidebar-primary: var(--color-emerald-500);
+  --sidebar-primary-foreground: var(--color-white);
+  --sidebar-accent: var(--color-slate-800);
+  --sidebar-accent-foreground: var(--color-white);
+  --sidebar-border: var(--color-slate-800);
+  --sidebar-ring: var(--color-emerald-500);
+}
+
+/* Paleta azul-marinho do protótipo (landing, login, cadastro) */
+.dark {
+  --background: var(--color-slate-900);
+  --foreground: var(--color-slate-50);
+  --card: var(--color-slate-800);
+  --card-foreground: var(--color-slate-50);
+  --popover: var(--color-slate-800);
+  --popover-foreground: var(--color-slate-50);
+
+  --primary: var(--color-indigo-500);
+  --primary-foreground: var(--color-white);
+  --success: var(--color-emerald-600);
+  --success-foreground: var(--color-white);
+  --destructive: var(--color-rose-500);
+  --destructive-foreground: var(--color-white);
+
+  --secondary: var(--color-slate-700);
+  --secondary-foreground: var(--color-slate-50);
+  --muted: var(--color-slate-800);
+  --muted-foreground: var(--color-slate-400);
+  --accent: var(--color-slate-700);
+  --accent-foreground: var(--color-slate-50);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: var(--color-emerald-500);
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-titulo: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* tokens de domínio do PoupaMais */
+  --color-receita: var(--color-emerald-600);
+  --color-receita-fundo: var(--color-emerald-100);
+  --color-despesa: var(--color-rose-600);
+  --color-despesa-fundo: var(--color-rose-100);
+  --color-categoria: var(--color-violet-700);
+  --color-categoria-fundo: var(--color-violet-100);
+  --color-atencao: var(--color-amber-600);
+  --color-marca: var(--color-emerald-500);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+  }
+}
