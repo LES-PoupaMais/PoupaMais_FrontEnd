@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [development, main]
+  pull_request:
+
+# Um push novo no mesmo PR cancela a execução anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Só para o build e o E2E: o E2E simula a API no navegador, nada chega aqui
+  API_URL: http://localhost:8080
+
+jobs:
+  qualidade:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mesma versão do desenvolvimento (.nvmrc)
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Inclui as regras do Atomic Design (eslint-plugin-boundaries)
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatação
+        run: npm run format:check
+
+      - name: Tipos
+        run: npm run typecheck
+
+      # Falha se a cobertura ficar abaixo dos pisos de coverage.thresholds (vitest.config.mts)
+      - name: Testes
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Relatório de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-frontend
+          path: coverage/
+          if-no-files-found: ignore
+
+  e2e:
+    name: Testes end-to-end
+    needs: qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Chromium e Firefox: navegadores exigidos pela RNF016 (Edge usa o mesmo motor do Chromium)
+      - name: Navegadores do Playwright
+        run: npx playwright install --with-deps chromium firefox
+
+      # O webServer do playwright.config.ts faz o build e sobe o Next
+      - name: Testes end-to-end
+        run: npm run test:e2e
+
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e
+          path: playwright-report/
