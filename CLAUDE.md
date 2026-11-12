@@ -296,6 +296,10 @@ Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions
 - `GET|PUT|DELETE /usuarios/me/foto` (PUT multipart, campo `foto`) · `GET /usuarios/me/dados` → JSON para download
 - `POST /usuarios/me/excluir {senha}` → `204` (via Server Action, que apaga o cookie)
 - `GET /categorias?ativa=` · `POST /categorias {descricao}` → `201 {id, descricao, ativa}` (`409` duplicada) · `PUT /categorias/{id}` · `PATCH /categorias/{id}/status {ativa}` · `DELETE /categorias/{id}` (`422` se vinculada)
+  - `GET` vem em ordem alfabética (sem diferenciar maiúsculas); sem filtro, **ativas primeiro**. `PUT`/`PATCH` → `200 {id, descricao, ativa}`.
+    Descrição: trim, obrigatória, ≤ 255 (`400` com `erros[]`); duplicada no `PUT` → `409`; categoria de outro usuário → `404`.
+  - No lançamento: categoria inativa → `422`; inexistente/de outro usuário → `404`.
+- Lista de lançamentos ordenada por ano desc, mês desc, id desc; `POST`/`PUT`/`PATCH`/`restaurar` devolvem o lançamento; `DELETE` de já deletado → `422`.
 - `GET /lancamentos?descricao=&mes=&ano=&tipo=&status=&categoriaId=` (sem `status` = ATIVO + INATIVO; `status=DELETADO` = Lixeira)
 - `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, mes, ano, valor, categoriaIds}`
 - `PATCH /lancamentos/{id}/status {status: "ATIVO"|"INATIVO"}` (`422` se DELETADO) · `DELETE /lancamentos/{id}` → status DELETADO · `POST /lancamentos/{id}/restaurar` → volta INATIVO
@@ -374,6 +378,12 @@ Skills do repo (`.claude/skills/`), usadas automaticamente pelo Claude quando o 
 | `mudanca-de-regra` (na raiz do workspace) | O pedido contradiz o DVP ou o contrato |
 
 Plugins oficiais recomendados (instalar com `/plugin`): `frontend-design` (só para telas fora do protótipo), `playwright` (navegar na app e depurar E2E), `feature-dev`, `pr-review-toolkit`, `commit-commands`, `security-guidance`, `context7` (documentação atualizada de Next/React/Tailwind).
+
+## Direção futura (ideias a discutir)
+
+Leia `doc/IDEIAS_FUTURAS.md` antes de propor funcionalidade nova ou mudar o visual: são ideias em aberto, levantadas com base em
+projetos acadêmicos antigos, para a equipe discutir. Este `CLAUDE.md` é a fonte da verdade do escopo atual (os `.md` do DVP são uma
+versão anterior). O design será refeito em conjunto (mobile-first, responsivo). Nada disso é para implementar sem decisão da equipe.
 
 ## Pontos em aberto
 
