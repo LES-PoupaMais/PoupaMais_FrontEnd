@@ -27,7 +27,8 @@ Protótipo Figma Make: https://www.figma.com/make/eneZxdyYREP4zoDtQIxtwm/Control
   3. Listagem com filtros e Formulários
   4. Cliente HTTP com envio do token (aqui: BFF do Next + cookie httpOnly)
   Critério de aceite: páginas navegáveis, consumindo a API e refletindo dados reais do banco.
-- Card de **Deploy**: front na Vercel com `API_URL` apontando para a API.
+- ~~Card de **Deploy**~~: fora do escopo (decisão de 12/11/2026). A apresentação e a entrega rodam **localmente**: API com
+  `docker compose up -d --build` no backend e o front com `npm run dev` (`API_URL=http://localhost:8080`).
 
 ### Roteiro da demo (slide 12 da apresentação): o front precisa suportar exatamente isto
 
@@ -293,7 +294,11 @@ Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions
 - `POST /auth/login` `{email, senha}` → `{token, expiraEm, usuario: {id, nome, email}}` · `401` credenciais inválidas
 - `GET /usuarios/me` → `{id, nome, email, possuiFoto, dataCadastro}` · `PUT /usuarios/me {nome}`
 - `PUT /usuarios/me/senha {senhaAtual, novaSenha}` → `{token, expiraEm}` (via Server Action, que troca o cookie) · `422` se a senha atual estiver errada
-- `GET|PUT|DELETE /usuarios/me/foto` (PUT multipart, campo `foto`) · `GET /usuarios/me/dados` → JSON para download
+- `GET|PUT|DELETE /usuarios/me/foto` (PUT multipart, campo `foto`)
+- `GET /usuarios/me/dados` → download de `meus-dados-poupamais.json` ("Baixar meus dados" no Perfil; baixar como blob, nome do
+  `Content-Disposition`). Conteúdo: `{geradoEm, perfil: {id, nome, email, dataCadastro, aceiteTermosEm, possuiFoto},
+  categorias: [{id, descricao, ativa}], lancamentos: [<lançamento>, …]}`, com **todos** os lançamentos (inclusive INATIVO e DELETADO);
+  sem lançamentos → `[]`. A foto não vai no JSON. Não confundir com a exportação CSV/XLSX de lançamentos (`/lancamentos/exportar`, filtrada).
 - `POST /usuarios/me/excluir {senha}` → `204` (via Server Action, que apaga o cookie)
 - `GET /categorias?ativa=` · `POST /categorias {descricao}` → `201 {id, descricao, ativa}` (`409` duplicada) · `PUT /categorias/{id}` · `PATCH /categorias/{id}/status {ativa}` · `DELETE /categorias/{id}` (`422` se vinculada)
   - `GET` vem em ordem alfabética (sem diferenciar maiúsculas); sem filtro, **ativas primeiro**. `PUT`/`PATCH` → `200 {id, descricao, ativa}`.
@@ -363,7 +368,7 @@ Arquivo: `.github/workflows/ci.yml` (mesmo desenho da pipeline do Previna, adapt
 - Rodar o mesmo localmente: skill `pipeline-local`.
 - **Regra da equipe:** PR só é integrado com o CI verde. Proteção da `development` **e** da `main` no GitHub exigindo os checks
   "Lint, tipos, testes e build" e "Testes end-to-end", com 1 aprovação.
-- Futuro (card de Deploy): preview da Vercel por PR e deploy de produção após o merge.
+- Sem deploy (decisão de 12/11/2026): não há preview nem publicação; a entrega roda localmente.
 
 ## Claude Code: skills e plugins
 
