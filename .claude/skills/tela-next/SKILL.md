@@ -1,6 +1,6 @@
 ---
 name: tela-next
-description: Use ao criar ou alterar uma tela/rota do PoupaMais no Next.js (App Router): page, layout, template, organismos, hook de dados, service, schema Zod, Server Action, proteção de rota, chamada via BFF e testes unitários e end-to-end.
+description: "Use ao criar ou alterar uma tela/rota do PoupaMais no Next.js (App Router): page, layout, template, organismos, hook de dados, service, schema Zod, Server Action, proteção de rota, chamada via BFF e testes unitários e end-to-end."
 ---
 
 # Nova tela no Next.js

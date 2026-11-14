@@ -1,6 +1,6 @@
 ---
 name: testes-frontend
-description: Use ao escrever, corrigir ou revisar testes do front do PoupaMais: testes unitários e de componente (Vitest + Testing Library + MSW) e testes automatizados end-to-end (Playwright), ou quando a cobertura mínima reprovar o CI.
+description: "Use ao escrever, corrigir ou revisar testes do front do PoupaMais: testes unitários e de componente (Vitest + Testing Library + MSW) e testes automatizados end-to-end (Playwright), ou quando a cobertura mínima reprovar o CI."
 ---
 
 # Testes do frontend
