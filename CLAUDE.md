@@ -262,7 +262,7 @@ Gráficos: `--chart-1` receita, `--chart-2` despesa, `--chart-3..5` categorias. 
 
 ## Regras de negócio que afetam a UI
 
-- **RN001**: validação do formulário (Zod em `schemas/`): descrição obrigatória (≤ 100), tipo, mês 1–12, ano 2000–2100, valor > 0, ≥ 1 categoria.
+- **RN001** (revista em 18/11/2026): validação do formulário (Zod em `schemas/`): descrição obrigatória (≤ 100), tipo, **data** (dia que exista, entre 01/01/2000 e 31/12/2100), valor > 0, ≥ 1 categoria. Listagens e dashboard continuam filtrados por mês/ano.
   Mostrar erro por campo; também exibir os `erros[]` vindos da API.
 - **RN002**: multiselect de categorias (várias por lançamento); criar e editar pelo próprio dropdown via modal; categorias inativas não podem ser selecionadas.
 - **RN003/RN004**: o dashboard só reflete lançamentos ATIVOS; após inativar/reativar, **invalidar a query do dashboard**.
@@ -300,24 +300,33 @@ Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions
   categorias: [{id, descricao, ativa}], lancamentos: [<lançamento>, …]}`, com **todos** os lançamentos (inclusive INATIVO e DELETADO);
   sem lançamentos → `[]`. A foto não vai no JSON. Não confundir com a exportação CSV/XLSX de lançamentos (`/lancamentos/exportar`, filtrada).
 - `POST /usuarios/me/excluir {senha}` → `204` (via Server Action, que apaga o cookie)
-- `GET /categorias?ativa=` · `POST /categorias {descricao}` → `201 {id, descricao, ativa}` (`409` duplicada) · `PUT /categorias/{id}` · `PATCH /categorias/{id}/status {ativa}` · `DELETE /categorias/{id}` (`422` se vinculada)
+- `GET /categorias?ativa=&mes=&ano=` → `[{id, descricao, ativa, quantidadeLancamentos}]` · `POST /categorias {descricao}` → `201 {id, descricao, ativa}` (`409` duplicada) · `PUT /categorias/{id}` · `PATCH /categorias/{id}/status {ativa}` · `DELETE /categorias/{id}` (`422` se vinculada)
   - `GET` vem em ordem alfabética (sem diferenciar maiúsculas); sem filtro, **ativas primeiro**. `PUT`/`PATCH` → `200 {id, descricao, ativa}`.
     Descrição: trim, obrigatória, ≤ 255 (`400` com `erros[]`); duplicada no `PUT` → `409`; categoria de outro usuário → `404`.
+  - `quantidadeLancamentos`: lançamentos ATIVO + INATIVO daquele mês (DELETADO não conta); sem `mes`/`ano`, o mês atual. `mes`/`ano` não filtram
+    as categorias nem mudam a ordem; inválidos → `400`. `POST`/`PUT`/`PATCH` não trazem a contagem.
   - No lançamento: categoria inativa → `422`; inexistente/de outro usuário → `404`.
-- Lista de lançamentos ordenada por ano desc, mês desc, id desc; `POST`/`PUT`/`PATCH`/`restaurar` devolvem o lançamento; `DELETE` de já deletado → `422`.
-- `GET /lancamentos?descricao=&mes=&ano=&tipo=&status=&categoriaId=` (sem `status` = ATIVO + INATIVO; `status=DELETADO` = Lixeira)
-- `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, mes, ano, valor, categoriaIds}`
+- Lista de lançamentos ordenada por data desc, id desc; `POST`/`PUT`/`PATCH`/`restaurar` devolvem o lançamento; `DELETE` de já deletado → `422`.
+- `GET /lancamentos?descricao=&mes=&ano=&tipo=&status=&categoriaId=&pagina=&tamanho=` (sem `status` = ATIVO + INATIVO; `status=DELETADO` = Lixeira)
+  → `{itens: [<lançamento>], pagina, tamanho, total, totalPaginas}`. `pagina` desde 0 (padrão 0), `tamanho` 1–100 (padrão 12); fora disso → `400`.
+  "Mostrar mais" com `useInfiniteQuery`; o contador "Mostrando 12 de 30" vem de `total`. A exportação ignora a paginação.
+- `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, data: "2026-11-05", valor, categoriaIds}`
+  (`data` ISO; o front mostra dd/mm/aaaa). Dia que não existe (`2026-02-31`) ou formato errado → `400` no campo `data`; fora de 2000–2100 → `422`.
 - `PATCH /lancamentos/{id}/status {status: "ATIVO"|"INATIVO"}` (`422` se DELETADO) · `DELETE /lancamentos/{id}` → status DELETADO · `POST /lancamentos/{id}/restaurar` → volta INATIVO
 - `POST /lancamentos/importar` multipart, campo `arquivo` → `{totalLinhas, importados, falhas: [{linha, conteudo, motivo}], categoriasCriadas}`
 - `GET /lancamentos/exportar?formato=csv|xlsx&<filtros>` → arquivo (baixar como blob, nome vindo do `Content-Disposition`)
 - `GET /lancamentos/template-csv` → arquivo
 - `GET /dashboard?mes=&ano=` →
-  `{mes, ano, receitas, despesas, saldo, taxaGasto|null, classificacaoTaxa: "DENTRO_DO_LIMITE"|"ATENCAO"|"ACIMA_DO_LIMITE"|null, mensagem, ultimosMeses: [{mes, ano, receitas, despesas, saldo}] (4), despesasPorCategoria: [{categoriaId, descricao, valor}], maioresDespesas: [{id, descricao, valor, categorias: string[]}]}`
+  `{mes, ano, receitas, despesas, saldo, taxaGasto|null, classificacaoTaxa: "DENTRO_DO_LIMITE"|"ATENCAO"|"ACIMA_DO_LIMITE"|null, mensagem, ultimosMeses: [{mes, ano, receitas, despesas, saldo}] (4), despesasPorCategoria: [{categoriaId, descricao, valor}], maioresDespesas: [{id, descricao, valor, categorias: string[]}], pesoMaioresDespesas: {valor, percentual|null}}`
+  (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa)
 
-Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", mes, ano, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao}`
+Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
+(`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC, ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
+`dataExclusao` preenchida ao ir para a Lixeira e `null` ao restaurar).
 Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir `mensagem` em toast e `erros` nos campos (`setError` do RHF).
 
-CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;mes;ano;valor;categorias`, várias categorias separadas por `|`.
+CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
+A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula de data.
 
 ## Convenções
 
