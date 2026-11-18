@@ -7,24 +7,32 @@ description: 'Use ao escrever, corrigir ou revisar testes do front do PoupaMais:
 
 ## Tipos
 
-| Tipo                | Onde                                                              | Ferramentas                             | Comando            |
-| ------------------- | ----------------------------------------------------------------- | --------------------------------------- | ------------------ |
-| Unitário (funções)  | ao lado do arquivo: `format.test.ts`, `lancamento.schema.test.ts` | Vitest                                  | `npm test`         |
-| Componente          | ao lado do componente: `button.test.tsx`                          | Vitest + Testing Library + `user-event` | `npm test`         |
-| Organismo com dados | ao lado do organismo                                              | + **MSW** (mock do BFF `/api/*`)        | `npm test`         |
-| End-to-end          | `e2e/*.spec.ts`                                                   | **Playwright** (Chromium, Firefox)      | `npm run test:e2e` |
+| Tipo               | Onde                                                              | Ferramentas                             | Comando            |
+| ------------------ | ----------------------------------------------------------------- | --------------------------------------- | ------------------ |
+| Unitário (funções) | ao lado do arquivo: `format.test.ts`, `lancamento.schema.test.ts` | Vitest                                  | `npm test`         |
+| Componente         | ao lado do componente: `button.test.tsx`                          | Vitest + Testing Library + `user-event` | `npm test`         |
+| Hooks globais      | `hooks/*.test.tsx`                                                | `renderHook` + `criarWrapper` + **MSW** | `npm test`         |
+| Integração da tela | `screens/<Tela>/<Tela>View.test.tsx`                              | Provider + View + **MSW** (mock do BFF) | `npm test`         |
+| End-to-end         | `e2e/*.spec.ts`                                                   | **Playwright** (Chromium, Firefox)      | `npm run test:e2e` |
 
 ## Unitário e componente
 
 - Teste o que o usuário vê e faz: `screen.getByRole('button', { name: 'Salvar lançamento' })`, `userEvent.click`.
 - Não teste classes CSS, estado interno nem detalhes de implementação.
-- Organismo que usa TanStack Query: renderize com o helper `renderComProviders` de `src/test/utils.tsx` (QueryClient novo por teste,
-  sem retry).
+- Componentes (inclusive organismos) são puros: teste **por props** (`vi.fn()` nos callbacks), sem MSW.
+- Tela (Context + View, que usam TanStack Query): renderize com `renderComProviders` de `src/test/utils.tsx` (QueryClient novo por
+  teste, sem retry). Hooks globais: `renderHook(() => useX(), { wrapper: criarWrapper().wrapper })`.
+- Rota no Context (`useRouter`, `usePathname`, `useSearchParams`): `vi.mock('next/navigation', …)` com `vi.hoisted` (ver
+  `screens/Dashboard/DashboardView.test.tsx`).
+- Largura da tela: o jsdom não tem `matchMedia`; `src/test/media.ts` instala um falso (390px por teste) e `simularLargura(1280)` muda.
+- Upload (multipart): o MSW no jsdom não lê o corpo `FormData` (Node 26 fecha o stream); confira com `vi.spyOn(http, 'post')`
+  (ver `services/services.test.ts`).
 - API simulada com MSW: handlers padrão em `src/test/msw/handlers.ts`; sobrescreva por teste com `server.use(...)`.
 - Casos que não podem faltar:
   - `lib/format`: moeda pt-BR, período `Ago/2026`, nome do mês;
   - schemas: cada regra da RN001/RN011 e a mensagem exibida;
-  - LancamentoForm: erros por campo, botão desabilitado durante o envio (RNF006), erros `erros[]` da API nos campos;
+  - `lib/data`: data que existe, formatos "18/11/2026", "18 nov", "18 de novembro de 2026";
+  - lancamento-form: erros por campo, botão desabilitado durante o envio (RNF006), erros `erros[]` da API nos campos;
   - lixeira: o Desfazer **não** chama a API; o `DELETE` só sai quando o toast fecha;
   - `AvatarUsuario`: foto quando `possuiFoto`, senão a inicial maiúscula do nome (o Radix só mostra a `<img>` depois do `load`:
     veja o `Image` falso em `src/components/atoms/avatar.test.tsx`).
@@ -39,8 +47,11 @@ description: 'Use ao escrever, corrigir ou revisar testes do front do PoupaMais:
 - **Sem backend**: o teste cria a sessão com o cookie `pm_token` (o `proxy.ts` só confere a presença) e simula a API no navegador com
   `page.route('**/api/**', ...)`, usando as fixtures de `e2e/fixtures/`.
 - Login/cadastro passam por Server Action (servidor → API real), então no E2E sem backend teste só a validação do formulário dessas telas.
-- Fluxos mínimos (roteiro da demo): criar categoria pelo dropdown, lançamento com duas categorias, importar CSV com linha inválida,
-  filtrar e inativar, lixeira + restaurar, dashboard mudando de mês, exportar.
+- Fluxos mínimos (roteiro da demo): criar categoria pelo campo, lançamento com duas categorias e data, importar CSV com linha inválida,
+  filtrar e tirar do saldo, lixeira + restaurar, dashboard mudando de mês, exportar.
+- Layout responsivo: `page.setViewportSize({ width: 390 | 834 | 1280, … })` (ver `e2e/app-shell.spec.ts`); tema com
+  `page.emulateMedia({ colorScheme: 'dark' })`.
+- Nesta máquina (sem sudo): `export LD_LIBRARY_PATH=$HOME/.local/playwright-libs/root/usr/lib/x86_64-linux-gnu` antes do `npm run test:e2e`.
 - Seletores por papel e texto (`getByRole`, `getByLabel`); nada de seletor CSS frágil.
 - Para depurar: `npx playwright test --ui` ou o plugin `playwright` do Claude Code para navegar na app.
 
