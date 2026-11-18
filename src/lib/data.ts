@@ -79,3 +79,17 @@ export function formatarInstante(instante: string): string {
   const hora = `${doisDigitos(data.getHours())}:${doisDigitos(data.getMinutes())}`
   return `${formatarData(paraDataIso(data))} às ${hora}`
 }
+
+/**
+ * Data digitada no campo (DS: DatePicker): "18/11/2026", "18112026" e "18-11-2026" (também com ponto ou espaço) viram
+ * "2026-11-18". Devolve null se não estiver num desses formatos ou se o dia não existir (31/02/2026).
+ */
+export function lerDataDigitada(texto: string): string | null {
+  const limpo = texto.trim()
+  const separado = /^(\d{1,2})[/\-. ](\d{1,2})[/\-. ](\d{4})$/.exec(limpo)
+  const junto = /^(\d{2})(\d{2})(\d{4})$/.exec(limpo)
+  const casou = separado ?? junto
+  if (!casou) return null
+  const [dia, mes, ano] = casou.slice(1)
+  return dataBrParaIso(`${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${ano}`)
+}

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatarNumeroBR,
+  parseBRL,
   formatarMesAno,
   formatarMoeda,
   formatarPeriodo,
@@ -48,5 +50,37 @@ describe('format', () => {
     expect(formatarPeriodo(8, 2026)).toBe('Ago/2026')
     expect(formatarPeriodo(3, 2027)).toBe('Mar/2027')
     expect(formatarMesAno(11, 2026)).toBe('Novembro 2026')
+  })
+})
+
+describe('parseBRL e formatarNumeroBR (campo de valor)', () => {
+  it.each([
+    ['180', 180],
+    ['180,5', 180.5],
+    ['1.234,56', 1234.56],
+    ['R$ 1.234,56', 1234.56],
+    ['1.234', 1234],
+    ['1.234.567', 1234567],
+    ['180.5', 180.5],
+    ['180.50', 180.5],
+    ['1.234.5', 1234.5],
+    ['−80,00', 80],
+    ['-80', 80],
+    ['180.', 180],
+    [',5', 0.5],
+    ['0,00', 0],
+    ['1,239', 1.24],
+  ])('"%s" vira %s', (texto, esperado) => {
+    expect(parseBRL(texto)).toBe(esperado)
+  })
+
+  it('sem dígito devolve null', () => {
+    expect(parseBRL('')).toBeNull()
+    expect(parseBRL('R$ ,')).toBeNull()
+  })
+
+  it('formata com milhar e centavos', () => {
+    expect(formatarNumeroBR(1234.5)).toBe('1.234,50')
+    expect(formatarNumeroBR(180)).toBe('180,00')
   })
 })

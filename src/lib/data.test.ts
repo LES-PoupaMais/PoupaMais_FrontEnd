@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  lerDataDigitada,
   dataBrParaIso,
   ehDataIsoValida,
   formatarData,
@@ -55,5 +56,21 @@ describe('data do lançamento', () => {
 
     expect(formatarInstante(instante)).toBe(esperado)
     expect(() => formatarInstante('ontem')).toThrow(RangeError)
+  })
+})
+
+describe('lerDataDigitada', () => {
+  it.each([
+    ['18/11/2026', '2026-11-18'],
+    ['18112026', '2026-11-18'],
+    ['18-11-2026', '2026-11-18'],
+    ['5/1/2026', '2026-01-05'],
+    [' 29/02/2028 ', '2028-02-29'],
+  ])('"%s" vira %s', (texto, iso) => {
+    expect(lerDataDigitada(texto)).toBe(iso)
+  })
+
+  it.each(['31/02/2026', '29/02/2026', '2026-11-18', '1811202', 'amanhã', ''])('recusa "%s"', (texto) => {
+    expect(lerDataDigitada(texto)).toBeNull()
   })
 })
