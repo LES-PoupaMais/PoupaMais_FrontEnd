@@ -42,7 +42,26 @@ describe('AvatarUsuario', () => {
 
   it('trata nome com espaços, acento e nome vazio', () => {
     expect(inicialDoNome('  érica')).toBe('É')
-    expect(inicialDoNome('   ')).toBe('?')
+    expect(inicialDoNome('   ')).toBe('')
+  })
+
+  it('sem nome, fica neutro com o ícone de pessoa', () => {
+    render(<AvatarUsuario nome="" />)
+
+    const avatar = screen.getByRole('img', { name: 'Avatar' })
+    expect(avatar).toHaveTextContent('')
+    expect(avatar.querySelector('svg')).not.toBeNull()
+  })
+
+  it('dentro de um link com nome próprio, fica escondido do leitor de tela', () => {
+    render(
+      <a href="/perfil" aria-label="Seu perfil">
+        <AvatarUsuario nome="Ana" tamanho={32} decorativo />
+      </a>,
+    )
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Seu perfil' })).toHaveTextContent('A')
   })
 
   it('agrupa avatares com contador e selo (partes do shadcn)', () => {
