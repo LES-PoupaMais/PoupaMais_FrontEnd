@@ -9,7 +9,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 2 : 0,
-  workers: CI ? 1 : undefined,
+  // Localmente, poucos workers: com muitos em paralelo o Firefox fica sem CPU (WSL) e estoura o tempo
+  workers: CI ? 1 : 3,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
     baseURL: 'http://localhost:3000',

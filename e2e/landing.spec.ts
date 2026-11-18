@@ -3,7 +3,9 @@ import { expect, test } from '@playwright/test'
 test('landing apresenta o PoupaMais e leva ao login', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { level: 1, name: /Pare de perder dinheiro sem perceber\./ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 1, name: /Veja para onde vai o seu dinheiro em cada mês\./ }),
+  ).toBeVisible()
   await expect(page.getByRole('link', { name: 'Criar conta' })).toBeVisible()
 
   await page.getByRole('link', { name: 'Entrar' }).click()
@@ -19,4 +21,14 @@ test('"Começar gratuitamente" leva ao cadastro', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/cadastro$/)
   await expect(page.getByRole('heading', { name: 'Criar conta' })).toBeVisible()
+})
+
+test('as telas públicas seguem o tema do sistema', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.goto('/login')
+  await expect(page.locator('html')).toHaveClass(/\bdark\b/)
+
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.goto('/login')
+  await expect(page.locator('html')).not.toHaveClass(/\bdark\b/)
 })
