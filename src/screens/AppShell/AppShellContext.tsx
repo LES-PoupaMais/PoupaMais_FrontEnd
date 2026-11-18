@@ -8,6 +8,7 @@ import { fotoDoUsuario, useUsuario } from '@/hooks/use-usuario'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
 import { gravarSidebarRecolhida } from '@/lib/sidebar-cookie'
 import type { MesAno, Usuario } from '@/types/api'
+import { useNovaCategoria } from './useNovaCategoria'
 
 // Estado da casca da área logada: sidebar (recolhida no computador, aberta por cima no tablet), rota ativa, mês da URL
 // (para a TopBar do celular), folha Criar, usuário e "Sair".
@@ -39,6 +40,8 @@ type AppShellContextValue = {
   usuario: Usuario | undefined
   /** URL da foto do avatar, ou null (inicial do nome) */
   fotoUrl: string | null
+  /** "Nova categoria" da folha Criar: diálogo de categoria aberto ali mesmo */
+  novaCategoria: ReturnType<typeof useNovaCategoria>
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null)
@@ -53,6 +56,7 @@ export function AppShellProvider({ sidebarRecolhida, children }: { sidebarRecolh
   const [criarAberto, setCriarAberto] = useState(false)
   const [saindo, iniciarSaida] = useTransition()
   const { data: usuario, dataUpdatedAt } = useUsuario()
+  const novaCategoria = useNovaCategoria()
 
   function alternarSidebar() {
     if (computador) {
@@ -87,6 +91,7 @@ export function AppShellProvider({ sidebarRecolhida, children }: { sidebarRecolh
     saindo,
     usuario,
     fotoUrl: fotoDoUsuario(usuario, dataUpdatedAt),
+    novaCategoria,
   }
 
   return <AppShellContext.Provider value={valor}>{children}</AppShellContext.Provider>

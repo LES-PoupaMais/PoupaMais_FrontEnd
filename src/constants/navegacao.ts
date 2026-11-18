@@ -28,7 +28,15 @@ export const ITENS_BOTTOM_NAV: ItemNavegacao[] = [
 ]
 
 /** Itens da folha "Criar" (CreateSheet), aberta pelo + da BottomNav. Aceita de 3 a 8 itens (DS). */
-export type ItemCriar = { titulo: string; subtitulo: string; icone: LucideIcon; href: string }
+export type ItemCriar = {
+  titulo: string
+  subtitulo: string
+  icone: LucideIcon
+  /** Leva a outra tela… */
+  href?: string
+  /** …ou faz uma ação ali mesmo, sem sair da tela (a AppShellView liga ao `onSelect` da folha) */
+  acao?: 'nova-categoria'
+}
 
 export const ITENS_CRIAR: ItemCriar[] = [
   {
@@ -38,12 +46,12 @@ export const ITENS_CRIAR: ItemCriar[] = [
     href: ROTAS.novoLancamento,
   },
   { titulo: 'Importar CSV', subtitulo: 'Envie vários lançamentos de uma vez.', icone: FileUp, href: ROTAS.importar },
-  // O DS abre o diálogo de categoria aqui; até o organismo categoria-dialog existir (B4), leva à tela Categorias.
+  // O DS abre o diálogo de categoria aqui mesmo (categoria-dialog), sem trocar de tela
   {
     titulo: 'Nova categoria',
     subtitulo: 'Organize seus lançamentos por assunto.',
     icone: Tag,
-    href: ROTAS.categorias,
+    acao: 'nova-categoria',
   },
 ]
 
@@ -77,9 +85,9 @@ export function topoDaRota(caminho: string): TopoDaRota {
   return TOPOS.find(([padrao]) => padrao.test(caminho))?.[1] ?? { titulo: 'PoupaMais', mostrarMes: false }
 }
 
-/** Telas de formulário escondem a BottomNav (o rodapé fixo com "Salvar" ocupa o lugar) */
+/** Telas de formulário escondem a BottomNav (o rodapé fixo com "Salvar" ou "Importar lançamentos" ocupa o lugar) */
 export function escondeBottomNav(caminho: string): boolean {
-  return /^\/lancamentos\/(novo|\d+\/editar)$/.test(caminho)
+  return /^\/lancamentos\/(novo|importar|\d+\/editar)$/.test(caminho)
 }
 
 /** Destinos que usam o mês da URL: ao trocar de aba, o link leva o mesmo `?mes=&ano=` (DS: BottomNav) */

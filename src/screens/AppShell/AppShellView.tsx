@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { MonthNavigator } from '@/components/molecules/month-navigator'
 import { BottomNav } from '@/components/organisms/bottom-nav'
+import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
 import { CreateSheet } from '@/components/organisms/create-sheet'
 import { Sidebar } from '@/components/organisms/sidebar'
 import { TopBar } from '@/components/organisms/top-bar'
@@ -43,6 +44,7 @@ export function AppShellView({ children }: { children: ReactNode }) {
     saindo,
     usuario,
     fotoUrl,
+    novaCategoria,
   } = useAppShellContext()
 
   // Dashboard e Lançamentos mantêm o mês da URL ao trocar de aba (DS: BottomNav)
@@ -98,7 +100,20 @@ export function AppShellView({ children }: { children: ReactNode }) {
               criarAberto={criarAberto}
               onCriar={() => setCriarAberto(!criarAberto)}
             />
-            <CreateSheet aberto={criarAberto} onAbertoChange={setCriarAberto} itens={ITENS_CRIAR} />
+            <CreateSheet
+              aberto={criarAberto}
+              onAbertoChange={setCriarAberto}
+              itens={ITENS_CRIAR.map((item) =>
+                item.acao === 'nova-categoria' ? { ...item, onSelect: novaCategoria.abrir } : item,
+              )}
+            />
+            <CategoriaDialog
+              aberto={novaCategoria.aberto}
+              onAbertoChange={novaCategoria.setAberto}
+              onSalvar={novaCategoria.salvar}
+              salvando={novaCategoria.salvando}
+              erroNome={novaCategoria.erroNome}
+            />
           </>
         )
       }
