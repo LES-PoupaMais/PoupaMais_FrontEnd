@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createContext, useContext, type ReactNode } from 'react'
-import { comPeriodo, deslocarMes, lerPeriodo } from '@/lib/periodo'
+import { comPeriodo, lerPeriodo } from '@/lib/periodo'
 import type { MesAno } from '@/types/api'
 
 // PLACEHOLDER (B1): mostra o padrão do filtro de mês NA URL (lê e escreve com useSearchParams/useRouter).
@@ -10,8 +10,6 @@ import type { MesAno } from '@/types/api'
 type DashboardContextValue = {
   periodo: MesAno
   irParaMes: (periodo: MesAno) => void
-  mesAnterior: () => void
-  proximoMes: () => void
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null)
@@ -29,8 +27,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const valor: DashboardContextValue = {
     periodo,
     irParaMes,
-    mesAnterior: () => irParaMes(deslocarMes(periodo, -1)),
-    proximoMes: () => irParaMes(deslocarMes(periodo, 1)),
   }
   return <DashboardContext.Provider value={valor}>{children}</DashboardContext.Provider>
 }
