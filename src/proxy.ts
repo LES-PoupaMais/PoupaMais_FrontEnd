@@ -4,7 +4,7 @@ import { COOKIE_SESSAO } from '@/lib/sessao-cookie'
 // Next 16: o antigo middleware.ts virou proxy.ts.
 // Só confere a PRESENÇA do cookie; quem valida o token é a API (401 → o BFF apaga o cookie).
 
-const ROTAS_PRIVADAS = ['/dashboard', '/lancamentos', '/perfil']
+const ROTAS_PRIVADAS = ['/dashboard', '/lancamentos', '/categorias', '/perfil']
 const ROTAS_SO_DESLOGADO = ['/login', '/cadastro']
 
 export function proxy(request: NextRequest) {
@@ -26,5 +26,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/lancamentos/:path*', '/perfil/:path*', '/login', '/cadastro'],
+  matcher: ['/dashboard/:path*', '/lancamentos/:path*', '/categorias/:path*', '/perfil/:path*', '/login', '/cadastro'],
 }

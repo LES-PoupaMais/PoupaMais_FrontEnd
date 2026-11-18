@@ -1,15 +1,10 @@
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/atoms/card'
+import { CadastroProvider, CadastroView } from '@/screens/Cadastro'
 
-// Placeholder: o formulário real (CadastroForm + Server Action) entra no card "Autenticação com BFF".
+// Só rota: Provider + View da tela (src/screens/Cadastro).
 export default function CadastroPage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <h1 className="text-2xl font-bold">Criar conta</h1>
-        </CardTitle>
-        <CardDescription>Comece a controlar suas finanças hoje.</CardDescription>
-      </CardHeader>
-    </Card>
+    <CadastroProvider>
+      <CadastroView />
+    </CadastroProvider>
   )
 }
