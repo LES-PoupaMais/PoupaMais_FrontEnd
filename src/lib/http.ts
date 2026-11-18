@@ -18,7 +18,7 @@ export class ErroApi extends Error {
 export const MENSAGEM_ERRO_PADRAO = 'Não foi possível concluir a operação. Tente novamente.'
 export const MENSAGEM_SEM_CONEXAO = 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.'
 
-type Parametros = Record<string, string | number | boolean | null | undefined>
+export type Parametros = Record<string, string | number | boolean | null | undefined>
 
 export type OpcoesRequisicao = Omit<RequestInit, 'body' | 'method'> & {
   corpo?: unknown
@@ -82,10 +82,36 @@ export async function requisitar<T>(
   return (tipo.includes('application/json') ? await resposta.json() : await resposta.blob()) as T
 }
 
+export type ArquivoBaixado = { blob: Blob; nomeArquivo: string | null }
+
+/** `attachment; filename="lancamentos.csv"` → "lancamentos.csv" (aceita também `filename*=UTF-8''…`) */
+export function nomeDoArquivo(contentDisposition: string | null): string | null {
+  if (!contentDisposition) return null
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition)
+  if (utf8) return decodeURIComponent(utf8[1].trim())
+  const simples = /filename="?([^";]+)"?/i.exec(contentDisposition)
+  return simples ? simples[1].trim() : null
+}
+
+/** Download (exportar, modelo CSV, meus dados): devolve o arquivo e o nome vindo do `Content-Disposition`. */
+export async function baixar(caminho: string, params?: Parametros): Promise<ArquivoBaixado> {
+  let resposta: Response
+  try {
+    resposta = await fetch(montarUrl(caminho, params), { method: 'GET' })
+  } catch {
+    throw new ErroApi(0, MENSAGEM_SEM_CONEXAO)
+  }
+  if (!resposta.ok) {
+    throw await lerErro(resposta)
+  }
+  return { blob: await resposta.blob(), nomeArquivo: nomeDoArquivo(resposta.headers.get('Content-Disposition')) }
+}
+
 export const http = {
   get: <T>(caminho: string, opcoes?: OpcoesRequisicao) => requisitar<T>('GET', caminho, opcoes),
   post: <T>(caminho: string, opcoes?: OpcoesRequisicao) => requisitar<T>('POST', caminho, opcoes),
   put: <T>(caminho: string, opcoes?: OpcoesRequisicao) => requisitar<T>('PUT', caminho, opcoes),
   patch: <T>(caminho: string, opcoes?: OpcoesRequisicao) => requisitar<T>('PATCH', caminho, opcoes),
   delete: <T>(caminho: string, opcoes?: OpcoesRequisicao) => requisitar<T>('DELETE', caminho, opcoes),
+  baixar,
 }

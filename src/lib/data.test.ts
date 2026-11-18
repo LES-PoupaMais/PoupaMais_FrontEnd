@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest'
+import {
+  dataBrParaIso,
+  ehDataIsoValida,
+  formatarData,
+  formatarDataCurta,
+  formatarDataExtenso,
+  formatarInstante,
+  hojeIso,
+  paraDataIso,
+  partesDaData,
+} from './data'
+
+describe('data do lançamento', () => {
+  it.each(['2026-11-18', '2024-02-29', '2000-01-01', '2100-12-31'])('aceita a data que existe %s', (iso) => {
+    expect(ehDataIsoValida(iso)).toBe(true)
+  })
+
+  it.each(['2026-02-31', '2025-02-29', '2026-13-01', '2026-00-10', '18/11/2026', '2026-1-5', ''])(
+    'recusa %s',
+    (iso) => {
+      expect(ehDataIsoValida(iso)).toBe(false)
+    },
+  )
+
+  it('separa as partes e recusa a data que não existe', () => {
+    expect(partesDaData('2026-11-05')).toEqual({ dia: 5, mes: 11, ano: 2026 })
+    expect(() => partesDaData('2026-02-31')).toThrow(RangeError)
+  })
+
+  it('formata nos três formatos do Design System', () => {
+    expect(formatarData('2026-11-05')).toBe('05/11/2026')
+    expect(formatarDataCurta('2026-11-18')).toBe('18 nov')
+    expect(formatarDataCurta('2026-03-05')).toBe('5 mar')
+    expect(formatarDataExtenso('2026-11-18')).toBe('18 de novembro de 2026')
+  })
+
+  it('converte o texto dd/mm/aaaa para ISO', () => {
+    expect(dataBrParaIso('18/11/2026')).toBe('2026-11-18')
+    expect(dataBrParaIso(' 05/01/2027 ')).toBe('2027-01-05')
+    expect(dataBrParaIso('31/02/2026')).toBeNull()
+    expect(dataBrParaIso('2026-11-18')).toBeNull()
+  })
+
+  it('usa o dia do calendário local', () => {
+    expect(paraDataIso(new Date(2026, 10, 5, 23, 59))).toBe('2026-11-05')
+    expect(hojeIso(new Date(2026, 0, 2))).toBe('2026-01-02')
+    expect(hojeIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('mostra o instante da auditoria no fuso de quem vê', () => {
+    const instante = '2026-11-05T22:42:00Z'
+    const local = new Date(instante)
+    const esperado = `${paraDataIso(local).split('-').reverse().join('/')} às ${String(local.getHours()).padStart(2, '0')}:42`
+
+    expect(formatarInstante(instante)).toBe(esperado)
+    expect(() => formatarInstante('ontem')).toThrow(RangeError)
+  })
+})
