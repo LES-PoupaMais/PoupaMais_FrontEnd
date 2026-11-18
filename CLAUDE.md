@@ -470,3 +470,11 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    `ErroApi` carrega a `mensagem` da API; a tradução entra com as primeiras telas que enviam dados.
 6. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
    Context da tela. Atualizar nos dois repositórios juntos.
+7. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
+   - `confirm-dialog` usa o primitivo `AlertDialog` do Radix direto (o átomo `alert-dialog` ainda não existe); quando existir, trocar
+     pelos componentes dele mantendo a API. O botão destrutivo usa `className` de perigo (`bg-destructive`) e `h-12` até o `button`
+     ganhar as variantes e a altura de 48px do DS; `error-state` usa `size="xl"` (44px) pelo mesmo motivo.
+   - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
+     shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
+   - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
+   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.
