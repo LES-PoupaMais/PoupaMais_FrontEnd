@@ -62,3 +62,53 @@ export function formatarPeriodo(mes: number, ano: number): string {
 export function formatarMesAno(mes: number, ano: number): string {
   return `${nomeDoMes(mes)} ${ano}`
 }
+
+const porcentagem = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+
+/** Taxa e participação: 60.6 → "60,6%", 52 → "52%", 112 → "112%" (até uma casa, sem arredondar a faixa: ela vem da API) */
+export function formatarPorcentagem(valor: number): string {
+  if (!Number.isFinite(valor)) throw new RangeError(`Porcentagem inválida: ${valor}`)
+  return `${porcentagem.format(valor)}%`
+}
+
+/** Soma valores monetários em centavos (sem erro de ponto flutuante): ['186.40', 127.8] → 314.2 */
+export function somarValores(valores: readonly ValorMonetario[]): number {
+  return valores.reduce<number>((total, valor) => total + Math.round(paraNumero(valor) * 100), 0) / 100
+}
+
+const numeroBR = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/** 1234.5 → "1.234,50" (o campo de valor mostra assim ao sair; o "R$" fica no prefixo do campo) */
+export function formatarNumeroBR(valor: number): string {
+  return numeroBR.format(valor)
+}
+
+/**
+ * Lê o valor do jeito que as pessoas digitam (DS: MoneyField): "180", "180,5", "1.234,56", "R$ 1.234,56".
+ * Com vírgula, o ponto é separador de milhar. Sem vírgula, ponto seguido de 3 dígitos é milhar e com 1–2 dígitos é decimal.
+ * O sinal nunca é digitado: "−" e "-" são ignorados. Devolve o número com 2 casas, ou null se não houver dígito.
+ */
+export function parseBRL(texto: string): number | null {
+  const limpo = texto.replace(/[^\d.,]/g, '')
+  if (!/\d/.test(limpo)) return null
+
+  let inteiro: string
+  let decimal = ''
+  const virgula = limpo.lastIndexOf(',')
+  if (virgula >= 0) {
+    inteiro = limpo.slice(0, virgula).replace(/[.,]/g, '')
+    decimal = limpo.slice(virgula + 1).replace(/[.,]/g, '')
+  } else {
+    const ponto = limpo.lastIndexOf('.')
+    const depois = ponto >= 0 ? limpo.slice(ponto + 1) : ''
+    if (ponto >= 0 && depois.length !== 3 && depois.length > 0) {
+      inteiro = limpo.slice(0, ponto).replace(/\./g, '')
+      decimal = depois
+    } else {
+      inteiro = limpo.replace(/\./g, '')
+    }
+  }
+
+  const numero = Number(`${inteiro || '0'}.${decimal || '0'}`)
+  return Math.round(numero * 100) / 100
+}

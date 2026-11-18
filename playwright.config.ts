@@ -4,6 +4,10 @@ const CI = Boolean(process.env.CI)
 
 // E2E sobre o build de produção. Não precisa do backend: a sessão é um cookie falso e a API é
 // simulada no navegador com page.route('**/api/**') (ver e2e/fixtures).
+// Porta configurável (PORT): com várias worktrees, cada uma usa a sua e o reuseExistingServer não pega o build de outra.
+const PORTA = Number(process.env.PORT ?? 3000)
+const URL_BASE = `http://localhost:${PORTA}`
+
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
@@ -13,7 +17,7 @@ export default defineConfig({
   workers: CI ? 1 : 3,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: URL_BASE,
     locale: 'pt-BR',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -24,8 +28,8 @@ export default defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
   ],
   webServer: {
-    command: 'npm run build && npm run start',
-    url: 'http://localhost:3000',
+    command: `npm run build && npm run start -- --port ${PORTA}`,
+    url: URL_BASE,
     reuseExistingServer: !CI,
     timeout: 240_000,
   },

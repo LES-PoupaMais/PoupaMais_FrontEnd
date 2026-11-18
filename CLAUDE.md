@@ -27,8 +27,9 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
   (landing, login, cadastro, dashboard).
 - **Navegação da área logada pronta (B2, branch `feat/navegacao`):** `month-navigator` (molécula), `sidebar`, `bottom-nav`, `top-bar` e
   `create-sheet` (organismos) ligados na `AppShellView`, e a `logoutAction` em `actions/auth.actions.ts`.
-- **Próximos blocos (plano da Fase B):** B2 = biblioteca de moléculas e organismos a partir do Design System (em paralelo, por família);
-  B4 = telas na ordem da seção "Telas". Cada bloco termina com a pipeline local verde e push.
+- **Componentes comuns prontos (B2, branches `feat/componentes-form` e `feat/componentes-feedback`):** átomos alinhados ao DS e moléculas
+  de formulário e de exibição/feedback (✓ na tabela do Atomic Design).
+- **Próximo bloco (plano da Fase B):** B4 = telas na ordem da seção "Telas"; cada tela cria os organismos que só ela usa. Cada bloco termina com a pipeline local verde e push.
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
 - Entrega do código no GitHub até **26/11/2026**. Sem deploy (decisão de 12/11/2026): roda localmente, API com
@@ -223,8 +224,8 @@ Navegador ──► Next (mesma origem)                                   ──
 
 | Nível | Pasta | O que é | Exemplos (nome do DS → arquivo) |
 | --- | --- | --- | --- |
-| **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | button, input, label, checkbox, switch, badge, avatar, tooltip, skeleton, separator, dialog/alert-dialog, popover, drawer, **sheet** ✓ (véu com `overlayClassName`), calendar, sonner, chart; próprios: **logo** ✓, **money-text** ✓, function-icon, progress |
-| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | form-field, password-field, money-field, **date-picker** (dias/meses/anos), **month-navigator** ✓, segmented-control, chip/filter-chip, multi-select, stat-card, spend-rate, empty-state, error-state, offline-banner, action-banner, confirm-dialog, upload-area, stepper, timeline, sub-row-list, section-header |
+| **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
+| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
 | **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
 | **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
@@ -236,6 +237,16 @@ tokens, estados e acessibilidade. Passo a passo: skill `componente-atomic`.
 - **Átomo gerado não é editado sem motivo.** Se precisar, marque cada alteração com `// PoupaMais:`, tire o arquivo da lista de exclusão
   de cobertura do `vitest.config.mts` e escreva o teste (exemplos: `button`, `avatar`).
 - Moléculas e organismos **compõem** átomos do shadcn; não recriam botão/input/dialog do zero.
+- **Button** (DS): variantes `primario` (padrão), `contornado`, `texto`, `perigo`, `perigo-texto`; tamanhos `padrao` (48px), `pequeno` (36px),
+  `icone` (44px); `loading` = spinner + `aria-busy` + `aria-disabled` (mantém o foco e não envia de novo). Os nomes do shadcn (`default`,
+  `outline`, `ghost`, `destructive`, `sm`, `icon`…) ficam como **apelidos** porque os átomos gerados pela CLI os usam; código novo usa os do DS.
+- **Formulário:** `FormField` liga rótulo, ajuda, contador e erro ao controle (`id`, `aria-describedby`, `aria-invalid`); `PasswordField`,
+  `MoneyField` (devolve **número** ou `null`; `parseBRL`/`formatarNumeroBR` em `lib/format`) e `DatePicker` (devolve **ISO** ou `null`;
+  `lerDataDigitada` em `lib/data`) já usam o `FormField`. Com React Hook Form, use `Controller` para os campos controlados (money, data,
+  multi-select, segmentado) e `register` para Input/PasswordField (repassam o `ref`).
+- **DatePicker:** `apresentacao="popover"` (computador) ou `"folha"` (celular): quem decide é a tela (`useMediaQuery` no Context/View), o
+  componente não lê a largura. O calendário é o átomo próprio `calendar` (três visões e teclado do DS, sem react-day-picker); `modo="mes"`
+  serve ao MonthNavigator. A folha (`drawer`) usa o Dialog do Radix (sem `vaul`, que não desmonta no jsdom): fecha pelo ×, véu ou Esc.
 - Variantes via `cva`; cores só por token (`bg-primary`, `text-receita`, `bg-despesa-fundo`, `text-atencao`…), nunca hex.
 - `'use client'` só onde há estado, efeito ou **evento** (ex.: o `AppShellTemplate`, que repassa o clique do véu e o Esc).
 
@@ -439,6 +450,8 @@ Arquivo: `.github/workflows/ci.yml`. Roda em push na `development` e na `main` e
 | `e2e` (Testes end-to-end), depois de `qualidade` | `npm ci` · `npx playwright install --with-deps chromium firefox` · `npm run test:e2e` · publica `playwright-report/` se falhar | qualquer fluxo E2E quebrado |
 
 - Rodar o mesmo localmente: skill `pipeline-local`. Localmente o Playwright usa 3 workers (com mais, o Firefox estoura o tempo no WSL).
+  Com várias worktrees ao mesmo tempo, use uma porta por worktree (`PORT=3101 npm run test:e2e`): o `reuseExistingServer` reaproveita
+  qualquer servidor que já esteja na porta e testaria o build de outra pasta.
 - **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. Sem deploy: a entrega roda localmente.
 
 ## Claude Code: skills e plugins
@@ -470,8 +483,10 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
    - Ao entrar (`loginAction`, B4), limpar o cache do TanStack Query para não mostrar dados da sessão anterior (o "Sair" não limpa:
      o redirect da action interrompe o código depois dela).
-2. **Átomos ainda com o tema antigo:** `button` (variante `success` e tamanhos do protótipo; o DS pede primário, contornado, texto e perigo
-   com 48px) e `avatar` (`AvatarUsuario` usa `bg-success`, token que o DS removeu). B2 alinha ao DS; até lá `bg-success` não tem cor.
+2. **Mensagens do schema × DS:** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
+   o DS (MoneyField/DatePicker) pede "Informe um valor maior que zero." e "Informe uma data válida, no formato dd/mm/aaaa.". O limite do
+   valor também diverge (schema/CLAUDE.md R$ 999.999.999,99; README do MoneyField R$ 99.999.999.999.999,99). Decidir com a equipe e alinhar.
+   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido.
 3. **Hooks que faltam:** importar CSV, exportar, baixar modelo, perfil (nome, foto, dados) e inativar/excluir categoria. Os services já existem;
    os hooks entram com as telas (B4) seguindo os de `hooks/use-mutacoes-lancamento.ts`.
 4. **Telas placeholder** (Landing, Login, Cadastro, Dashboard): o B4 troca pelo conteúdo real (organismos, dados, estados e E2E do fluxo).
@@ -480,3 +495,12 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    `ErroApi` carrega a `mensagem` da API; a tradução entra com as primeiras telas que enviam dados.
 6. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
    Context da tela. Atualizar nos dois repositórios juntos.
+7. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
+   - **Desbloqueado no merge do B2:** o átomo `alert-dialog` e o `button` (`perigo`, `padrao` 48px) já existem; falta aplicar abaixo.
+   - `confirm-dialog` usa o primitivo `AlertDialog` do Radix direto (o átomo `alert-dialog` ainda não existia); trocar
+     pelos componentes dele mantendo a API. O botão destrutivo usa `className` de perigo (`bg-destructive`) e `h-12` até o `button`
+     ganhar as variantes e a altura de 48px do DS; `error-state` usa `size="xl"` (44px) pelo mesmo motivo.
+   - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
+     shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
+   - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
+   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.

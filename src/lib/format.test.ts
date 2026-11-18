@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatarNumeroBR,
+  parseBRL,
   formatarMesAno,
   formatarMoeda,
   formatarPeriodo,
+  formatarPorcentagem,
+  somarValores,
   formatarSaldo,
   formatarValorComSinal,
   MENOS,
@@ -48,5 +52,50 @@ describe('format', () => {
     expect(formatarPeriodo(8, 2026)).toBe('Ago/2026')
     expect(formatarPeriodo(3, 2027)).toBe('Mar/2027')
     expect(formatarMesAno(11, 2026)).toBe('Novembro 2026')
+  })
+
+  it('formata a porcentagem com até uma casa', () => {
+    expect(formatarPorcentagem(60.6)).toBe('60,6%')
+    expect(formatarPorcentagem(52)).toBe('52%')
+    expect(formatarPorcentagem(112.04)).toBe('112%')
+    expect(() => formatarPorcentagem(Number.NaN)).toThrow(RangeError)
+  })
+
+  it('soma valores em centavos, aceitando string decimal', () => {
+    expect(somarValores(['186.40', 127.8, 98.15])).toBe(412.35)
+    expect(somarValores([0.1, 0.2])).toBe(0.3)
+    expect(somarValores([])).toBe(0)
+  })
+})
+
+describe('parseBRL e formatarNumeroBR (campo de valor)', () => {
+  it.each([
+    ['180', 180],
+    ['180,5', 180.5],
+    ['1.234,56', 1234.56],
+    ['R$ 1.234,56', 1234.56],
+    ['1.234', 1234],
+    ['1.234.567', 1234567],
+    ['180.5', 180.5],
+    ['180.50', 180.5],
+    ['1.234.5', 1234.5],
+    ['−80,00', 80],
+    ['-80', 80],
+    ['180.', 180],
+    [',5', 0.5],
+    ['0,00', 0],
+    ['1,239', 1.24],
+  ])('"%s" vira %s', (texto, esperado) => {
+    expect(parseBRL(texto)).toBe(esperado)
+  })
+
+  it('sem dígito devolve null', () => {
+    expect(parseBRL('')).toBeNull()
+    expect(parseBRL('R$ ,')).toBeNull()
+  })
+
+  it('formata com milhar e centavos', () => {
+    expect(formatarNumeroBR(1234.5)).toBe('1.234,50')
+    expect(formatarNumeroBR(180)).toBe('180,00')
   })
 })
