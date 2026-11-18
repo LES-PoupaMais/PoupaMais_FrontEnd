@@ -1,39 +1,41 @@
 # PoupaMais — FrontEnd (Web)
 
 Aplicação web de gestão financeira pessoal e familiar (projeto de LES — Fatec Guarulhos, orientação Prof. Jadir Custódio Júnior).
-O usuário registra **receitas e despesas** (lançamentos), organiza por **categorias**, importa/exporta em lote via **CSV/Excel**
-e acompanha um **Dashboard** mensal. Foco: letramento financeiro e prevenção do superendividamento (ODS 1 e 8).
-Web **responsiva** (usada também no navegador do celular); não há app nativo (RNI001).
+O usuário registra **receitas e despesas** (lançamentos, com **data**), organiza por **categorias**, importa/exporta em lote via
+**CSV/Excel** e acompanha um **Dashboard** mensal. Foco: letramento financeiro e prevenção do superendividamento (ODS 1 e 8).
+Web **mobile-first e responsiva** (nasce para o navegador do celular); não há app nativo (RNI001).
 
 Este repositório é **só o front**. A API (Java + Spring Boot + PostgreSQL + JWT) fica em `LES-PoupaMais/PoupaMais_BackEnd`.
 O contrato está repetido abaixo; se mudar aqui, mude lá também.
-Material de apoio fora do repo (pasta do workspace `../`): `../Documentação/DVP_PoupaMais_v1.md` (requisitos),
-`../Documentação/DVP_PoupaMais_v1_imagens/` (prints das telas: image6 landing, image2 login, image3 cadastro,
-image1 dashboard, image14 lançamentos, image5 novo lançamento), `../Imagens e Diagramas/Logos/` (logos).
-Protótipo Figma Make: https://www.figma.com/make/eneZxdyYREP4zoDtQIxtwm/Controle-de-Finan%C3%A7as-Pessoais
 
-## Estado atual (05/11/2026)
+**Fontes da verdade (pasta do workspace `../`, fora do repo):**
 
-- **Scaffold pronto (06/11/2026):** Next.js 16.4 + React 19.3 + Tailwind 4 + shadcn/ui (Radix, estilo `radix-nova`), Vitest 5,
-  Playwright 1.65, MSW 3. Pipeline local verde. As telas ainda são placeholders: landing, login, cadastro e dashboard.
+| O quê | Onde | Vale para |
+| --- | --- | --- |
+| **Design System** (visual) | `../Documentação/design/ds/project/`: `README.md` (princípios, cor, tipografia, voz), `Navegacao-e-layout.md`, `Graficos.md`, `Acessibilidade-e-casos-limite.md`, `Preparado-para-crescer.md`, `Para-copiar-no-codigo.md`, `tokens.json`/`tokens.css` e `components/<Nome>/{README.md,preview.html}` | tokens, componentes, estados, textos |
+| **Pranchetas das telas** (canvas) | `../Documentação/design/telas/project/<tela>-<celular\|tablet\|computador>.dc.html` (uma por estado; mapa em `canvas.json`) | layout de cada tela e estado |
+| Decisões de design | `../Documentação/design/MUDANCAS_RODADA2.md` (**vale sobre** a revisão) e `../Documentação/md/Revisao_Perguntas_Design_PoupaMais.md` | conflitos entre documentos |
+| Requisitos | `../Documentação/DVP_PoupaMais_v1.md` (versão anterior; quando divergir, vale este `CLAUDE.md`) | RF/RN |
+
+O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, switch "ATIVO") **não vale mais**: use o Design System e as pranchetas.
+
+## Estado atual (18/11/2026)
+
+- **Fundação pronta (B1, branch `feat/fundacao-front`):** arquitetura `app/ → screens/ → components/`, tokens do Design System com tema
+  claro/escuro, Plus Jakarta Sans, templates (`app-shell`, `auth`, `public`, `dashboard`, `form-page`), `MoneyText`, `Logo`, contrato v1.1.0
+  em `types/`, `services/`, `hooks/` e `schemas/`, regras de arquitetura no ESLint. As telas ainda são **placeholders** no padrão novo
+  (landing, login, cadastro, dashboard) e a navegação da área logada é **provisória** (`organisms/navegacao-provisoria.tsx`).
+- **Próximos blocos (plano da Fase B):** B2 = biblioteca de moléculas e organismos a partir do Design System (em paralelo, por família);
+  B4 = telas na ordem da seção "Telas". Cada bloco termina com a pipeline local verde e push.
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
-- **Decisão:** trocamos React + Vite por **Next.js (App Router)**. Os slides 8 e 9 da apresentação (`../Documentação/apresentacao.md`)
-  já foram atualizados no `.md` (o Canva é ajustado à mão).
-- Entregas: apresentação final **12–13/11/2026** (demo ao vivo); código no GitHub até **26/11/2026**.
-- Card do Trello deste repo, **Desenvolver e Integrar Telas do Frontend**:
-  1. Landing Page e fluxos de Login/Cadastro
-  2. Dashboard com gráficos dinâmicos
-  3. Listagem com filtros e Formulários
-  4. Cliente HTTP com envio do token (aqui: BFF do Next + cookie httpOnly)
-  Critério de aceite: páginas navegáveis, consumindo a API e refletindo dados reais do banco.
-- ~~Card de **Deploy**~~: fora do escopo (decisão de 12/11/2026). A apresentação e a entrega rodam **localmente**: API com
+- Entrega do código no GitHub até **26/11/2026**. Sem deploy (decisão de 12/11/2026): roda localmente, API com
   `docker compose up -d --build` no backend e o front com `npm run dev` (`API_URL=http://localhost:8080`).
 
-### Roteiro da demo (slide 12 da apresentação): o front precisa suportar exatamente isto
+### Roteiro da demo: o front precisa suportar exatamente isto (os E2E cobrem)
 
-1. Criar uma categoria (pelo `+ Criar nova categoria` do dropdown) → 2. Cadastrar lançamento com **duas** categorias →
-3. Importar CSV com uma linha inválida (mostrar quais linhas falharam) → 4. Filtrar e inativar um lançamento →
+1. Criar uma categoria pelo próprio campo de categorias do formulário → 2. Cadastrar lançamento com **duas** categorias e **data** →
+3. Importar CSV com uma linha inválida (mostrar quais linhas falharam) → 4. Filtrar e **tirar do saldo** um lançamento →
 5. Ver o dashboard atualizado → 6. Exportar lançamentos.
 
 ## Stack
@@ -41,32 +43,32 @@ Protótipo Figma Make: https://www.figma.com/make/eneZxdyYREP4zoDtQIxtwm/Control
 | Item          | Escolha |
 | ------------- | ------- |
 | Framework     | **Next.js 16 (App Router) + React 19 + TypeScript** (`src/`, alias `@/*`). `cacheComponents` ligado (ver Arquitetura) |
-| Estilo        | Tailwind CSS 4 + **shadcn/ui** (componentes copiados para `components/atoms`, tema em variáveis CSS) + `cn()` (`@/lib/cn`, pacote oficial `cn` do shadcn) + `class-variance-authority` para variantes |
+| Estilo        | Tailwind CSS 4 + **shadcn/ui** (átomos em `components/atoms`, tema em variáveis CSS) + `cn()` (`@/lib/cn`, pacote `cn` do shadcn, configurado com os tokens próprios) + `class-variance-authority` |
+| Tema          | `next-themes` (`attribute="class"`, padrão = sistema; troca Sistema/Claro/Escuro no Perfil) |
 | Primitivos acessíveis | Radix UI (pacote `radix-ui`), por baixo dos átomos do shadcn (RNF012) |
-| Dados remotos | TanStack Query (cache; invalidar dashboard e lista após mutações) |
-| HTTP          | `fetch`/Axios no cliente apontando para o **BFF** do próprio Next (`/api/*`) |
+| Dados remotos | TanStack Query (lista com `useInfiniteQuery`; invalidar lista, dashboard e categorias após mutações) |
+| HTTP          | `fetch` via `lib/http` apontando para o **BFF** do próprio Next (`/api/*`) |
 | Formulários   | React Hook Form + Zod (`@hookform/resolvers`) |
-| Gráficos      | Recharts (área: Receitas vs Despesas; donut: categorias; barras/linha: saldo mensal) |
-| Ícones        | lucide-react (TrendingUp, TrendingDown, Wallet, AlertTriangle, LayoutGrid, List, PlusCircle, Pencil, Trash2, Filter, Download, Upload, Eye) |
-| Toasts        | sonner |
-| Fontes        | `next/font/google`: Outfit (títulos), DM Sans (corpo), JetBrains Mono (valores) |
-| Qualidade     | ESLint (config do Next) + **eslint-plugin-boundaries** (regras do Atomic Design) + Prettier + `prettier-plugin-tailwindcss` |
-| Testes        | **Vitest** + Testing Library + `user-event` + **MSW** (unitário/componente, cobertura v8) · **Playwright** (end-to-end) |
+| Gráficos      | Recharts pelo átomo `chart` do shadcn: **área** (Receitas × Despesas) e **barras** (saldo mensal, categorias). **Nunca pizza nem rosca** |
+| Ícones        | lucide-react (traço 1,75–2px; 16, 20, 24) |
+| Toasts        | sonner (átomo `sonner`, segue o tema) |
+| Fonte         | `next/font/google`: **Plus Jakarta Sans** (500–800, `--font-plus-jakarta`), em `src/styles/fonts.ts` |
+| Qualidade     | ESLint (config do Next) + **eslint-plugin-boundaries** (regras da Arquitetura) + Prettier + `prettier-plugin-tailwindcss` |
+| Testes        | **Vitest** + Testing Library + `user-event` + **MSW** (cobertura v8) · **Playwright** (end-to-end, Chromium e Firefox) |
 
-**Node:** nvm instalado na máquina, com Node 26 LTS como padrão. O repo tem `.nvmrc` (`26`): rode `nvm use` ao entrar na pasta.
-O Node 18 do sistema continua lá, mas não use (o Next exige ≥ 20.9).
+**Node:** nvm com Node 26 LTS. O repo tem `.nvmrc` (`26`): rode `nvm use` ao entrar na pasta (o Node 18 do sistema não serve).
 
 ## Comandos
 
 ```bash
 nvm use                 # Node da .nvmrc
 npm run dev             # http://localhost:3000
-npm run lint            # ESLint (inclui as regras do Atomic Design)
+npm run lint            # ESLint (inclui as regras da Arquitetura)
 npm run format          # Prettier (format:check no CI)
-npm run typecheck       # tsc --noEmit
-npm test                # Vitest (unitário e componente)
+npm run typecheck       # next typegen + tsc --noEmit
+npm test                # Vitest
 npm run test:coverage   # Vitest + piso de cobertura (o que o CI roda)
-npm run test:e2e        # Playwright (sobe o Next sozinho; navegadores: npx playwright install --with-deps chromium firefox)
+npm run test:e2e        # Playwright (sobe o build sozinho)
 npm run build           # build de produção
 ```
 
@@ -76,7 +78,99 @@ npm run build           # build de produção
 API_URL=http://localhost:8080
 ```
 
+E2E nesta máquina (WSL sem sudo): os navegadores precisam de
+`export LD_LIBRARY_PATH=$HOME/.local/playwright-libs/root/usr/lib/x86_64-linux-gnu` (Chromium e Firefox já instalados em
+`~/.cache/ms-playwright`). Não use `--with-deps` localmente; no CI ele é usado.
+
 ## Arquitetura
+
+### Árvore
+
+```text
+src/
+├── app/                     # SÓ ROTAS: page.tsx/layout.tsx mínimos (Provider + View). Sem estado, regra ou estilo.
+│   ├── layout.tsx           #   <html>, fonte, globals.css e <AppProviders> (screens/App)
+│   ├── (public)/page.tsx    #   / → screens/Landing
+│   ├── (auth)/login, cadastro/page.tsx
+│   ├── (app)/layout.tsx     #   área logada: <Suspense> + <AppShell> (screens/AppShell → AppShellTemplate)
+│   ├── (app)/dashboard/page.tsx
+│   └── api/[...path]/route.ts   # BFF (repasse para a API com o token do cookie)
+├── screens/                 # UMA PASTA POR TELA: estado, dados e composição (PascalCase)
+│   ├── App/                 #   AppProviders: tema + QueryClient + tooltips + toasts (só o layout raiz usa)
+│   ├── AppShell/            #   casca da área logada: AppShell (servidor, lê o cookie), Context, View, Skeleton
+│   └── Dashboard/
+│       ├── DashboardContext.tsx     # 'use client': hooks de dados, estado da tela, ações, toasts, useDashboardContext()
+│       ├── DashboardView.tsx        # 'use client': consome o Context e preenche o Template com Organisms
+│       ├── DashboardSkeleton.tsx    # fallback do <Suspense> da rota
+│       ├── useDashboard*.ts         # (opcional) lógica isolada da tela
+│       ├── DashboardView.test.tsx   # integração da tela (Provider + View + MSW)
+│       └── index.ts                 # export público: DashboardProvider, DashboardView, DashboardSkeleton
+├── components/              # UI PURA (Atomic Design): só props/children, sem rota, sem Context de tela, sem dados
+│   ├── atoms/  molecules/  organisms/  templates/
+├── hooks/                   # hooks GLOBAIS: TanStack Query (useLancamentos, useDashboard…), useMediaQuery
+├── services/                # chamadas ao BFF /api/* (funções puras, sem React)
+├── actions/                 # Server Actions (login, cadastro, logout, troca de senha, excluir conta)
+├── schemas/                 # Zod (RN001, RN002, RN011…)
+├── types/                   # api.ts: DTOs do contrato
+├── constants/               # query-keys, rotas, navegação
+├── lib/                     # http, format, data, periodo, destino, cn, session (server-only), cookies
+├── styles/                  # globals.css (tokens do Design System) e fonts.ts
+├── test/                    # setup, utils (renderComProviders, criarWrapper), media (matchMedia falso), msw/
+└── proxy.ts                 # Next 16: substitui o middleware.ts
+```
+
+Na raiz: `components.json` (shadcn), `vitest.config.mts`, `playwright.config.ts`, `e2e/` (specs + `fixtures/`), `eslint.config.mjs`.
+
+### Regras obrigatórias
+
+1. **`app/`** só importa `screens/` (e `types/`; o layout raiz também importa `styles/`).
+   - `page.tsx` envolve a tela no Provider e renderiza a View. Nada de `useState`/`useEffect`, `className` ou regra.
+   - No Next 16, `params`/`searchParams` são **Promises**, e com `cacheComponents` ligado quem os lê fica dentro de `<Suspense>`.
+     A página repassa a Promise para um componente interno que faz o `await` (exemplo na skill `tela-next`); o fallback é o
+     `XxxSkeleton` exportado pela própria tela. Se o Context lê a URL com `useSearchParams`, a página só põe o `<Suspense>` em volta.
+   - **Route groups:** em `(app)` o layout do grupo monta a casca (`screens/AppShell` → `AppShellTemplate`), porque ela persiste entre as
+     telas. Em `(auth)` e `(public)` **não há layout de grupo**: o template (`AuthTemplate`, `PublicTemplate`) é escolhido pela View da
+     tela, porque recebe título e subtítulo de cada tela.
+   - `app/api/[...path]/route.ts` (BFF) é a única exceção: route handler sem UI, pode importar `lib/`, `types/` e `constants/`.
+2. **`screens/`**:
+   - O `Context` centraliza os dados (hooks globais de TanStack Query), o estado da tela (filtros, painel aberto, diálogo), as ações
+     (mutations e Server Actions), a invalidação e os toasts. `useXxxContext()` dá erro claro fora do Provider.
+   - O **filtro de mês fica na URL** (`?mes=11&ano=2026`): o Context lê com `useSearchParams` (`lib/periodo.lerPeriodo`) e escreve com
+     `router.replace` (`comPeriodo`), como no `DashboardContext`.
+   - A `View` consome o Context e monta `Template` + `Organisms`, com os estados carregando, vazio, erro e sem conexão.
+   - **Uma tela não importa outra tela.** O que duas telas compartilham vira componente, hook global ou `lib/`.
+3. **`components/` são puros:** recebem dados e callbacks por props.
+   - **Organisms não usam `hooks/`, `services/` nem `actions/`.** Quem busca dados e chama ações é o Context da tela.
+   - Formulários podem usar React Hook Form + o schema Zod (estado de UI), mas enviam por `onSubmit` vindo da View.
+   - `next/link` e ícones são permitidos (são UI). Rota ativa, usuário logado etc. chegam por props.
+4. **Hierarquia:** atoms ← molecules ← organisms (podem usar outros organisms) ← templates. Templates só fazem layout e recebem
+   `children` ou slots (`sidebar`, `bottomNav`, `header`, `cabecalho`…).
+5. **Nomes:** `components/` no padrão shadcn (arquivo kebab-case, export PascalCase, teste ao lado, sem pasta por componente e sem
+   `index.ts`); `screens/` com pasta e arquivos PascalCase (`DashboardView.tsx`) e um `index.ts` público.
+6. **`eslint-plugin-boundaries`** impõe isto (`eslint.config.mjs`; mensagem "Arquitetura: X não pode importar Y"):
+
+   | De | Pode importar |
+   | --- | --- |
+   | `app` | `screen`, `styles`, `types` |
+   | `bff` (`app/api`) | `lib`, `types`, `constants` |
+   | `screen` | `atom`, `molecule`, `organism`, `template`, `hooks`, `actions`, `schemas`, `types`, `constants`, `lib` e arquivos da **própria** tela |
+   | `template` | `atom`, `molecule`, `organism`, `template`, `lib`, `types` |
+   | `organism` | `atom`, `molecule`, `organism`, `schemas`, `types`, `constants`, `lib` |
+   | `molecule` | `atom`, `molecule`, `lib`, `types` |
+   | `atom` | `atom`, `lib`, `types` |
+   | `hooks` | `hooks`, `services`, `schemas`, `types`, `constants`, `lib` |
+   | `services` | `services`, `types`, `constants`, `lib` |
+   | `actions` | `actions`, `schemas`, `types`, `constants`, `lib` |
+   | `schemas` | `schemas`, `types`, `constants`, `lib` |
+   | `constants` | `constants`, `types` |
+   | `lib` | `lib`, `types`, `constants` |
+   | `types` / `styles` | só o próprio tipo |
+
+   Testes (`*.test.ts(x)`) e `src/test/**` ficam fora das regras. Pacotes externos (`react`, `next/*`, `lucide-react`…) não são checados.
+7. **Testes:** componentes testados por props (Vitest + RTL); telas com Provider + View + MSW (integração); fluxos com Playwright;
+   `app/**` fora da cobertura; pisos 80/70.
+
+Camadas de dados: `lib/http` → `services/` → `hooks/` → **Context da tela** → props dos organismos. Nenhum componente monta URL nem chama `fetch`.
 
 ### Fluxo de autenticação e dados (BFF)
 
@@ -84,210 +178,176 @@ API_URL=http://localhost:8080
 Navegador ──► Next (mesma origem)                                   ──► Spring API
              • Server Actions: login/cadastro/logout                     /api/auth/*
                → grava o JWT em cookie httpOnly `pm_token`
-             • proxy.ts: rotas de (app) sem cookie → /login
+             • proxy.ts: rotas de (app) sem cookie → /login?voltar=…
              • app/api/[...path]/route.ts: repassa a chamada,            /api/*
                lendo o cookie e mandando `Authorization: Bearer`
 ```
 
 - **Por quê:** o token não fica em `localStorage` (protegido contra XSS); não há CORS (tudo é mesma origem); a URL da API fica escondida.
-- `src/proxy.ts` (no Next 16 o antigo `middleware.ts` virou `proxy.ts`): protege `/dashboard`, `/lancamentos/**` e `/perfil`
-  e manda quem já está logado de `/login`/`/cadastro` para `/dashboard`.
-- `app/api/[...path]/route.ts`: um único handler para GET/POST/PUT/PATCH/DELETE. Repassa query, body (inclusive multipart do
-  import, com `duplex: 'half'`) e devolve status, corpo e headers (`Content-Type`, `Content-Disposition` para os downloads).
-  Se a API responder 401, apaga o cookie e devolve 401; o cliente então redireciona para `/login`.
+- `src/proxy.ts`: protege `/dashboard`, `/lancamentos/**`, `/categorias` e `/perfil` (guardando o destino em `?voltar=`) e manda quem já
+  está logado de `/login`/`/cadastro` para `/dashboard`. Só confere a **presença** do cookie; quem valida o token é a API.
+- BFF: um único handler para GET/POST/PUT/PATCH/DELETE. Repassa query, body (inclusive multipart, com `duplex: 'half'`) e devolve status,
+  corpo e headers (`Content-Type`, `Content-Disposition`). Se a API responder 401, apaga o cookie e devolve 401; o `AppProviders` então
+  leva a pessoa para `/login?voltar=<página atual>`. O login volta para lá com `lib/destino.destinoSeguro` (só caminho interno).
 - `src/lib/session.ts` (`import 'server-only'`): `obterToken()`, `gravarSessao(token, expiraEm)`, `encerrarSessao()`; nome do cookie em `lib/sessao-cookie.ts`.
-- **`cacheComponents` (Next 16) está ligado:** páginas e layouts viram estáticos por padrão. Componente de servidor que lê `cookies()`,
-  `headers()` ou `searchParams` precisa ficar dentro de um `<Suspense>`; se não, o build falha. Route handlers (BFF) e Server Actions
-  não têm essa restrição. Guia local: `node_modules/next/dist/docs/01-app/02-guides/authentication-with-cache-components.md`.
+- **`cacheComponents` (Next 16) está ligado:** páginas e layouts viram estáticos por padrão. Quem lê `cookies()`, `headers()`,
+  `searchParams` ou usa `useSearchParams` fica dentro de um `<Suspense>`; se não, o build falha. Guias locais:
+  `node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md` e `authentication-with-cache-components.md`.
 
-### Atomic Design
+### Casca da área logada (`AppShellTemplate` + `screens/AppShell`)
 
-| Nível | Pasta | O que é | Pode importar | Exemplos |
-| --- | --- | --- | --- | --- |
-| **Átomos** | `components/atoms` | **Componentes do shadcn/ui** (+ átomos próprios no mesmo estilo). Sem regra de negócio e sem API | átomos, `lib/`, `types/` | `button` (com `success`, `xl` e `loading`), `input`, `label`, `card`, `badge`, `switch`, `dialog`, `dropdown-menu`, `select`, `checkbox`, `popover`, `command`, `field`, `sonner`, `skeleton`, `table`, `tooltip`, `avatar` (`AvatarUsuario`: foto ou inicial), `chart`; próprios: `money-text`, `logo` |
-| **Moléculas** | `components/molecules` | Combinação de átomos, ainda genérica (sem domínio) | átomos, moléculas, `lib/`, `types/` | `form-field` (label+input+erro com `field`), `password-field`, `month-year-select`, `stat-card`, `confirm-dialog`, `empty-state`, `search-input`, `multi-select` (popover + command) |
-| **Organismos** | `components/organisms` | Seções completas e de domínio; **únicos que usam hooks de dados** | átomos, moléculas, `hooks/`, `schemas/`, `types/`, `lib/` | `Navbar`, `UserMenu`, `LoginForm`, `CadastroForm`, `LancamentoForm`, `CategoriaMultiSelect`, `CategoriaModal`, `LancamentosTable`, `FiltrosLancamentos`, `ImportarDialog`, `ResultadoImportacao`, `ExportarMenu`, `ResumoCards`, `MensagemSaldo`, `ReceitasDespesasChart`, `DespesasCategoriaChart`, `SaldoMensalChart`, `MaioresDespesasList`, `HeroSection`, `FeaturesSection`, `BeneficiosSection` |
-| **Templates** | `components/templates` | Esqueleto de página: grid, slots, fundo. Recebe `children`; não busca dados | átomos, moléculas, organismos de layout (`Navbar`) | `PublicTemplate` (escuro), `AuthTemplate` (card central escuro), `AppTemplate` (navbar escura + conteúdo claro), `DashboardTemplate` (grid dos cards e gráficos) |
-| **Páginas** | `app/**/page.tsx` | Nível "páginas" do Atomic: monta template + organismos e lê `params`/`searchParams` | tudo acima | `/dashboard`, `/lancamentos`… |
-
-Regras (o `eslint-plugin-boundaries` reclama se forem violadas, com a mensagem "Atomic Design: X não pode importar Y"):
-
-- Um nível importa **o mesmo nível ou os de baixo**; nunca um nível acima. Páginas (`app/`) não importam `services/` direto.
-- Átomos e moléculas **não conhecem o domínio** (não sabem o que é lançamento) e recebem tudo por props.
-- Só organismos chamam `hooks/` (TanStack Query) ou Server Actions. Páginas e templates não chamam API diretamente.
-- **Arquivos no padrão shadcn, em todos os níveis:** kebab-case soltos na pasta do nível, export nomeado em PascalCase e teste ao lado
-  (`atoms/button.tsx` + `atoms/button.test.tsx`, `organisms/lancamentos-table.tsx` + `.test.tsx`). Sem pasta por componente e sem `index.ts`.
-- **Novo átomo do shadcn:** `npx shadcn@latest add <nome>` (o `components.json` grava em `components/atoms`). Depois rode `npm run format`.
-  - A CLI deste estilo gera `import { cn } from "cn"`: troque por `@/lib/cn` (mesmo pacote, import padronizado).
-  - Se o componente trouxer um hook (ex.: `use-mobile`), mova-o para `lib/`: átomo não importa `hooks/`.
-- **Átomo gerado não é editado sem motivo.** Se precisar (como `button`, `avatar`, `sonner`), marque cada alteração com `// PoupaMais:`,
-  tire o arquivo da lista de exclusão de cobertura do `vitest.config.mts` e escreva o teste.
-- Moléculas e organismos **compõem** átomos do shadcn; não recriam botão/input/dialog do zero. O visual do protótipo continua mandando:
-  ajuste por `className`/variantes, não trocando de componente.
-- Variantes via `cva`; cores só por token do tema (`bg-primary`, `bg-success`, `text-despesa`…), nunca hex.
-- `'use client'` só onde há estado, efeito ou evento (a maioria dos organismos e alguns átomos). Templates e páginas ficam como Server Components.
-
-### Estrutura de pastas
-
-```
-src/
-├── app/
-│   ├── layout.tsx                    # <html>, fontes (next/font), <Providers> (QueryClient + Toaster)
-│   ├── providers.tsx                 # 'use client'
-│   ├── not-found.tsx · error.tsx · loading.tsx
-│   ├── (public)/
-│   │   ├── layout.tsx                # PublicTemplate
-│   │   ├── page.tsx                  # /  (landing)
-│   │   └── privacidade/page.tsx      # /privacidade  (Política de Privacidade, RF015)
-│   ├── (auth)/
-│   │   ├── layout.tsx                # AuthTemplate
-│   │   ├── login/page.tsx            # /login
-│   │   ├── cadastro/page.tsx         # /cadastro
-│   │   ├── esqueci-senha/page.tsx    # /esqueci-senha            (RF012)
-│   │   └── redefinir-senha/page.tsx  # /redefinir-senha?token=…  (link do e-mail)
-│   ├── (app)/                        # área logada, protegida pelo proxy.ts
-│   │   ├── layout.tsx                # AppTemplate (Navbar)
-│   │   ├── dashboard/page.tsx        # /dashboard?mes=8&ano=2026
-│   │   ├── perfil/page.tsx           # /perfil  (RF013, RF014, RF016, RF017)
-│   │   └── lancamentos/
-│   │       ├── page.tsx              # /lancamentos?tipo=&status=&mes=…  (filtros na URL)
-│   │       ├── novo/page.tsx         # /lancamentos/novo
-│   │       └── [id]/editar/page.tsx  # /lancamentos/:id/editar
-│   └── api/[...path]/route.ts        # BFF → Spring
-├── proxy.ts                          # Next 16: substitui o middleware.ts
-├── test/             setup.ts, utils.tsx (renderComProviders), msw/{handlers,server}.ts
-├── components/
-│   ├── atoms/        button.tsx, input.tsx, card.tsx… (shadcn) + testes ao lado
-│   ├── molecules/    form-field.tsx, stat-card.tsx…
-│   ├── organisms/    lancamentos-table.tsx, lancamento-form.tsx…
-│   └── templates/    public-template.tsx, auth-template.tsx, app-template.tsx
-├── actions/          auth.actions.ts            # Server Actions: loginAction, cadastroAction, logoutAction
-├── services/         lancamentos.service.ts, categorias.service.ts, dashboard.service.ts, usuario.service.ts
-│                     #  funções puras que chamam /api/* (BFF); sem React
-├── hooks/            useLancamentos, useLancamento, useSalvarLancamento, useAlterarStatus, useImportarCsv,
-│                     #  useExportar, useCategorias, useSalvarCategoria, useDashboard, useUsuario
-├── schemas/          lancamento.schema.ts, categoria.schema.ts, auth.schema.ts   # Zod (RN001 etc.)
-├── types/            api.ts                      # tipos espelhando os DTOs da API
-├── constants/        meses.ts, query-keys.ts, rotas.ts
-└── lib/              http.ts (cliente do BFF + tratamento do erro padrão), session.ts (server-only),
-                      format.ts (moeda, período "Ago/2026", nome do mês), cn.ts, sessao-cookie.ts, download.ts
-```
-
-Na raiz: `components.json` (shadcn), `vitest.config.mts`, `playwright.config.ts`, `e2e/` (specs + `fixtures/`), `eslint.config.mjs`.
-
-```
-```
-
-Camadas de dados (do mais baixo ao mais alto): `lib/http` → `services/` → `hooks/` → organismos.
-Assim nenhum componente monta URL nem trata `fetch` diretamente.
-
-**Filtros na URL** (`searchParams`): `/lancamentos?status=ATIVO&mes=8` e `/dashboard?mes=8&ano=2026`. Isso deixa
-o link compartilhável, o botão Voltar funcionando, e a exportação usa os mesmos parâmetros.
-
-## Telas (protótipo Figma: 6 telas; **não existe tela de categorias**)
-
-| Rota | Tela | Conteúdo |
+| Largura | Navegação | Topo |
 | --- | --- | --- |
-| `/` | Landing (escura) | Header com logo + "Entrar" + "Criar conta". Badge "Controle financeiro pessoal", título "Pare de perder dinheiro **sem perceber.**" (parte em verde), subtítulo, CTA "Começar gratuitamente →" e "Já tenho conta". 3 cards: Dashboard inteligente, Controle total, Importação em lote. Seção "O que você ganha" com 4 itens com check. |
-| `/login` | Login (escura) | Card "Bem-vindo de volta" / "Entre na sua conta para continuar." · E-MAIL, SENHA (olho para mostrar) · link **"Esqueci minha senha"** · botão verde "Entrar" · "Não tem conta? Criar conta". |
-| `/cadastro` | Criar conta (escura) | "Criar conta" / "Comece a controlar suas finanças hoje." · NOME COMPLETO, E-MAIL, SENHA (mín. 6, olho), CONFIRMAR SENHA, checkbox obrigatório **"Li e aceito a Política de Privacidade"** (link para `/privacidade`) · botão "Criar conta" · "Já tem conta? Entrar". Após sucesso: logar direto e ir para `/dashboard`. |
-| `/dashboard` | Dashboard Financeiro | Título + "Agosto 2026 — visão geral da sua saúde financeira" + **seletor de mês/ano** (padrão = atual). 4 cards: RECEITAS (verde), DESPESAS (vermelho), SALDO, TAXA DE GASTO (% + classificação). Faixa de mensagem do saldo. Gráfico de área "Receitas vs Despesas — últimos 4 meses", donut "Despesas por Categoria" com legenda, gráfico "Saldo Mensal" e lista "Maiores Despesas" (top 5). |
-| `/lancamentos` | Lançamentos | Barra: botão "Filtros" + contador "30 lançamentos" · à direita "Exportar ▾" (CSV / Excel) e "Importar em lote ▾" (roxo; Importar arquivo / Baixar modelo CSV). Tabela: DESCRIÇÃO, PERÍODO (`Ago/2026`), CATEGORIAS (chips roxos), TIPO (badge RECEITA verde / DESPESA vermelho), VALOR (`+R$ 8.500,00` verde / `-R$ 680,00` vermelho, fonte mono), ATIVO (switch), AÇÕES (lápis, lixeira). Inativos aparecem esmaecidos. No celular, a tabela vira lista de cards. Ver "Lixeira" abaixo. |
-| `/lancamentos/novo` e `/lancamentos/[id]/editar` | Novo / Editar Lançamento | "Registre uma receita ou despesa manualmente." · DESCRIÇÃO\*, TIPO\* (dois botões Receita/Despesa), MÊS\* (select com nomes), ANO\*, VALOR (R$)\* com máscara, CATEGORIA(S)\* multiselect (ver "Gestão de categorias") · "Limpar" e "Salvar lançamento" (roxo). |
+| < 768px (celular) | slot `bottomNav` fixo embaixo (Início · Lançamentos · [+] · Categorias · Perfil) | slot `header` (TopBar) fixo no topo |
+| 768–1023px (tablet) | slot `sidebar` no **trilho** (72px); `aberta` abre a sidebar (256px) **por cima**, com véu; véu, Esc ou escolher um item fecham | título e mês no conteúdo |
+| ≥ 1024px (computador) | sidebar **expandida** (256px) empurrando o conteúdo; `recolhida` vira trilho e o conteúdo ganha a largura | título e mês no conteúdo |
 
-| `/esqueci-senha` | Esqueci minha senha (escura) | E-MAIL · "Enviar link". Depois de enviar, mostrar **sempre** a mesma mensagem: "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha." (RN014) |
-| `/redefinir-senha?token=` | Redefinir senha (escura) | NOVA SENHA + CONFIRMAR · ao concluir, toast e ir para `/login`. Token inválido ou expirado: mensagem + link para pedir de novo. |
-| `/privacidade` | Política de Privacidade (pública) | Texto da política: dados coletados (nome, e-mail, senha com hash, foto opcional, lançamentos), finalidade, não compartilhamento, direitos do titular (acessar, corrigir, exportar, excluir) e como exercê-los no Perfil. |
-| `/perfil` | Perfil (área logada) | Três blocos: **Dados pessoais** (Avatar grande + "Trocar foto"/"Remover foto", NOME editável, E-MAIL só leitura) · **Alterar senha** (SENHA ATUAL, NOVA, CONFIRMAR) · **Privacidade** ("Baixar meus dados" e "Excluir minha conta", em vermelho, com modal que pede a senha e explica que é irreversível). |
+- A preferência do computador fica no cookie `sidebar=recolhida|expandida` (`lib/sidebar-cookie.ts`), lido **no servidor** por
+  `screens/AppShell/AppShell.tsx` para a página já chegar no modo certo. No tablet a abertura é passageira (não grava cookie).
+- O template expõe o estado em `data-sidebar-recolhida`/`data-sidebar-aberta`. O organismo da sidebar usa a variante **`trilho:`**
+  (definida no `globals.css`) para o modo de ícones: `trilho:sr-only` no nome, `trilho:justify-center`, `trilho:hidden` no logo grande.
+- Layout que depende da largura é **sempre CSS** (`md:`, `lg:`, `trilho:`). `useMediaQuery` (hooks) só decide comportamento e ARIA
+  (o que o botão `panel-left` faz e o `aria-expanded`), porque no servidor ele devolve `false`.
+- Telas de formulário (`/lancamentos/novo`, `/lancamentos/[id]/editar`) não recebem a barra inferior: o rodapé fixo com "Salvar" ocupa o lugar.
+- Sem `sidebar` nem `bottomNav`, o template vira a casca simples (futura visualização por link, DS "Preparado para crescer").
+- Hoje a View usa a navegação **provisória**. O B2 entrega `sidebar`, `bottom-nav`, `top-bar` e `create-sheet` (puros, com props) e a
+  `AppShellView` passa a usá-los; então `organisms/navegacao-provisoria.tsx` é apagado.
 
-As telas de esqueci/redefinir senha, privacidade e perfil **não estão no protótipo**: seguir o visual das telas de auth (escuras) e de lançamentos (claras).
+## Atomic Design
 
-Navbar do app (escura): logo PoupaMais · Dashboard · Lançamentos · Novo Lançamento · à direita `Avatar` (foto ou inicial do nome) + nome + menu (**Meu perfil**, Sair).
+| Nível | Pasta | O que é | Exemplos (nome do DS → arquivo) |
+| --- | --- | --- | --- |
+| **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | button, input, label, checkbox, switch, badge, avatar, tooltip, skeleton, separator, dialog/alert-dialog, popover, drawer, calendar, sonner, chart; próprios: **logo** ✓, **money-text** ✓, function-icon, progress |
+| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | form-field, password-field, money-field, **date-picker** (dias/meses/anos), month-navigator, segmented-control, chip/filter-chip, multi-select, stat-card, spend-rate, empty-state, error-state, offline-banner, action-banner, confirm-dialog, upload-area, stepper, timeline, sub-row-list, section-header |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | sidebar, bottom-nav, top-bar, create-sheet, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
+| **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
-**Avatar:** se `possuiFoto`, `<img src="/api/usuarios/me/foto?v={versão}">` (mude a versão após trocar a foto, para furar o cache); senão, círculo verde com a **primeira letra do nome** em maiúscula (como no protótipo: "U").
+✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
+tokens, estados e acessibilidade. Passo a passo: skill `componente-atomic`.
 
-### Gestão de categorias (RF011 / UC009 / RN002): dentro do dropdown, sem tela própria
+- **Novo átomo do shadcn:** `npx shadcn@latest add <nome>` (grava em `components/atoms`), depois `npm run format`.
+  A CLI gera `import { cn } from "cn"`: troque por `@/lib/cn`. Hook que vier junto (ex.: `use-mobile`) vai para `lib/`.
+- **Átomo gerado não é editado sem motivo.** Se precisar, marque cada alteração com `// PoupaMais:`, tire o arquivo da lista de exclusão
+  de cobertura do `vitest.config.mts` e escreva o teste (exemplos: `button`, `avatar`).
+- Moléculas e organismos **compõem** átomos do shadcn; não recriam botão/input/dialog do zero.
+- Variantes via `cva`; cores só por token (`bg-primary`, `text-receita`, `bg-despesa-fundo`, `text-atencao`…), nunca hex.
+- `'use client'` só onde há estado, efeito ou **evento** (ex.: o `AppShellTemplate`, que repassa o clique do véu e o Esc).
 
-Toda a gestão de categorias acontece no **dropdown multiselect "CATEGORIA(S)"** (`CategoriaMultiSelect`) do formulário de lançamento:
+## Telas
 
-- **Primeira opção do dropdown:** `+ Criar nova categoria` → abre o `CategoriaModal` com o campo descrição → `POST /categorias`.
-  A categoria criada já entra selecionada no lançamento.
-- **Cada categoria da lista** tem um **ícone de lápis** à direita → abre o mesmo `CategoriaModal` em modo edição (`PUT /categorias/{id}`).
-  O clique no lápis não marca nem desmarca a categoria (`stopPropagation`).
-- Inativar/reativar (`PATCH /categorias/{id}/status`): fica no modal de edição (sugestão; não está no protótipo).
-  Categorias inativas aparecem no fim da lista, esmaecidas e não selecionáveis, mas com o lápis para reativar.
-- Erros da API aparecem dentro do modal: `409` = "Já existe uma categoria com essa descrição" (comparação sem diferenciar maiúsculas/minúsculas).
-- O filtro por categoria da tela de Lançamentos usa uma lista simples, sem criar nem editar.
-- Depois de criar ou editar, invalidar as queries `categorias`, `lancamentos` e `dashboard` (os nomes aparecem nos chips e no gráfico).
+Ordem de implementação (B4, pelo roteiro da demo). Cada tela segue o fluxo de 4 etapas da skill `tela-next`
+(componentes → Context → View → rota limpa + testes) e é comparada com as pranchetas nos temas claro e escuro, a 390, 834 e 1440px.
 
-### Lixeira e status (RN004 / RN006 / UC010)
+| # | Telas | Rotas | Pranchetas (`../Documentação/design/telas/project/`) |
+| --- | --- | --- | --- |
+| 1 | Login, Cadastro, Esqueci e Redefinir senha, Sessão vencida | `(auth)/login`, `cadastro`, `esqueci-senha`, `redefinir-senha` | `login-*`, `cadastro-*`, `esqueci-*`, `redefinir-*`, `sessao-vencida-celular` |
+| 2 | Dashboard (todos os estados) | `(app)/dashboard?mes&ano` | `dashboard-*` (celular, tablet, computador, escuro, recolhida, vazio, erro, carregando, atenção, acima, criar, menu-tablet) |
+| 3 | Lançamentos: lista, filtros, visualização (painel/tela), Conta no saldo, mover para a lixeira com Desfazer | `(app)/lancamentos`, `lancamentos/[id]` | `lancamentos-*`, `lancamento-detalhe-*` |
+| 4 | Novo/Editar lançamento (DatePicker, categorias com criar nova, descartar) | `lancamentos/novo`, `lancamentos/[id]/editar` | `novo-*`, `editar-*`, `nova-categoria-inline-celular`, `novo-categorias-celular` |
+| 5 | Importar CSV + resultado · Exportar | `lancamentos/importar` (+ diálogo de exportar) | `importar-*`, `importando-celular`, `exportar-*` |
+| 6 | Categorias | `(app)/categorias` | `categorias-*`, `categoria-*` |
+| 7 | Lixeira (subtela de Lançamentos) | `lancamentos/lixeira` | `lixeira-*`, `editar-lixeira-computador` |
+| 8 | Perfil (foto, senha, tema, dados LGPD, excluir conta) | `(app)/perfil` | `perfil-*`, `excluir-conta-*` |
+| 9 | Landing, Privacidade, 404, erro global | `(public)/`, `privacidade`, `not-found`, `error` | `landing-*`, `privacidade-*`, `nao-encontrado-*`, `erro-geral-computador`; globais: `sem-internet-*`, `toasts-celular` |
 
-- **Switch ATIVO**: alterna ATIVO⇄INATIVO (`PATCH /lancamentos/{id}/status`). Inativo continua na lista, esmaecido, e sai do dashboard.
-- **Ícone de lixeira**: exclusão lógica, **sem modal**. A linha some na hora e aparece um toast "Lançamento excluído · **Desfazer**" (~5 s).
-  A chamada `DELETE /lancamentos/{id}` **só é enviada quando o toast fecha sem Desfazer** (envie também se o usuário sair da página).
-  Assim o Desfazer não passa pela API e a regra "restaurar volta como Inativo" continua valendo.
-- **Filtro de status**: `Todos` (padrão = ATIVO + INATIVO) · `Ativos` · `Inativos` · `Lixeira` (`status=DELETADO`).
-- **Na Lixeira**: as linhas aparecem sem switch e sem lápis; no lugar, um botão **Restaurar** (`POST /lancamentos/{id}/restaurar`)
-  e o toast "Restaurado como inativo. Ative para voltar ao dashboard."
-- Lançamento deletado **não pode ser editado**: se alguém abrir `/lancamentos/[id]/editar` de um deletado, mostrar aviso e o botão Restaurar.
-- A exportação segue o filtro: só exporta deletados quando o filtro é Lixeira.
+Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 
-## Design (extraído dos prints do protótipo; conferir valores exatos no Figma)
+- **Mês na URL** (`MonthNavigator`), compartilhado por Dashboard e Lançamentos; a Lixeira não depende do mês.
+- **Lixeira, Novo, Editar, Visualizar e Importar são subtelas de Lançamentos:** na barra inferior o ativo é Lançamentos e o "‹" volta
+  para Lançamentos (`constants/navegacao.itemAtivo`).
+- **Formulário:** tela inteira com "Salvar lançamento" fixo no rodapé no celular; card centralizado no computador (`FormPageTemplate`).
+  Sair com alterações não salvas pergunta antes ("Descartar alterações?", ConfirmDialog).
+- **Visualizar lançamento** (TransactionDetail): abre ao tocar em qualquer lugar da linha; tela cheia no celular, painel à direita
+  (~440px, com véu) no computador; ação principal Editar (na lixeira, Restaurar).
+- **Lista:** cards (TransactionRow) + filtros em chips e folha no celular; tabela (TransactionTable) + barra de filtros acima no computador.
+- **Dashboard (computador, 12 colunas):** Saldo (4) + tiles Receitas, Despesas e Taxa de gasto (8) · área Receitas × Despesas (8) +
+  Saldo mensal (4) · Despesas por categoria (6) + Maiores despesas (6). Tablet em 2 colunas; celular em 1 coluna nessa ordem (`DashboardTemplate`).
+- Destinos da sidebar: "Dia a dia" (Dashboard, Lançamentos, Categorias, Lixeira) e "Conta" (Perfil, Sair). Sem sino e sem menu ☰.
+- **Avatar:** se `possuiFoto`, `/api/usuarios/me/foto?v={versão}` (`usuarioService.urlDaFoto`; mude a versão após trocar a foto); senão,
+  a inicial do nome em maiúscula.
 
-Tokens em `src/app/globals.css`, sobre as variáveis do shadcn. Não usar cor "solta" em componente.
+### Categorias (RF011 / UC009 / RN002)
 
-| Variável shadcn | Claro (`:root`, área logada) | Escuro (`.dark`, landing e auth) |
-| --- | --- | --- |
-| `--primary` | indigo-600 | indigo-500 |
-| `--success` (nova) | emerald-600 | emerald-600 |
-| `--destructive` | rose-600 | rose-500 |
-| `--background` / `--card` | slate-50 / branco | slate-900 / slate-800 |
-| `--border` | slate-200 | branco 10% |
-| `--radius` | 0.75rem | 0.75rem |
+- Tela própria **Categorias** (lista com criar, renomear, inativar e reativar; contagem de lançamentos do mês com `quantidadeLancamentos`).
+  Inativar uma categoria em uso (`422`) mostra o aviso "categoria em uso" no próprio diálogo.
+- No formulário de lançamento, o campo de categorias (multi-select) permite **criar uma nova no próprio campo**; a criada já entra selecionada.
+  Categorias inativas não são selecionáveis.
+- `409` = "Já existe uma categoria com esse nome" (sem diferenciar maiúsculas/minúsculas), mostrado no diálogo.
+- Depois de criar ou editar: invalidar `categorias`, `lancamentos` e `dashboard` (`useSalvarCategoria` já faz).
 
-Tokens de domínio: `text-receita`, `text-despesa` (+ `-fundo`), `text-categoria`/`bg-categoria-fundo`, `text-atencao`, `text-marca`.
-Gráficos: `--chart-1` receita, `--chart-2` despesa, `--chart-3..5` categorias. O tema escuro vem da classe `dark` aplicada pelo
-`PublicTemplate` e pelo `AuthTemplate`; o `AppTemplate` fica no claro.
+### Conta no saldo e Lixeira (RN004 / RN006 / UC010)
 
-- **Telas públicas** (landing/login/cadastro): fundo azul-marinho escuro (~`#0F172A`/slate-900), cards ~`#1E293B` com borda sutil,
-  inputs escuros, labels em CAIXA ALTA pequenas e cinza.
-- **Área logada**: navbar escura (`bg-sidebar`, slate-900); conteúdo em fundo claro (~`#F8FAFC`), cards brancos com borda `slate-200` e cantos arredondados (~12px).
-- Cores: verde primário/receita `emerald-600 #059669` (botões das telas públicas, valores positivos);
-  despesa `rose-600 #E11D48`; ação primária da área logada `indigo-600 #4F46E5` ("Importar em lote", "Salvar lançamento");
-  chips de categoria roxo claro (`violet-100` fundo / `violet-700` texto); badge RECEITA `emerald-100/700`, DESPESA `rose-100/700`;
-  faixa de mensagem: verde claro quando saldo ≥ 0, vermelho/âmbar claro quando negativo.
-- Tipografia: títulos em sans geométrica bold (parece **Outfit**), corpo em **DM Sans**; **valores monetários em fonte monoespaçada** (átomo `MoneyText`).
-- Logo: ícone de tendência (seta subindo, verde) + "PoupaMais". Arquivos em `../Imagens e Diagramas/Logos/` → copiar para `public/`.
-- Taxa de gasto: cor por classificação: Dentro do limite (verde), Atenção (âmbar), Acima do limite (vermelho).
+- **"Conta no saldo"** (switch; nunca "Ativo"): ATIVO ⇄ INATIVO (`PATCH /lancamentos/{id}/status`). Fora do saldo continua na lista,
+  com o valor suave (`MoneyText suave`), e sai do dashboard.
+- **"Mover para a lixeira"**, sem modal: a linha some na hora e aparece o toast "Movido para a lixeira · **Desfazer**" (5 s, com contador).
+  O `DELETE /lancamentos/{id}` (`useMoverParaLixeira`) **só é enviado quando o toast fecha sem Desfazer** (ou ao sair da página).
+- **Lixeira** (`/lancamentos/lixeira`, `status=DELETADO`): sem switch e sem Editar; ação **Restaurar** (`useRestaurarLancamento`) e o toast
+  "Restaurado como inativo. Ative para voltar ao dashboard."
+- Lançamento na lixeira não pode ser editado: em `/lancamentos/[id]/editar` mostrar o aviso e Restaurar.
+- A exportação segue o filtro: só exporta itens da lixeira quando o filtro é a Lixeira.
+
+## Design
+
+**O Design System manda** (`../Documentação/design/ds/project/README.md`). Resumo do que o código já tem:
+
+- **Tokens** em `src/styles/globals.css`: o bloco "Para copiar no código" colado sem alteração (fonte `../Documentação/design/ds/globals.css.gerado`)
+  mais os complementos do front (valores de `tokens.css`). Não edite as cores aqui: mude no DS e cole de novo.
+  - shadcn: `bg-background` (fundo), `bg-card` (superfície), `bg-secondary`/`bg-muted` (superfície 2), `text-muted-foreground` (texto suave),
+    `bg-primary` (ação), `bg-accent` (primária fundo), `text-destructive` (**erro e exclusão**, não despesa), `border-border`, `border-input`, `ring-ring`.
+  - Domínio: `text-receita`/`bg-receita-fundo`/`receita-grafico`/`receita-area`, `text-despesa`/`bg-despesa-fundo`/`despesa-grafico`/`despesa-area`,
+    `bg-erro-fundo`, `text-atencao` sobre `bg-atencao-fundo`, `destaque-*` (card Saldo do mês), `bg-sobreposicao` (véu), `primaria-hover`.
+    Reservados sem uso hoje: `investimento`, `compartilhado`, `destaque` (+ `-fundo`).
+  - Complementos: `shadow-card`, `shadow-flutuante`, `w-sidebar`/`w-trilho`/`pl-trilho`, `h-barra-inferior`, `max-w-conteudo` (1200px),
+    raios `rounded-campo`/`rounded-icone`/`rounded-card`/`rounded-grande`/`rounded-pilula`, estilos de texto `text-display`, `text-titulo-1..3`,
+    `text-rotulo-secao`, `text-corpo`, `text-corpo-forte`, `text-legenda`, `text-rotulo-campo`, `text-mini`, `text-valor-destaque|tile|linha`
+    (tamanho, altura de linha, peso e espaçamento juntos) e a variante `trilho:`.
+  - Token novo de tamanho, sombra, raio ou medida? Ensine o `cn` em `lib/cn.ts` (senão o merge apaga classes).
+- **Tema:** claro e escuro **em todas as telas** (landing e auth não são mais sempre escuras), seguindo o sistema por padrão; a classe `dark`
+  vai no `<html>` pelo `next-themes`. Use `dark:` só quando o token não resolve sozinho (ex.: trocar o logo).
+- **Fonte única:** Plus Jakarta Sans 500–800. Todo valor usa `tabular-nums` (`MoneyText` já usa).
+- **Valores:** `MoneyText` (`components/atoms/money-text.tsx`): sempre com centavos, sinal (`+`/`−` tipográfico) + seta + cor; `tipo`
+  RECEITA/DESPESA/neutro, `tamanho` destaque/tile/linha, `suave`, `ajustar`. Formatação em `lib/format.ts`.
+- **Datas:** `lib/data.ts`: campo e tabela "18/11/2026", lista do celular "18 nov", visualização "18 de novembro de 2026", auditoria
+  "05/11/2026 às 19:42" no fuso de quem vê. Mês do filtro "Novembro 2026" (`formatarMesAno`).
+- **Logo:** átomo `logo` (`horizontal`, `sidebar`, `cofrinho`), arquivos em `public/logos/`; troca pelo tema só com CSS.
+- **Gráficos** (`Graficos.md`): **área** para Receitas × Despesas dos 4 meses (curvas monotônicas, `receita-area`/`despesa-area`, tooltip com
+  centavos), **barras verticais** para o saldo mensal (positivo acima do zero em `receita-grafico`, negativo abaixo em `despesa-grafico`,
+  valor com sinal na barra) e **barras horizontais** para despesas por categoria (todas em `despesa-grafico`, da maior para a menor; tocar
+  abre Lançamentos filtrado). Eixo começando no zero com 3 marcas redondas ("R$ 5 mil"), grade tracejada, legenda em texto e tabela `sr-only`.
+  **Nunca pizza nem rosca.** Recharts pelo átomo `chart` (`--chart-1` receita, `--chart-2` despesa).
+- **Princípios:** um botão preenchido por tela; uma cor de função por card; cor diferencia tipos, não instâncias (chips de categoria neutros);
+  nunca só cor; toda ação termina em toast; textos com "você", sem jargão, botões começando com verbo.
+- **Estados de toda tela:** carregando (Skeleton), vazio (EmptyState com a próxima ação), erro (ErrorState com "Tentar de novo") e sem
+  conexão (OfflineBanner, botões que gravam desabilitados com o motivo).
+- **Acessibilidade** (`Acessibilidade-e-casos-limite.md`): AA nos dois temas, foco visível (anel de 2px), alvos de 44px, `aria-current="page"`
+  na navegação, `aria-live` nos toasts, diálogos começando em Cancelar, `prefers-reduced-motion` (o `globals.css` já zera as animações).
 
 ## Regras de negócio que afetam a UI
 
-- **RN001** (revista em 18/11/2026): validação do formulário (Zod em `schemas/`): descrição obrigatória (≤ 100), tipo, **data** (dia que exista, entre 01/01/2000 e 31/12/2100), valor > 0, ≥ 1 categoria. Listagens e dashboard continuam filtrados por mês/ano.
-  Mostrar erro por campo; também exibir os `erros[]` vindos da API.
-- **RN002**: multiselect de categorias (várias por lançamento); criar e editar pelo próprio dropdown via modal; categorias inativas não podem ser selecionadas.
-- **RN003/RN004**: o dashboard só reflete lançamentos ATIVOS; após inativar/reativar, **invalidar a query do dashboard**.
-  Se `taxaGasto` vier `null` (sem receitas), exibir "Não disponível para o período".
-- **RN006**: ATIVO/INATIVO são editáveis e alternam livremente; DELETADO só pode ser restaurado (volta INATIVO). Ver "Lixeira e status".
-- **RN007**: após importar, exibir resumo "X lançamentos importados, Y linhas com erro" + tabela das falhas (linha, motivo) e categorias criadas.
-- **RN008**: gráficos de 4 meses e top 5 despesas vêm prontos da API; o front só renderiza.
-- **RN010 / RNI003**: mostrar a `mensagem` da API. **Não** incluir recomendação de investimento:
-  o protótipo diz "…Considere investir o excedente.", e esse trecho **deve sair** (viola RNI003).
-- **RF005**: filtros por descrição, mês, ano, tipo, status (Todos/Ativos/Inativos/Lixeira) e categoria. A **exportação usa os filtros ativos** (RN013).
-- **RN011**: cadastro com senha ≥ 6 e confirmação (Zod `refine`), e-mail válido, aceite da Política obrigatório.
-- **RN014**: na recuperação, nunca dizer se o e-mail existe.
-- **RN015**: foto JPG/PNG/WEBP até 2 MB (validar no front antes de enviar; a API valida de novo). E-mail não editável. Ao trocar a senha,
-  a API devolve um token novo: a Server Action grava o cookie novo e a sessão continua.
-- **RN016**: excluir conta → modal com senha → `POST /usuarios/me/excluir` → apagar o cookie → ir para `/` com toast "Conta excluída".
+- **RN001** (revista em 18/11/2026): `schemas/lancamento.schema.ts`: descrição obrigatória (≤ 100), tipo, **data** obrigatória (dia que
+  exista, de 01/01/2000 a 31/12/2100, trafega como `AAAA-MM-DD`), valor > 0 (até R$ 999.999.999,99), ≥ 1 categoria. Listagens e dashboard
+  continuam filtrados por mês/ano. Mostrar erro por campo; também exibir os `erros[]` vindos da API (`setError` do RHF).
+- **RN002**: várias categorias por lançamento; criar pelo próprio campo; categorias inativas não podem ser selecionadas.
+- **RN003/RN004**: o dashboard só reflete lançamentos que contam no saldo (ATIVO); após mudar "Conta no saldo", invalidar o dashboard
+  (as mutations de `hooks/use-mutacoes-lancamento.ts` já invalidam lista, dashboard e categorias). `taxaGasto` `null` → "Não disponível para o período".
+- **RN006**: ATIVO/INATIVO alternam livremente; DELETADO só pode ser restaurado (volta INATIVO).
+- **RN007**: após importar, resumo "X lançamentos importados, Y linhas ignoradas" + linha e motivo de cada falha + categorias criadas.
+- **RN008**: gráficos de 4 meses, top 5 despesas e `pesoMaioresDespesas` vêm prontos da API; o front só renderiza.
+- **RN010 / RNI003**: mostrar a `mensagem` da API (neutra). **Nunca** recomendar investimento.
+- **RF005 / RN013**: filtros por descrição, mês, ano, tipo, status e categoria; a exportação usa os filtros ativos.
+- **RN011**: `schemas/auth.schema.ts`: nome ≤ 150, e-mail válido ≤ 100, senha de 6 a 72 com confirmação, aceite da Política obrigatório.
 - **RN012**: antes de enviar o CSV, checar no front se tem até 2 MB (a API também recusa acima de 5.000 linhas).
-- **RNF006**: todo botão que envia dados (salvar, importar, excluir conta…) fica **desabilitado com spinner** enquanto a requisição
-  está em andamento (`isPending` do TanStack Query / `useFormStatus`). Não existe detecção de duplicata: lançamentos iguais são válidos.
-- Mensagens de erro e sucesso claras, em português, sem termos técnicos (RNF007, RNF009, RNF010). Estados vazios:
-  "Não há lançamentos cadastrados", "Não há informações disponíveis para o período".
+- **RN014**: na recuperação de senha, nunca dizer se o e-mail existe.
+- **RN015**: foto JPG/PNG/WEBP até 2 MB (validar antes de enviar). E-mail não editável. Trocar a senha devolve token novo (Server Action troca o cookie).
+- **RN016**: excluir conta → diálogo (digitar EXCLUIR + senha, oferecendo antes "Baixar meus dados") → Server Action → apagar o cookie → `/` com toast.
+- **RNF006**: botão que envia dados fica **desabilitado com spinner** até a resposta (`<Button loading={isPending}>`). Lançamentos iguais são válidos.
+- Mensagens claras, em português, sem termos técnicos (RNF007, RNF009, RNF010); nunca a mensagem crua da API.
 
 ## Contrato da API (espelho do CLAUDE.md do backend)
 
 O navegador chama `/api/...` do **próprio Next**; o BFF repassa para `${API_URL}/api/...` com `Authorization: Bearer <token>`. JSON camelCase.
 Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions** (que chamam a API e gravam o cookie), não pelo BFF.
+No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache em `hooks/` e chaves em `constants/query-keys.ts`.
 
 - `POST /auth/cadastro` `{nome, email, senha, aceiteTermos}` → `201` · e-mail já usado → `409`
 - `POST /auth/recuperar-senha {email}` → `202` sempre · `POST /auth/redefinir-senha {token, novaSenha}` → `204` (`422` token inválido/expirado)
@@ -330,19 +390,18 @@ A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula 
 
 ## Convenções
 
-- Arquivos em kebab-case (`lancamentos-table.tsx`, `use-lancamentos.ts`), exports nomeados em PascalCase (componentes) e
-  camelCase (`useLancamentos`); services `xxx.service.ts`; schemas `xxx.schema.ts`.
+- `components/`, `hooks/`, `services/`, `schemas/`, `lib/`: arquivos em kebab-case (`transaction-row.tsx`, `use-lancamentos.ts`), exports
+  PascalCase (componentes) e camelCase (`useLancamentos`); services `xxx.service.ts` (objeto `xxxService`); schemas `xxx.schema.ts`.
+  `screens/`: pasta e arquivos PascalCase.
 - Textos de interface em português; identificadores sem acento.
-- Query keys centralizadas em `constants/query-keys.ts`, nunca string solta.
-- Valores sempre formatados com `Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})` (`lib/format.ts`); a API trabalha com número decimal.
-- Nada de token em `localStorage`; a sessão é só o cookie httpOnly.
-- Responsivo mobile-first; contraste e legibilidade adequados (RNF012); testar em Chrome, Edge e Firefox (RNF016).
-- Enquanto a API não estiver pronta, os `services/` podem devolver mocks (dados do protótipo: Salário mensal 8.500, Freelance 1.200,
-  Aluguel 2.100, Supermercado 680, iFood 420…). Os componentes não mudam quando o mock sai.
-- Toda tela ou componente nasce **com testes** (ver "Testes"). Sem teste, não está pronto.
-- **Git (Gitflow):** `feat/<card>` criada a partir da `development` → PR para a `development` → quando estável para entrega, PR
-  `development` → `main`. Nunca PR de `feat/*` direto para a `main` e nunca commit direto na `development` ou na `main`.
-  Conventional Commits (`feat(dashboard): ...`).
+- Query keys só por `constants/query-keys.ts`; rotas por `constants/rotas.ts`; destinos da navegação por `constants/navegacao.ts`.
+- Valores sempre por `MoneyText`/`lib/format.ts`; datas por `lib/data.ts`. A API trabalha com número decimal.
+- Nada de token em `localStorage`; a sessão é só o cookie httpOnly. `localStorage` só para conveniência (nunca para dados).
+- Responsivo mobile-first; testar em Chrome, Edge e Firefox (RNF016).
+- Toda tela ou componente nasce **com testes**. Sem teste, não está pronto.
+- **Git (Gitflow):** `feat/<card>` criada a partir da `development` → PR para a `development` → quando estável, PR `development` → `main`.
+  Nunca PR de `feat/*` direto para a `main` e nunca commit direto na `development` ou na `main`. Conventional Commits em português
+  (`feat(dashboard): ...`).
 
 ## Testes
 
@@ -350,55 +409,64 @@ Guia detalhado: skill `testes-frontend`.
 
 | Nível | Onde | Ferramentas | O que prova |
 |---|---|---|---|
-| **Unitário** | ao lado do arquivo (`format.test.ts`, `lancamento.schema.test.ts`) | Vitest | Formatação, schemas Zod (RN001, RN011…), utilitários |
-| **Componente** | ao lado do componente (`Button.test.tsx`) | Vitest + Testing Library + `user-event` | O que o usuário vê e faz; acessibilidade básica (papéis e rótulos) |
-| **Integração do front** | ao lado do organismo | + **MSW** simulando o BFF `/api/*` | Organismo + hook + service juntos: carregando, vazio, erro, sucesso, invalidação de cache |
-| **End-to-end (automatizado)** | `e2e/*.spec.ts` | **Playwright** (Chromium e Firefox, RNF016) | Fluxos completos no navegador sobre o build de produção |
+| **Unitário** | ao lado do arquivo (`format.test.ts`, `lancamento.schema.test.ts`) | Vitest | Formatação, datas, schemas Zod, utilitários, services |
+| **Componente** | ao lado do componente (`money-text.test.tsx`) | Vitest + Testing Library + `user-event` | O que o usuário vê e faz **por props**; acessibilidade básica |
+| **Hooks globais** | `hooks/*.test.tsx` | `renderHook` + `criarWrapper()` + MSW | Paginação, invalidação após mutations |
+| **Integração da tela** | `screens/<Tela>/<Tela>View.test.tsx` | Provider + View + **MSW** (`renderComProviders`) | Carregando, vazio, erro, sucesso, ações e toasts |
+| **End-to-end** | `e2e/*.spec.ts` | **Playwright** (Chromium e Firefox) | Fluxos completos sobre o build de produção |
 
-- **E2E sem backend:** a sessão é criada com o cookie `pm_token` (o `proxy.ts` só confere a presença) e a API é simulada no navegador com
-  `page.route('**/api/**')` usando `e2e/fixtures/`. Cobrir no mínimo o roteiro da demo (categoria pelo dropdown, lançamento com duas
-  categorias, CSV com linha inválida, filtro + inativar, lixeira + restaurar, dashboard por mês, exportar).
-- **Cobertura (Vitest v8)**: `npm run test:coverage` falha abaixo dos pisos de `vitest.config.mts`: **80% de linhas, funções e statements,
-  70% de branches** no início (o Previna usa 95/92; subimos junto com a cobertura). Fora da conta: os átomos do shadcn **sem lógica nossa** (lista no `vitest.config.mts`), `app/**` (páginas finas, cobertas pelo E2E),
-  `src/test/**` e arquivos `.d.ts`.
+- **E2E sem backend:** sessão pelo cookie `pm_token` (o `proxy.ts` só confere a presença) e API simulada no navegador com
+  `page.route('**/api/**')` (`e2e/fixtures/`). Cobrir o roteiro da demo.
+- **Largura nos testes:** o jsdom não tem `matchMedia`; `src/test/media.ts` instala um falso (cada teste começa em 390px) e
+  `simularLargura(1280)` muda. No E2E, `page.setViewportSize`.
+- **Cobertura (Vitest v8):** `npm run test:coverage` falha abaixo de **80% de linhas, funções e statements e 70% de branches**.
+  Fora da conta: átomos do shadcn **sem lógica nossa** (lista no `vitest.config.mts`), `app/**` (só rotas, cobertas pelo E2E), `styles/**`,
+  `**/index.ts`, `src/test/**`, `proxy.ts` e `.d.ts`. `screens/**` entra.
 
 ## Pipeline (CI: GitHub Actions)
 
-Arquivo: `.github/workflows/ci.yml` (mesmo desenho da pipeline do Previna, adaptado; com um job de E2E a mais).
-
-- **Quando roda:** push na `development` e na `main`, e todo Pull Request; um push novo no mesmo PR cancela a execução anterior. Permissões só de leitura.
-- Node pela `.nvmrc` (`node-version-file`), com cache do npm.
+Arquivo: `.github/workflows/ci.yml`. Roda em push na `development` e na `main` e em todo PR; um push novo no mesmo PR cancela o anterior.
 
 | Job | Passos | Reprova se |
 |---|---|---|
-| `qualidade` (Lint, tipos, testes e build) | `npm ci` · `lint` · `format:check` · `typecheck` · `test:coverage` · `build` · publica `coverage/` | erro de lint/Atomic Design, formatação, tipo, teste, cobertura abaixo do piso ou build quebrado |
+| `qualidade` (Lint, tipos, testes e build) | `npm ci` · `lint` · `format:check` · `typecheck` · `test:coverage` · `build` · publica `coverage/` | erro de lint/arquitetura, formatação, tipo, teste, cobertura abaixo do piso ou build quebrado |
 | `e2e` (Testes end-to-end), depois de `qualidade` | `npm ci` · `npx playwright install --with-deps chromium firefox` · `npm run test:e2e` · publica `playwright-report/` se falhar | qualquer fluxo E2E quebrado |
 
-- Rodar o mesmo localmente: skill `pipeline-local`.
-- **Regra da equipe:** PR só é integrado com o CI verde. Proteção da `development` **e** da `main` no GitHub exigindo os checks
-  "Lint, tipos, testes e build" e "Testes end-to-end", com 1 aprovação.
-- Sem deploy (decisão de 12/11/2026): não há preview nem publicação; a entrega roda localmente.
+- Rodar o mesmo localmente: skill `pipeline-local`. Localmente o Playwright usa 3 workers (com mais, o Firefox estoura o tempo no WSL).
+- **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. Sem deploy: a entrega roda localmente.
 
 ## Claude Code: skills e plugins
 
-Skills do repo (`.claude/skills/`), usadas automaticamente pelo Claude quando o assunto aparece:
-
-| Skill | Quando |
+| Skill (`.claude/skills/`) | Quando |
 |---|---|
-| `componente-atomic` | Criar ou alterar componente (nível do Atomic Design, pasta, imports, teste) |
-| `tela-next` | Criar ou alterar uma tela/rota (service, hook, schema, organismos, page, E2E) |
+| `componente-atomic` | Criar ou alterar componente (nível, arquivo, imports, pureza, teste) |
+| `tela-next` | Criar ou alterar uma tela/rota: fluxo de 4 etapas (componentes → Context → View → rota) |
 | `testes-frontend` | Escrever ou corrigir testes (Vitest, MSW, Playwright); cobertura reprovando |
 | `pipeline-local` | Antes de dizer "pronto", commitar ou abrir PR; CI falhou |
-| `mudanca-de-regra` (na raiz do workspace) | O pedido contradiz o DVP ou o contrato |
+| `mudanca-de-regra` (na raiz do workspace) | O pedido contradiz o DVP, o Design System ou o contrato |
 
-Plugins oficiais recomendados (instalar com `/plugin`): `frontend-design` (só para telas fora do protótipo), `playwright` (navegar na app e depurar E2E), `feature-dev`, `pr-review-toolkit`, `commit-commands`, `security-guidance`, `context7` (documentação atualizada de Next/React/Tailwind).
+Plugins recomendados (`/plugin`): `playwright` (navegar na app e depurar E2E), `feature-dev`, `pr-review-toolkit`, `commit-commands`,
+`security-guidance`, `context7` (documentação atualizada de Next/React/Tailwind).
 
 ## Direção futura (ideias a discutir)
 
-Leia `doc/IDEIAS_FUTURAS.md` antes de propor funcionalidade nova ou mudar o visual: são ideias em aberto, levantadas com base em
-projetos acadêmicos antigos, para a equipe discutir. Este `CLAUDE.md` é a fonte da verdade do escopo atual (os `.md` do DVP são uma
-versão anterior). O design será refeito em conjunto (mobile-first, responsivo). Nada disso é para implementar sem decisão da equipe.
+Leia `doc/IDEIAS_FUTURAS.md` antes de propor funcionalidade nova, e a seção "Preparado para crescer" do Design System: o que já está
+reservado (cores, navegação, casca de visualização) para crescer sem refazer o design. Nada disso é para implementar sem decisão da equipe.
 
-## Pontos em aberto
+## Pendências
 
-1. O gráfico "Saldo Mensal" não aparece no print do dashboard (fica abaixo da dobra); conferir no Figma.
+Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
+
+1. **Navegação provisória** (`organisms/navegacao-provisoria.tsx`): o B2 entrega `sidebar`, `bottom-nav`, `top-bar` e `create-sheet`;
+   a `AppShellView` passa a usá-los e o arquivo provisório (com o teste) é apagado. O foco preso na sidebar aberta do tablet e o avatar
+   ficam com esses organismos (o Esc e o véu já fecham pelo template). "Sair" precisa da `logoutAction` (ainda não existe em `actions/`).
+2. **Átomos ainda com o tema antigo:** `button` (variante `success` e tamanhos do protótipo; o DS pede primário, contornado, texto e perigo
+   com 48px) e `avatar` (`AvatarUsuario` usa `bg-success`, token que o DS removeu). B2 alinha ao DS; até lá `bg-success` não tem cor.
+3. **Hooks que faltam:** importar CSV, exportar, baixar modelo, perfil (nome, foto, dados) e inativar/excluir categoria. Os services já existem;
+   os hooks entram com as telas (B4) seguindo os de `hooks/use-mutacoes-lancamento.ts`.
+4. **Telas placeholder** (Landing, Login, Cadastro, Dashboard): o B4 troca pelo conteúdo real (organismos, dados, estados e E2E do fluxo).
+   Faltam as rotas de esqueci/redefinir senha, lançamentos, categorias, lixeira, perfil, privacidade, `not-found` e `error`.
+5. **Tradução de erros em `lib/http`:** o DS pede que nenhuma tela mostre a mensagem crua da API (mapear status e `erros[]`). Hoje o
+   `ErroApi` carrega a `mensagem` da API; a tradução entra com as primeiras telas que enviam dados.
+6. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
+   Context da tela. Atualizar nos dois repositórios juntos.

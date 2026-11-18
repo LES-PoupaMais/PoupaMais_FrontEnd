@@ -14,10 +14,13 @@ npm run format:check        # 2. Prettier (corrigir com npm run format)
 npm run typecheck           # 3. TypeScript sem emitir
 npm run test:coverage       # 4. Vitest + piso de cobertura
 npm run build               # 5. build de produção do Next
-npm run test:e2e            # 6. Playwright (instale os navegadores 1x: npx playwright install --with-deps chromium firefox)
+npm run test:e2e            # 6. Playwright, Chromium e Firefox (ver abaixo)
 ```
 
-- Lint de `boundaries/element-types`: um componente importou um nível acima ou um hook fora de organismo (skill `componente-atomic`).
+- E2E nesta máquina (WSL sem sudo): antes, `export LD_LIBRARY_PATH=$HOME/.local/playwright-libs/root/usr/lib/x86_64-linux-gnu`
+  (navegadores já em `~/.cache/ms-playwright`; não use `--with-deps`). Em outra máquina: `npx playwright install --with-deps chromium firefox`.
+- Lint `boundaries/dependencies` ("Arquitetura: X não pode importar Y"): veja a tabela de regras na seção "Arquitetura" do `CLAUDE.md`.
+  Organismo pedindo hook/service/action → o dado vem por props do Context da tela (skills `componente-atomic` e `tela-next`).
 - Cobertura abaixo do piso: veja `coverage/index.html` e escreva os testes que faltam.
 - E2E falhou: `npx playwright show-report` mostra o passo, o print e o trace.
 

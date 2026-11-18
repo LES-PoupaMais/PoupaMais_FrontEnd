@@ -1,28 +1,34 @@
-import { TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { Logo } from '@/components/atoms/logo'
 import { buttonVariants } from '@/components/atoms/button'
-import { cn } from '@/lib/cn'
+import { RodapePublico } from './auth-template'
 
-// Esqueleto das páginas públicas (landing, política de privacidade): tema escuro do protótipo.
-export function PublicTemplate({ children }: { children: ReactNode }) {
+// Páginas públicas (landing, política de privacidade, 404). Seguem o tema (claro ou escuro).
+// Topo com o logo, "Entrar" e "Criar conta"; rodapé com a página inicial e a política de privacidade.
+// Pranchetas: ../Documentação/design/telas/project/landing-*.dc.html e privacidade-*.dc.html.
+export type PublicTemplateProps = {
+  children: ReactNode
+}
+
+export function PublicTemplate({ children }: PublicTemplateProps) {
   return (
-    <div className="dark bg-background text-foreground flex min-h-screen flex-col">
-      <header className="border-border flex items-center justify-between border-b px-6 py-4 md:px-10">
-        <Link href="/" className="font-heading flex items-center gap-2 text-lg font-bold">
-          <TrendingUp className="text-marca size-5" aria-hidden="true" />
-          PoupaMais
+    <div data-slot="public-template" className="bg-background text-foreground flex min-h-screen flex-col">
+      <header className="max-w-conteudo mx-auto flex w-full items-center justify-between gap-4 px-5 py-4 md:px-8">
+        <Link href="/" aria-label="PoupaMais, ir para a página inicial">
+          <Logo className="h-12" />
         </Link>
-        <nav className="flex items-center gap-2">
-          <Link href="/login" className={buttonVariants({ variant: 'ghost' })}>
+        <nav aria-label="Acesso" className="flex items-center gap-2">
+          <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'xl' })}>
             Entrar
           </Link>
-          <Link href="/cadastro" className={cn(buttonVariants({ variant: 'success' }), 'font-semibold')}>
+          <Link href="/cadastro" className={buttonVariants({ variant: 'outline', size: 'xl' })}>
             Criar conta
           </Link>
         </nav>
       </header>
-      {children}
+      <main className="max-w-conteudo mx-auto flex w-full flex-1 flex-col px-5 md:px-8">{children}</main>
+      <RodapePublico />
     </div>
   )
 }

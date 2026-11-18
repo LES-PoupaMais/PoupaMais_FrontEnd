@@ -12,9 +12,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
+      // Entram: components/, screens/ (Context + View, testados juntos com MSW), hooks/, services/, schemas/, lib/…
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        'src/app/**', // páginas finas: cobertas pelo E2E (Playwright)
+        'src/app/**', // só rotas (Provider + View): cobertas pelo E2E (Playwright)
+        'src/styles/**', // globals.css e next/font: não rodam no Vitest
+        'src/**/index.ts', // reexports públicos das telas (screens/<Tela>/index.ts)
         'src/test/**',
         'src/**/*.d.ts',
         'src/proxy.ts', // coberto pelo E2E (e2e/protecao.spec.ts)

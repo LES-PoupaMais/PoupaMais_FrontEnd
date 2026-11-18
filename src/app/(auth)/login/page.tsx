@@ -1,15 +1,21 @@
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/atoms/card'
+import { Suspense } from 'react'
+import { LoginProvider, LoginSkeleton, LoginView } from '@/screens/Login'
 
-// Placeholder: o formulário real (LoginForm + Server Action) entra no card "Autenticação com BFF".
-export default function LoginPage() {
+// Só rota. searchParams é uma Promise (Next 16) e, com cacheComponents, quem a lê fica dentro de <Suspense>:
+// a página repassa a Promise e o componente interno faz o await.
+export default function LoginPage({ searchParams }: PageProps<'/login'>) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
-        </CardTitle>
-        <CardDescription>Entre na sua conta para continuar.</CardDescription>
-      </CardHeader>
-    </Card>
+    <Suspense fallback={<LoginSkeleton />}>
+      <Login searchParams={searchParams} />
+    </Suspense>
+  )
+}
+
+async function Login({ searchParams }: Pick<PageProps<'/login'>, 'searchParams'>) {
+  const { voltar } = await searchParams // /login?voltar=/lancamentos/novo (sessão vencida)
+  return (
+    <LoginProvider voltar={voltar}>
+      <LoginView />
+    </LoginProvider>
   )
 }

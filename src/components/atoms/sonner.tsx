@@ -1,10 +1,12 @@
 'use client'
 
+import { useTheme } from 'next-themes'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from 'lucide-react'
 
-// PoupaMais: sem next-themes. O tema vem por prop (claro na área logada); não seguimos o tema do sistema.
-const Toaster = ({ theme = 'light', ...props }: ToasterProps) => {
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = 'system' } = useTheme()
+
   return (
     <Sonner
       theme={theme as ToasterProps['theme']}

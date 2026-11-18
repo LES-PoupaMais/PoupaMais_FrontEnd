@@ -3,15 +3,19 @@ import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 import boundaries from 'eslint-plugin-boundaries'
 
-// Atomic Design: cada pasta é um "elemento" (arquivos kebab-case soltos dentro dela, padrão shadcn);
-// as policies dizem quem pode importar quem.
-// Mesmo nível é permitido (ex.: um átomo usar o Spinner). Importar um nível ACIMA é erro.
+// Arquitetura (CLAUDE.md, seção "Arquitetura"): cada pasta é um "elemento" e as policies dizem quem pode importar quem.
+// Tudo o que não está liberado é proibido (default: 'disallow'). Testes e src/test ficam de fora.
+// A ordem importa: o primeiro padrão que casa decide o tipo (por isso `bff` vem antes de `app`).
 const elementos = [
   { type: 'atom', pattern: 'src/components/atoms' },
   { type: 'molecule', pattern: 'src/components/molecules' },
   { type: 'organism', pattern: 'src/components/organisms' },
   { type: 'template', pattern: 'src/components/templates' },
+  // uma pasta por tela: `tela` guarda o nome, para impedir que uma tela importe outra
+  { type: 'screen', pattern: 'src/screens/*', capture: ['tela'] },
+  { type: 'bff', pattern: 'src/app/api' },
   { type: 'app', pattern: 'src/app' },
+  { type: 'styles', pattern: 'src/styles' },
   { type: 'hooks', pattern: 'src/hooks' },
   { type: 'services', pattern: 'src/services' },
   { type: 'actions', pattern: 'src/actions' },
@@ -23,7 +27,7 @@ const elementos = [
 
 const pode = (from, ...to) => ({ from: { element: { type: from } }, allow: { to: { element: { types: to } } } })
 
-const atomicDesign = {
+const arquitetura = {
   files: ['src/**/*.{ts,tsx}'],
   ignores: ['src/**/*.test.{ts,tsx}', 'src/test/**'],
   plugins: { boundaries },
@@ -34,37 +38,37 @@ const atomicDesign = {
       {
         default: 'disallow',
         message:
-          'Atomic Design: "{{ from.element.types.[0] }}" não pode importar "{{ to.element.types.[0] }}". Ver CLAUDE.md, seção Atomic Design.',
+          'Arquitetura: "{{ from.element.types.[0] }}" não pode importar "{{ to.element.types.[0] }}". Ver CLAUDE.md, seção Arquitetura.',
         policies: [
+          // components/: UI pura. Organismos NÃO usam hooks/, services/ nem actions/ (recebem dados e callbacks por props)
           pode('atom', 'atom', 'lib', 'types'),
           pode('molecule', 'atom', 'molecule', 'lib', 'types'),
-          pode(
-            'organism',
-            'atom',
-            'molecule',
-            'organism',
-            'hooks',
-            'schemas',
-            'types',
-            'constants',
-            'lib',
-            'actions',
-            'services',
-          ),
+          pode('organism', 'atom', 'molecule', 'organism', 'schemas', 'types', 'constants', 'lib'),
           pode('template', 'atom', 'molecule', 'organism', 'template', 'lib', 'types'),
+          // screens/: Context (dados, estado, ações) + View (Template + Organisms)
           pode(
-            'app',
+            'screen',
             'atom',
             'molecule',
             'organism',
             'template',
-            'app',
             'hooks',
             'actions',
+            'schemas',
             'types',
             'constants',
             'lib',
           ),
+          // ...e arquivos da PRÓPRIA tela; uma tela não importa outra
+          {
+            from: { element: { type: 'screen' } },
+            allow: { to: { element: { type: 'screen', captured: { tela: '{{ from.element.captured.tela }}' } } } },
+          },
+          // app/: só rotas. Importa telas e tipos (e os estilos globais, no layout raiz)
+          pode('app', 'screen', 'styles', 'types'),
+          // app/api: o BFF (route handler, sem UI) lê o cookie da sessão
+          pode('bff', 'lib', 'types', 'constants'),
+          pode('styles', 'styles'),
           pode('hooks', 'hooks', 'services', 'schemas', 'types', 'constants', 'lib'),
           pode('services', 'services', 'types', 'constants', 'lib'),
           pode('actions', 'actions', 'schemas', 'types', 'constants', 'lib'),
@@ -81,7 +85,7 @@ const atomicDesign = {
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  atomicDesign,
+  arquitetura,
   globalIgnores([
     '.next/**',
     'out/**',

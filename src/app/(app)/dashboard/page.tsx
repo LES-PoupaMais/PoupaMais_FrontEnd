@@ -1,9 +1,13 @@
-// Placeholder: o dashboard real (DashboardTemplate + organismos) entra no card "Desenvolver e Integrar Telas".
+import { Suspense } from 'react'
+import { DashboardProvider, DashboardSkeleton, DashboardView } from '@/screens/Dashboard'
+
+// Só rota. O mês fica na URL (?mes=11&ano=2026) e o Context lê com useSearchParams, que pede <Suspense>.
 export default function DashboardPage() {
   return (
-    <>
-      <h1 className="text-3xl font-bold">Dashboard Financeiro</h1>
-      <p className="text-muted-foreground mt-1">Visão geral da sua saúde financeira.</p>
-    </>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardProvider>
+        <DashboardView />
+      </DashboardProvider>
+    </Suspense>
   )
 }

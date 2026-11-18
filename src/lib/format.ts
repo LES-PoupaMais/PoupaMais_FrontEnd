@@ -1,5 +1,8 @@
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
+/** Sinal de menos tipográfico (U+2212): o Design System usa "−", não o hífen. */
+export const MENOS = '−'
+
 export const MESES = [
   'Janeiro',
   'Fevereiro',
@@ -15,14 +18,31 @@ export const MESES = [
   'Dezembro',
 ] as const
 
-/** 8500 → "R$ 8.500,00" */
-export function formatarMoeda(valor: number): string {
-  return moeda.format(valor)
+/** A API manda número (o back usa BigDecimal); aceita também a string decimal "1120.35". */
+export type ValorMonetario = number | string
+
+function paraNumero(valor: ValorMonetario): number {
+  const numero = typeof valor === 'string' ? Number(valor) : valor
+  if (!Number.isFinite(numero)) {
+    throw new RangeError(`Valor inválido: ${valor}`)
+  }
+  return numero
 }
 
-/** Valor da listagem de lançamentos: "+R$ 8.500,00" (receita) ou "-R$ 680,00" (despesa) */
-export function formatarValorComSinal(valor: number, tipo: 'RECEITA' | 'DESPESA'): string {
-  return `${tipo === 'RECEITA' ? '+' : '-'}${formatarMoeda(Math.abs(valor))}`
+/** 8500 → "R$ 8.500,00" (sempre com centavos; negativo sai com "-" do Intl: prefira formatarSaldo) */
+export function formatarMoeda(valor: ValorMonetario): string {
+  return moeda.format(paraNumero(valor))
+}
+
+/** Valor de lançamento: "+ R$ 8.500,00" (receita) ou "− R$ 680,00" (despesa). O sinal vem do tipo, nunca do número. */
+export function formatarValorComSinal(valor: ValorMonetario, tipo: 'RECEITA' | 'DESPESA'): string {
+  return `${tipo === 'RECEITA' ? '+' : MENOS} ${formatarMoeda(Math.abs(paraNumero(valor)))}`
+}
+
+/** Totais e saldo (neutro): "R$ 4.920,00" ou "− R$ 750,40" */
+export function formatarSaldo(valor: ValorMonetario): string {
+  const numero = paraNumero(valor)
+  return numero < 0 ? `${MENOS} ${formatarMoeda(Math.abs(numero))}` : formatarMoeda(numero)
 }
 
 /** 8 → "Agosto" */
@@ -36,4 +56,9 @@ export function nomeDoMes(mes: number): string {
 /** (8, 2026) → "Ago/2026" */
 export function formatarPeriodo(mes: number, ano: number): string {
   return `${nomeDoMes(mes).slice(0, 3)}/${ano}`
+}
+
+/** (11, 2026) → "Novembro 2026" (mês do filtro, no topo do Dashboard e de Lançamentos) */
+export function formatarMesAno(mes: number, ano: number): string {
+  return `${nomeDoMes(mes)} ${ano}`
 }
