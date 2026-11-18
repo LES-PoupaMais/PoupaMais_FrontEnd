@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { render, screen } from '@testing-library/react'
 import { Plus, Trash2 } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
@@ -15,8 +16,8 @@ describe('EmptyState', () => {
         acoesEmColuna
         acoes={
           <>
-            <a href="/lancamentos/novo">Criar primeiro lançamento</a>
-            <a href="/lancamentos/importar">Importar CSV</a>
+            <Link href="/lancamentos/novo">Criar primeiro lançamento</Link>
+            <Link href="/lancamentos/importar">Importar CSV</Link>
           </>
         }
       />,
