@@ -24,7 +24,9 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
 - **Fundação pronta (B1, branch `feat/fundacao-front`):** arquitetura `app/ → screens/ → components/`, tokens do Design System com tema
   claro/escuro, Plus Jakarta Sans, templates (`app-shell`, `auth`, `public`, `dashboard`, `form-page`), `MoneyText`, `Logo`, contrato v1.1.0
   em `types/`, `services/`, `hooks/` e `schemas/`, regras de arquitetura no ESLint. As telas ainda são **placeholders** no padrão novo
-  (landing, login, cadastro, dashboard) e a navegação da área logada é **provisória** (`organisms/navegacao-provisoria.tsx`).
+  (landing, login, cadastro, dashboard).
+- **Navegação da área logada pronta (B2, branch `feat/navegacao`):** `month-navigator` (molécula), `sidebar`, `bottom-nav`, `top-bar` e
+  `create-sheet` (organismos) ligados na `AppShellView`, e a `logoutAction` em `actions/auth.actions.ts`.
 - **Próximos blocos (plano da Fase B):** B2 = biblioteca de moléculas e organismos a partir do Design System (em paralelo, por família);
   B4 = telas na ordem da seção "Telas". Cada bloco termina com a pipeline local verde e push.
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
@@ -210,16 +212,20 @@ Navegador ──► Next (mesma origem)                                   ──
   (o que o botão `panel-left` faz e o `aria-expanded`), porque no servidor ele devolve `false`.
 - Telas de formulário (`/lancamentos/novo`, `/lancamentos/[id]/editar`) não recebem a barra inferior: o rodapé fixo com "Salvar" ocupa o lugar.
 - Sem `sidebar` nem `bottomNav`, o template vira a casca simples (futura visualização por link, DS "Preparado para crescer").
-- Hoje a View usa a navegação **provisória**. O B2 entrega `sidebar`, `bottom-nav`, `top-bar` e `create-sheet` (puros, com props) e a
-  `AppShellView` passa a usá-los; então `organisms/navegacao-provisoria.tsx` é apagado.
+- A `AppShellView` pluga os organismos: `Sidebar` (slot `sidebar`, com `prenderFoco` quando aberta por cima no tablet), `TopBar`
+  (slot `header`: título, Voltar, `MonthNavigator` compacto e avatar, conforme `constants/navegacao.topoDaRota`) e `BottomNav` +
+  `CreateSheet` (slot `bottomNav`; o + abre a folha). O mês da TopBar vem da URL (`AppShellContext`, igual ao `DashboardContext`) e os
+  links de Dashboard e Lançamentos levam o mesmo `?mes=&ano=` (`ROTAS_COM_MES`). "Sair" chama a `logoutAction` (apaga o cookie
+  httpOnly e redireciona para `/login`).
+- O "+ Novo lançamento" da sidebar leva direto a `/lancamentos/novo` (README e preview da Sidebar); a folha Criar é só do celular.
 
 ## Atomic Design
 
 | Nível | Pasta | O que é | Exemplos (nome do DS → arquivo) |
 | --- | --- | --- | --- |
-| **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | button, input, label, checkbox, switch, badge, avatar, tooltip, skeleton, separator, dialog/alert-dialog, popover, drawer, calendar, sonner, chart; próprios: **logo** ✓, **money-text** ✓, function-icon, progress |
-| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | form-field, password-field, money-field, **date-picker** (dias/meses/anos), month-navigator, segmented-control, chip/filter-chip, multi-select, stat-card, spend-rate, empty-state, error-state, offline-banner, action-banner, confirm-dialog, upload-area, stepper, timeline, sub-row-list, section-header |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | sidebar, bottom-nav, top-bar, create-sheet, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
+| **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | button, input, label, checkbox, switch, badge, avatar, tooltip, skeleton, separator, dialog/alert-dialog, popover, drawer, **sheet** ✓ (véu com `overlayClassName`), calendar, sonner, chart; próprios: **logo** ✓, **money-text** ✓, function-icon, progress |
+| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | form-field, password-field, money-field, **date-picker** (dias/meses/anos), **month-navigator** ✓, segmented-control, chip/filter-chip, multi-select, stat-card, spend-rate, empty-state, error-state, offline-banner, action-banner, confirm-dialog, upload-area, stepper, timeline, sub-row-list, section-header |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
 | **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
@@ -457,9 +463,13 @@ reservado (cores, navegação, casca de visualização) para crescer sem refazer
 
 Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 
-1. **Navegação provisória** (`organisms/navegacao-provisoria.tsx`): o B2 entrega `sidebar`, `bottom-nav`, `top-bar` e `create-sheet`;
-   a `AppShellView` passa a usá-los e o arquivo provisório (com o teste) é apagado. O foco preso na sidebar aberta do tablet e o avatar
-   ficam com esses organismos (o Esc e o véu já fecham pelo template). "Sair" precisa da `logoutAction` (ainda não existe em `actions/`).
+1. **Navegação (sobras do B2):**
+   - "Nova categoria" na folha Criar leva à tela Categorias; o DS pede abrir o diálogo de categoria ali mesmo (trocar `href` por
+     `onSelect` quando o organismo `categoria-dialog` existir, B4).
+   - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; ligar ao `date-picker` no modo mês quando ele existir.
+   - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
+   - Ao entrar (`loginAction`, B4), limpar o cache do TanStack Query para não mostrar dados da sessão anterior (o "Sair" não limpa:
+     o redirect da action interrompe o código depois dela).
 2. **Átomos ainda com o tema antigo:** `button` (variante `success` e tamanhos do protótipo; o DS pede primário, contornado, texto e perigo
    com 48px) e `avatar` (`AvatarUsuario` usa `bg-success`, token que o DS removeu). B2 alinha ao DS; até lá `bg-success` não tem cor.
 3. **Hooks que faltam:** importar CSV, exportar, baixar modelo, perfil (nome, foto, dados) e inativar/excluir categoria. Os services já existem;
