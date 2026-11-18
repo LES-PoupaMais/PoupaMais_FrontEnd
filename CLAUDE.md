@@ -226,7 +226,7 @@ Navegador ──► Next (mesma origem)                                   ──
 | --- | --- | --- | --- |
 | **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
 | **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, **lancamento-form** ✓, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
 | **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
@@ -504,3 +504,17 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
    - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.
+8. **Novo/Editar lançamento (B4, tela 4):**
+   - "Limpar" do celular é um botão fixo sobre a TopBar (a `TopBar` da casca não tem slot de ação). Proposta: prop `acao` na `TopBar`
+     preenchida pela tela.
+   - O campo de categorias abre em popover também no celular; a prancheta `novo-categorias-celular` pede folha de baixo. Proposta: prop
+     `apresentacao` (`popover`/`folha`) no `multi-select`, como no `date-picker`.
+   - Sem o lápis de editar/reativar categoria no campo: entra quando o `categoria-dialog` (tela Categorias) existir; aí o
+     `nova-categoria-dialog` (só cria) pode virar o modo "criar" dele.
+   - `lancamento-na-lixeira` (Editar de item na lixeira) desenha os dados à mão: trocar pelo `transaction-detail` quando existir.
+   - "Mover para a lixeira" no Editar: toast com Desfazer sem a barra/contador de 5 s e a linha ainda aparece na lista até o toast fechar;
+     o DELETE não sai se a pessoa fechar a aba nesses 5 s. Reusar o toast da lista (tela 3) quando existir.
+   - Mensagens do `lancamento.schema` × prancheta `novo-erros-celular` ("A descrição é obrigatória.", "Informe um valor maior que zero.",
+     "Informe pelo menos uma categoria."): a tela usa as do schema até a decisão da Pendência 2.
+   - `erros[]` da API vão para os campos com a mensagem da própria API; os toasts usam textos do front (pendência 5 continua).
+   - `useSemConexao` está em `screens/LancamentoForm`: mover para `hooks/` quando outra tela precisar.
