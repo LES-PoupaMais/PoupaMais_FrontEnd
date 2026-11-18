@@ -225,8 +225,8 @@ Navegador ──► Next (mesma origem)                                   ──
 | Nível | Pasta | O que é | Exemplos (nome do DS → arquivo) |
 | --- | --- | --- | --- |
 | **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
-| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
+| **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓, **undo-toast** ✓ |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, **transaction-row** ✓, **transaction-table** ✓, **transaction-detail** ✓, **filter-bar** ✓, **export-dialog** ✓, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
 | **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
@@ -504,3 +504,17 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
    - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.
+8. **Lançamentos, visualização, exportar e Lixeira (B4, telas 3, 5-exportar e 7):**
+   - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
+     desenham uma página. A Lixeira ganhou um "Exportar" (não está na prancheta `lixeira-*`) para cumprir "só exporta a lixeira com o
+     filtro Lixeira"; confirmar com o design.
+   - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
+   - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
+     Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
+   - "Mover para a lixeira": o toast segue aberto ao trocar de tela (fila global em `hooks/use-lixeira-adiada.ts`); o DELETE vai quando o
+     toast fecha sem Desfazer ou no `pagehide`. Fechar a aba logo após mover pode perder o DELETE (fetch sem `keepalive`).
+   - Textos sem prancheta (escolhidos aqui, revisar): toasts "Lançamento fora do saldo. Ele continua na lista." / "Lançamento de volta ao
+     saldo" / "Arquivo exportado" / "Modelo CSV baixado" e erros "Não foi possível …"; vazio de filtro "Nada encontrado com esses filtros".
+   - `useBaixarModeloCsv` (em `hooks/use-exportacao.ts`) e `useConexao` (`hooks/use-conexao.ts`) podem duplicar hooks de Importar/outras
+     telas no merge: manter um só.
+
