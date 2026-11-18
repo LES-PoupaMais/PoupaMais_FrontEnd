@@ -94,7 +94,7 @@ function ErrorState({
           </Button>
         ) : (
           onTentarDeNovo && (
-            <Button variant="outline" size="xl" loading={tentando} onClick={onTentarDeNovo}>
+            <Button variant="contornado" loading={tentando} onClick={onTentarDeNovo}>
               {!tentando && <RefreshCw aria-hidden="true" />}
               {tentando ? 'Tentando…' : (rotuloAcao ?? padrao.rotuloAcao)}
             </Button>

@@ -14,11 +14,14 @@ describe('ErrorState', () => {
     expect(onTentarDeNovo).toHaveBeenCalledTimes(1)
   })
 
-  it('tentando de novo: botão desabilitado, ocupado e "Tentando…"', () => {
-    render(<ErrorState onTentarDeNovo={vi.fn()} tentando />)
+  it('tentando de novo: botão ocupado, "Tentando…" e sem novo envio (mantém o foco: aria-disabled, não disabled)', async () => {
+    const onTentarDeNovo = vi.fn()
+    render(<ErrorState onTentarDeNovo={onTentarDeNovo} tentando />)
     const botao = screen.getByRole('button', { name: 'Tentando…' })
-    expect(botao).toBeDisabled()
+    expect(botao).toHaveAttribute('aria-disabled', 'true')
     expect(botao).toHaveAttribute('aria-busy', 'true')
+    await userEvent.click(botao)
+    expect(onTentarDeNovo).not.toHaveBeenCalled()
   })
 
   it('404: título como h1, sem alerta e com Voltar ao início', () => {

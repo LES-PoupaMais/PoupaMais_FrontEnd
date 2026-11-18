@@ -486,7 +486,7 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - **Desbloqueado no merge do B2:** o átomo `alert-dialog` e o `button` (`perigo`, `padrao` 48px) já existem; falta aplicar abaixo.
    - `confirm-dialog` usa o primitivo `AlertDialog` do Radix direto (o átomo `alert-dialog` ainda não existia); trocar
      pelos componentes dele mantendo a API. O botão destrutivo usa `className` de perigo (`bg-destructive`) e `h-12` até o `button`
-     ganhar as variantes e a altura de 48px do DS; `error-state` usa `size="xl"` (44px) pelo mesmo motivo.
+     ganhar as variantes e a altura de 48px do DS (o `error-state` já usa `contornado` 48px).
    - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
