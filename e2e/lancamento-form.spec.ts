@@ -120,6 +120,19 @@ test('descartar alterações: pelo ‹ e pelo Voltar do navegador', async ({ pag
   await expect(page).toHaveURL(/\/dashboard$/)
 })
 
+test('"Sair" da sidebar com alterações pergunta antes (Cancelar fica no formulário)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/lancamentos/novo')
+  await page.getByLabel('Descrição').fill('Padaria')
+
+  await page.getByRole('button', { name: 'Sair', exact: true }).click()
+  const dialogo = page.getByRole('alertdialog', { name: 'Descartar alterações?' })
+  await expect(dialogo).toBeVisible()
+  await dialogo.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(page).toHaveURL(/\/lancamentos\/novo$/)
+  await expect(page.getByLabel('Descrição')).toHaveValue('Padaria')
+})
+
 test('lançamento na lixeira: aviso no lugar do formulário e Restaurar', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/lancamentos/9/editar')

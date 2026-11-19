@@ -48,7 +48,8 @@ describe('Sidebar', () => {
 
     const conta = within(nav).getByRole('list', { name: 'Conta' })
     expect(within(conta).getByRole('link', { name: 'Perfil' })).toBeInTheDocument()
-    expect(within(conta).getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+    // Telas com alterações não salvas perguntam antes de sair (data-confirmar-saida)
+    expect(within(conta).getByRole('button', { name: 'Sair' })).toHaveAttribute('data-confirmar-saida')
   })
 
   it('tem o logo para o Dashboard e o "Novo lançamento" para o formulário', () => {

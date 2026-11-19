@@ -322,6 +322,50 @@ describe('Novo lançamento', () => {
     expect(rota.push).toHaveBeenCalledWith('/lancamentos')
   })
 
+  it('"Sair" (botão com data-confirmar-saida) com alterações: mesmo diálogo; só sai ao descartar', async () => {
+    const sair = vi.fn()
+    const { usuario } = renderComProviders(
+      <TooltipProvider>
+        <button type="button" data-confirmar-saida="" onClick={sair}>
+          Sair
+        </button>
+        <LancamentoFormProvider modo="novo">
+          <LancamentoFormView />
+        </LancamentoFormProvider>
+        <Toaster />
+      </TooltipProvider>,
+    )
+    await usuario.type(await screen.findByLabelText(/^Descrição/), 'Padaria')
+
+    await usuario.click(screen.getByRole('button', { name: 'Sair' }))
+    let dialogo = await screen.findByRole('alertdialog', { name: 'Descartar alterações?' })
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
+    expect(sair).not.toHaveBeenCalled()
+
+    await usuario.click(screen.getByRole('button', { name: 'Sair' }))
+    dialogo = await screen.findByRole('alertdialog', { name: 'Descartar alterações?' })
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Descartar' }))
+    await waitFor(() => expect(sair).toHaveBeenCalledTimes(1))
+  })
+
+  it('"Sair" sem alterações sai direto', async () => {
+    const sair = vi.fn()
+    const { usuario } = renderComProviders(
+      <TooltipProvider>
+        <button type="button" data-confirmar-saida="" onClick={sair}>
+          Sair
+        </button>
+        <LancamentoFormProvider modo="novo">
+          <LancamentoFormView />
+        </LancamentoFormProvider>
+      </TooltipProvider>,
+    )
+    await screen.findByLabelText(/^Descrição/)
+    await usuario.click(screen.getByRole('button', { name: 'Sair' }))
+    expect(sair).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+  })
+
   it('Voltar do navegador com alterações: pergunta; Cancelar fica, Descartar volta', async () => {
     const pushState = vi.spyOn(window.history, 'pushState')
     const back = vi.spyOn(window.history, 'back').mockImplementation(() => {})

@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react'
 
 // "Descartar alterações?" ao sair do formulário com alterações não salvas (DS: Navegação e layout, Formulários):
 // - links da página inteira (‹ da TopBar, sidebar, Cancelar…): o clique é interceptado na captura, antes do next/link;
+// - botões que saem da página marcados com `data-confirmar-saida` (o "Sair" da sidebar): mesmo diálogo; ao descartar,
+//   o clique é repetido já liberado;
 // - Voltar do navegador: com alterações, uma entrada extra no histórico (mesma URL) segura o primeiro "voltar";
 // - recarregar ou fechar a aba: o aviso nativo do navegador (beforeunload).
 // `perguntar` abre o diálogo; `descartar` segue o caminho que a pessoa escolheu; `cancelar` fica na página.
@@ -66,6 +68,18 @@ export function useAvisoAoSair(sujo: boolean, perguntar: (pedido: PedidoDeSaida)
     const aoClicar = (evento: MouseEvent) => {
       if (!sujoRef.current || liberadoRef.current || evento.defaultPrevented) return
       if (evento.button !== 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) return
+      const saida = (evento.target as Element | null)?.closest?.('[data-confirmar-saida]')
+      if (saida instanceof HTMLElement) {
+        evento.preventDefault()
+        evento.stopPropagation()
+        perguntarRef.current({
+          descartar: () => {
+            liberadoRef.current = true
+            saida.click()
+          },
+        })
+        return
+      }
       const link = (evento.target as Element | null)?.closest?.('a[href]')
       if (!(link instanceof HTMLAnchorElement)) return
       if ((link.target && link.target !== '_self') || link.hasAttribute('download')) return
