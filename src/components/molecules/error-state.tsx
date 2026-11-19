@@ -24,6 +24,8 @@ type ErrorStateProps = Omit<React.ComponentProps<'section'>, 'children'> & {
   rotuloAcao?: string
   /** Sem a superfície de card (quando já está dentro de um card) */
   semCartao?: boolean
+  /** Opcional: segunda saída em botão de texto (404: "Ver lançamentos"; erro geral: "Voltar ao início") */
+  acaoSecundaria?: { rotulo: string; href: string }
 }
 
 const PADRAO = {
@@ -48,6 +50,7 @@ function ErrorState({
   href = '/',
   rotuloAcao,
   semCartao = false,
+  acaoSecundaria,
   className,
   ...props
 }: ErrorStateProps) {
@@ -99,6 +102,11 @@ function ErrorState({
               {tentando ? 'Tentando…' : (rotuloAcao ?? padrao.rotuloAcao)}
             </Button>
           )
+        )}
+        {acaoSecundaria && (
+          <Button asChild variant="texto">
+            <Link href={acaoSecundaria.href}>{acaoSecundaria.rotulo}</Link>
+          </Button>
         )}
       </div>
     </section>
