@@ -30,7 +30,7 @@ describe('AppProviders', () => {
     tratarNaoAutenticado(new Error('outro'))
 
     expect(assign).toHaveBeenCalledOnce()
-    expect(assign).toHaveBeenCalledWith('/login?voltar=%2Flancamentos%3Fmes%3D11')
+    expect(assign).toHaveBeenCalledWith('/login?voltar=%2Flancamentos%3Fmes%3D11&sessao=vencida')
   })
 
   it('o QueryClient trata o 401 das queries e das mutations', () => {

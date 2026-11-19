@@ -12,9 +12,9 @@ export default function LoginPage({ searchParams }: PageProps<'/login'>) {
 }
 
 async function Login({ searchParams }: Pick<PageProps<'/login'>, 'searchParams'>) {
-  const { voltar } = await searchParams // /login?voltar=/lancamentos/novo (sessão vencida)
+  const { voltar, sessao } = await searchParams // /login?voltar=/lancamentos/novo&sessao=vencida
   return (
-    <LoginProvider voltar={voltar}>
+    <LoginProvider voltar={voltar} sessao={sessao}>
       <LoginView />
     </LoginProvider>
   )

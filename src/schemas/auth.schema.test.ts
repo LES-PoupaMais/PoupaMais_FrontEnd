@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cadastroSchema, loginSchema } from './auth.schema'
+import { cadastroSchema, loginSchema, recuperarSenhaSchema, redefinirSenhaSchema } from './auth.schema'
 
 const cadastro = {
   nome: 'Usuário Demo',
@@ -18,7 +18,9 @@ describe('auth.schema (RN011)', () => {
   it('login exige e-mail válido e senha', () => {
     expect(loginSchema.safeParse({ email: ' demo@poupamais.com.br ', senha: 'x' }).success).toBe(true)
     expect(mensagem(loginSchema.safeParse({ email: '', senha: '' }), 'email')).toBe('Informe o e-mail.')
-    expect(mensagem(loginSchema.safeParse({ email: 'demo', senha: 'x' }), 'email')).toBe('Informe um e-mail válido.')
+    expect(mensagem(loginSchema.safeParse({ email: 'demo', senha: 'x' }), 'email')).toBe(
+      'Informe um e-mail válido, como voce@email.com.',
+    )
     expect(mensagem(loginSchema.safeParse({ email: 'demo@poupamais.com.br', senha: '' }), 'senha')).toBe(
       'Informe a senha.',
     )
@@ -45,5 +47,23 @@ describe('auth.schema (RN011)', () => {
       /Política de Privacidade/,
     )
     expect(mensagem(cadastroSchema.safeParse({ ...cadastro, nome: ' ' }), 'nome')).toBe('Informe seu nome.')
+  })
+
+  it('esqueci a senha exige só um e-mail válido (RN014)', () => {
+    expect(recuperarSenhaSchema.safeParse({ email: 'demo@poupamais.com.br' }).success).toBe(true)
+    expect(mensagem(recuperarSenhaSchema.safeParse({ email: '' }), 'email')).toBe('Informe o e-mail.')
+  })
+
+  it('redefinir exige a nova senha de 6 a 72 e a confirmação igual', () => {
+    expect(redefinirSenhaSchema.safeParse({ novaSenha: '123456', confirmarSenha: '123456' }).success).toBe(true)
+    expect(mensagem(redefinirSenhaSchema.safeParse({ novaSenha: '123', confirmarSenha: '123' }), 'novaSenha')).toBe(
+      'A senha deve ter pelo menos 6 caracteres.',
+    )
+    expect(
+      mensagem(redefinirSenhaSchema.safeParse({ novaSenha: '123456', confirmarSenha: '1234567' }), 'confirmarSenha'),
+    ).toBe('As senhas não são iguais.')
+    expect(
+      mensagem(redefinirSenhaSchema.safeParse({ novaSenha: '123456', confirmarSenha: '' }), 'confirmarSenha'),
+    ).toBe('Confirme a senha.')
   })
 })

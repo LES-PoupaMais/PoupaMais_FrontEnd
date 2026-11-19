@@ -1,33 +1,39 @@
 'use client'
 
 import Link from 'next/link'
+import { OfflineBanner } from '@/components/molecules/offline-banner'
+import { CadastroForm } from '@/components/organisms/cadastro-form'
+import { CadastroLateral } from '@/components/organisms/cadastro-lateral'
 import { AuthTemplate } from '@/components/templates/auth-template'
 import { ROTAS } from '@/constants/rotas'
 import { useCadastroContext } from './CadastroContext'
 
-// PLACEHOLDER (B1): o formulário (organismo cadastro-form) entra no B4.
+// Pranchetas cadastro-celular, cadastro-computador (texto de apoio à esquerda) e cadastro-validacao-celular.
 export function CadastroView() {
-  const { linkPrivacidade } = useCadastroContext()
+  const { linkPrivacidade, enviando, erro, errosDaApi, online, cadastrar } = useCadastroContext()
   return (
     <AuthTemplate
       titulo="Criar conta"
-      subtitulo="Comece a controlar suas finanças hoje."
+      subtitulo="Comece a organizar as suas finanças pelo mês atual."
+      aviso={!online && <OfflineBanner variante="canto" />}
+      lateral={<CadastroLateral />}
       rodape={
         <>
           Já tem conta?{' '}
-          <Link href={ROTAS.login} className="text-primary font-bold">
+          <Link href={ROTAS.login} className="text-corpo-forte text-primary">
             Entrar
           </Link>
         </>
       }
     >
-      <p className="text-legenda text-muted-foreground text-center">
-        O formulário de cadastro entra na próxima etapa. Leia a{' '}
-        <Link href={linkPrivacidade} className="text-primary font-bold">
-          Política de Privacidade
-        </Link>
-        .
-      </p>
+      <CadastroForm
+        onSubmit={cadastrar}
+        enviando={enviando}
+        erro={erro}
+        errosDaApi={errosDaApi}
+        semConexao={!online}
+        hrefPrivacidade={linkPrivacidade}
+      />
     </AuthTemplate>
   )
 }

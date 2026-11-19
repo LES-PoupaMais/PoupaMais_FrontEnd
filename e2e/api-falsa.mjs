@@ -16,6 +16,29 @@ createServer((req, res) => {
   req.on('data', (parte) => (texto += parte))
   req.on('end', () => {
     if (req.url === '/saude') return responder(res, 200, { ok: true })
+    // Rotas públicas de autenticação (telas de acesso). "senha-errada" no login → 401; "usado@poupamais.com.br" no
+    // cadastro → 409; token "token-expirado" ao redefinir → 422; recuperar a senha → 202 sempre (RN014).
+    if (req.method === 'POST' && req.url?.startsWith('/api/auth/')) {
+      const dados = texto ? JSON.parse(texto) : {}
+      if (req.url === '/api/auth/login') {
+        if (dados.senha === SENHA_ERRADA) return responder(res, 401, { status: 401, mensagem: 'Credenciais inválidas' })
+        return responder(res, 200, {
+          token: 'token-login-e2e',
+          expiraEm: new Date(Date.now() + 86_400_000).toISOString(),
+          usuario: { id: 1, nome: 'Usuário Demo', email: dados.email },
+        })
+      }
+      if (req.url === '/api/auth/cadastro') {
+        if (dados.email === 'usado@poupamais.com.br')
+          return responder(res, 409, { status: 409, mensagem: 'E-mail já cadastrado' })
+        return responder(res, 201, { id: 2, nome: dados.nome, email: dados.email })
+      }
+      if (req.url === '/api/auth/recuperar-senha') return responder(res, 202)
+      if (req.url === '/api/auth/redefinir-senha') {
+        if (dados.token === 'token-expirado') return responder(res, 422, { status: 422, mensagem: 'Token inválido' })
+        return responder(res, 204)
+      }
+    }
     if (!req.headers.authorization) return responder(res, 401, { status: 401, mensagem: 'Sessão expirada' })
     const corpo = texto ? JSON.parse(texto) : {}
 

@@ -13,7 +13,7 @@ export function tratarNaoAutenticado(erro: unknown) {
     const voltar = encodeURIComponent(window.location.pathname + window.location.search)
     // Navegação completa de propósito: descarta o cache e o estado da sessão vencida (fora do React, sem useRouter)
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign(`/login?voltar=${voltar}`)
+    window.location.assign(`/login?voltar=${voltar}&sessao=vencida`) // tela Sessão vencida
   }
 }
 
