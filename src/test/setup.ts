@@ -15,3 +15,13 @@ afterEach(() => {
   cleanup()
 })
 afterAll(() => server.close())
+
+// O jsdom não tem ResizeObserver; o ResponsiveContainer do Recharts (átomo chart) usa. Os gráficos renderizam com a
+// medida inicial do ChartContainer (320×200).
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}
