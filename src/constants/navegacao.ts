@@ -1,4 +1,4 @@
-import { House, LayoutDashboard, List, Tags, Trash2, User, type LucideIcon } from 'lucide-react'
+import { FileUp, House, LayoutDashboard, List, Plus, Tag, Tags, Trash2, User, type LucideIcon } from 'lucide-react'
 import { ROTAS } from './rotas'
 
 // Destinos da navegação (DS: Navegação e layout, "Destinos atuais"). A Sidebar e a BottomNav recebem isto por props.
@@ -27,14 +27,63 @@ export const ITENS_BOTTOM_NAV: ItemNavegacao[] = [
   { nome: 'Perfil', href: ROTAS.perfil, icone: User },
 ]
 
-/** Título curto da TopBar (celular), por rota */
-export const TITULOS_TOPBAR: Record<string, string> = {
-  [ROTAS.dashboard]: 'Início',
-  [ROTAS.lancamentos]: 'Lançamentos',
-  [ROTAS.lixeira]: 'Lixeira',
-  [ROTAS.categorias]: 'Categorias',
-  [ROTAS.perfil]: 'Perfil',
+/** Itens da folha "Criar" (CreateSheet), aberta pelo + da BottomNav. Aceita de 3 a 8 itens (DS). */
+export type ItemCriar = { titulo: string; subtitulo: string; icone: LucideIcon; href: string }
+
+export const ITENS_CRIAR: ItemCriar[] = [
+  {
+    titulo: 'Novo lançamento',
+    subtitulo: 'Registre uma receita ou despesa do mês.',
+    icone: Plus,
+    href: ROTAS.novoLancamento,
+  },
+  { titulo: 'Importar CSV', subtitulo: 'Envie vários lançamentos de uma vez.', icone: FileUp, href: ROTAS.importar },
+  // O DS abre o diálogo de categoria aqui; até o organismo categoria-dialog existir (B4), leva à tela Categorias.
+  {
+    titulo: 'Nova categoria',
+    subtitulo: 'Organize seus lançamentos por assunto.',
+    icone: Tag,
+    href: ROTAS.categorias,
+  },
+]
+
+/** O que a TopBar (celular) mostra em cada rota (DS: TopBar) */
+export type TopoDaRota = {
+  /** Título curto, uma palavra quando possível */
+  titulo: string
+  /** MonthNavigator compacto: só em Início e Lançamentos */
+  mostrarMes: boolean
+  /** Telas internas: "‹" com o destino, sem mês e sem avatar */
+  voltar?: { href: string; destino: string }
 }
+
+const VOLTAR_LANCAMENTOS = { href: ROTAS.lancamentos, destino: 'Lançamentos' }
+
+// Da mais específica para a mais geral: a primeira que casa decide
+const TOPOS: [RegExp, TopoDaRota][] = [
+  [/^\/dashboard$/, { titulo: 'Início', mostrarMes: true }],
+  [/^\/lancamentos$/, { titulo: 'Lançamentos', mostrarMes: true }],
+  [/^\/lancamentos\/lixeira$/, { titulo: 'Lixeira', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
+  [/^\/lancamentos\/novo$/, { titulo: 'Novo lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
+  [/^\/lancamentos\/importar$/, { titulo: 'Importar CSV', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
+  [/^\/lancamentos\/\d+\/editar$/, { titulo: 'Editar lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
+  [/^\/lancamentos\/\d+$/, { titulo: 'Lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
+  [/^\/categorias$/, { titulo: 'Categorias', mostrarMes: false }],
+  [/^\/perfil$/, { titulo: 'Perfil', mostrarMes: false }],
+]
+
+/** Título, mês e Voltar da TopBar para um caminho. Rota desconhecida: só o nome do app. */
+export function topoDaRota(caminho: string): TopoDaRota {
+  return TOPOS.find(([padrao]) => padrao.test(caminho))?.[1] ?? { titulo: 'PoupaMais', mostrarMes: false }
+}
+
+/** Telas de formulário escondem a BottomNav (o rodapé fixo com "Salvar" ocupa o lugar) */
+export function escondeBottomNav(caminho: string): boolean {
+  return /^\/lancamentos\/(novo|\d+\/editar)$/.test(caminho)
+}
+
+/** Destinos que usam o mês da URL: ao trocar de aba, o link leva o mesmo `?mes=&ano=` (DS: BottomNav) */
+export const ROTAS_COM_MES: readonly string[] = [ROTAS.dashboard, ROTAS.lancamentos]
 
 /**
  * Item ativo para uma rota: o mais específico que casa com o caminho.

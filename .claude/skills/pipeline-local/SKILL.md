@@ -19,6 +19,8 @@ npm run test:e2e            # 6. Playwright, Chromium e Firefox (ver abaixo)
 
 - E2E nesta máquina (WSL sem sudo): antes, `export LD_LIBRARY_PATH=$HOME/.local/playwright-libs/root/usr/lib/x86_64-linux-gnu`
   (navegadores já em `~/.cache/ms-playwright`; não use `--with-deps`). Em outra máquina: `npx playwright install --with-deps chromium firefox`.
+- Várias worktrees rodando E2E ao mesmo tempo: dê uma porta para cada (`PORT=3101 npm run test:e2e`). Sem isso, o
+  `reuseExistingServer` do Playwright reaproveita o servidor de outra worktree que estiver na 3000 e testa o build errado.
 - Lint `boundaries/dependencies` ("Arquitetura: X não pode importar Y"): veja a tabela de regras na seção "Arquitetura" do `CLAUDE.md`.
   Organismo pedindo hook/service/action → o dado vem por props do Context da tela (skills `componente-atomic` e `tela-next`).
 - Cobertura abaixo do piso: veja `coverage/index.html` e escreva os testes que faltam.

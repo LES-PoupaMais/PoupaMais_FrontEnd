@@ -29,7 +29,7 @@ describe('Dashboard (placeholder)', () => {
     renderizar()
 
     expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: 'Mês exibido' })).toHaveTextContent('Novembro 2026')
+    expect(screen.getByRole('navigation', { name: 'Mês exibido' })).toHaveTextContent('Novembro 2026')
   })
 
   it('troca de mês escrevendo na URL, sem perder os outros parâmetros', async () => {

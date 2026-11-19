@@ -1,5 +1,7 @@
 import { act, screen, within } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { server } from '@/test/msw/server'
 import { simularLargura } from '@/test/media'
 import { renderComProviders } from '@/test/utils'
 import { AppShell } from './AppShell'
@@ -7,12 +9,28 @@ import { AppShellSkeleton } from './AppShellSkeleton'
 import { AppShellProvider, useAppShellContext } from './AppShellContext'
 import { AppShellView } from './AppShellView'
 
-const navegacao = vi.hoisted(() => ({ caminho: '/dashboard' }))
-vi.mock('next/navigation', () => ({ usePathname: () => navegacao.caminho }))
+const navegacao = vi.hoisted(() => ({ caminho: '/dashboard', busca: '', replace: vi.fn() }))
+vi.mock('next/navigation', () => ({
+  usePathname: () => navegacao.caminho,
+  useRouter: () => ({ replace: navegacao.replace }),
+  useSearchParams: () => new URLSearchParams(navegacao.busca),
+}))
+const acoes = vi.hoisted(() => ({ logoutAction: vi.fn(async () => {}) }))
+vi.mock('@/actions/auth.actions', () => acoes)
 const cookiesFalsos = vi.hoisted(() => ({ sidebar: undefined as string | undefined }))
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => (cookiesFalsos.sidebar ? { value: cookiesFalsos.sidebar } : undefined) }),
 }))
+
+// O tooltip do Radix (trilho da sidebar) mede o gatilho com ResizeObserver, que o jsdom não tem
+vi.stubGlobal(
+  'ResizeObserver',
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+)
 
 function renderizar(sidebarRecolhida = false) {
   return renderComProviders(
@@ -26,10 +44,17 @@ function renderizar(sidebarRecolhida = false) {
 
 const casca = (container: HTMLElement) => container.querySelector('[data-slot="app-shell"]') as HTMLElement
 const sidebar = () => within(document.getElementById('sidebar') as HTMLElement)
+const barra = (container: HTMLElement) =>
+  within(container.querySelector('[data-slot="app-shell-bottom-nav"]') as HTMLElement)
+const topo = (container: HTMLElement) =>
+  within(container.querySelector('[data-slot="app-shell-header"]') as HTMLElement)
 
 describe('AppShell (Context + View)', () => {
   beforeEach(() => {
     navegacao.caminho = '/dashboard'
+    navegacao.busca = ''
+    navegacao.replace.mockClear()
+    acoes.logoutAction.mockClear()
     document.cookie = 'sidebar=; path=/; max-age=0'
   })
 
@@ -79,14 +104,97 @@ describe('AppShell (Context + View)', () => {
   it('nas subtelas de Lançamentos a barra inferior marca Lançamentos; no formulário ela some', () => {
     navegacao.caminho = '/lancamentos/lixeira'
     const { container, unmount } = renderizar()
-    const barra = within(container.querySelector('[data-slot="app-shell-bottom-nav"]') as HTMLElement)
-    expect(barra.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('aria-current', 'page')
+    expect(barra(container).getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('heading', { level: 1, name: 'Lixeira' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Voltar para Lançamentos' })).toHaveAttribute('href', '/lancamentos')
+    expect(screen.queryByRole('navigation', { name: 'Mês exibido' })).toBeNull()
     unmount()
 
     navegacao.caminho = '/lancamentos/novo'
     const formulario = renderizar()
     expect(formulario.container.querySelector('[data-slot="app-shell-bottom-nav"]')).toBeNull()
+  })
+
+  it('no celular, a TopBar mostra o mês da URL e troca o mês na URL', async () => {
+    navegacao.busca = 'mes=1&ano=2026&tipo=DESPESA'
+    const { container, usuario } = renderizar()
+
+    const mes = topo(container).getByRole('navigation', { name: 'Mês exibido' })
+    expect(mes).toHaveTextContent('Jan 2026')
+    await usuario.click(within(mes).getByRole('button', { name: 'Mês anterior' }))
+
+    expect(navegacao.replace).toHaveBeenCalledWith('/dashboard?mes=12&ano=2025&tipo=DESPESA', { scroll: false })
+  })
+
+  it('com o mês na URL, Dashboard e Lançamentos levam o mesmo mês; os outros destinos não', () => {
+    navegacao.caminho = '/lancamentos'
+    navegacao.busca = 'mes=3&ano=2026'
+    const { container } = renderizar()
+
+    const inferior = barra(container)
+    expect(inferior.getByRole('link', { name: 'Início' })).toHaveAttribute('href', '/dashboard?mes=3&ano=2026')
+    const lancamentos = inferior.getByRole('link', { name: 'Lançamentos' })
+    expect(lancamentos).toHaveAttribute('href', '/lancamentos?mes=3&ano=2026')
+    expect(lancamentos).toHaveAttribute('aria-current', 'page')
+    expect(inferior.getByRole('link', { name: 'Categorias' })).toHaveAttribute('href', '/categorias')
+    expect(sidebar().getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('o + da barra abre a folha Criar; Esc fecha', async () => {
+    const { container, usuario } = renderizar()
+
+    await usuario.click(barra(container).getByRole('button', { name: 'Criar' }))
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+    expect(barra(container).getByRole('button', { name: 'Fechar Criar', hidden: true })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+
+    await usuario.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(barra(container).getByRole('button', { name: 'Criar' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('Sair chama a logoutAction', async () => {
+    simularLargura(1280)
+    const { usuario } = renderizar()
+
+    await usuario.click(sidebar().getByRole('button', { name: 'Sair' }))
+
+    expect(acoes.logoutAction).toHaveBeenCalledOnce()
+  })
+
+  it('no tablet, com a sidebar aberta o Tab fica preso nela', async () => {
+    simularLargura(834)
+    const { usuario } = renderizar()
+
+    await usuario.click(sidebar().getByRole('button', { name: 'Expandir menu' }))
+    sidebar().getByRole('button', { name: 'Sair' }).focus()
+    await usuario.tab()
+
+    expect(sidebar().getByRole('link', { name: 'PoupaMais, ir para o Dashboard' })).toHaveFocus()
+  })
+
+  it('o avatar da TopBar usa a foto quando o usuário tem foto', async () => {
+    server.use(
+      http.get('*/api/usuarios/me', () =>
+        HttpResponse.json({ id: 1, nome: 'Ana', email: 'ana@x.com', possuiFoto: true, dataCadastro: '2026-08-01' }),
+      ),
+    )
+    let contexto: ReturnType<typeof useAppShellContext> | undefined
+    function Espiao() {
+      contexto = useAppShellContext()
+      return null
+    }
+    const { container } = renderComProviders(
+      <AppShellProvider sidebarRecolhida={false}>
+        <Espiao />
+        <AppShellView>tela</AppShellView>
+      </AppShellProvider>,
+    )
+
+    await vi.waitFor(() => expect(contexto?.fotoUrl).toMatch(/^\/api\/usuarios\/me\/foto\?v=\d+$/))
+    expect(topo(container).getByRole('link', { name: 'Seu perfil' })).toHaveAttribute('href', '/perfil')
   })
 
   it('carrega o usuário logado para a navegação', async () => {

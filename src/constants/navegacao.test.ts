@@ -28,3 +28,41 @@ describe('rotas', () => {
     expect(ROTAS.editarLancamento(3)).toBe('/lancamentos/3/editar')
   })
 })
+
+describe('topo do celular e barra inferior', async () => {
+  const { escondeBottomNav, topoDaRota } = await import('./navegacao')
+
+  it('Início e Lançamentos mostram o mês; Categorias e Perfil não', () => {
+    expect(topoDaRota('/dashboard')).toEqual({ titulo: 'Início', mostrarMes: true })
+    expect(topoDaRota('/lancamentos')).toEqual({ titulo: 'Lançamentos', mostrarMes: true })
+    expect(topoDaRota('/categorias').mostrarMes).toBe(false)
+    expect(topoDaRota('/perfil').titulo).toBe('Perfil')
+  })
+
+  it('subtelas de Lançamentos voltam para Lançamentos, sem mês', () => {
+    for (const [caminho, titulo] of [
+      ['/lancamentos/lixeira', 'Lixeira'],
+      ['/lancamentos/novo', 'Novo lançamento'],
+      ['/lancamentos/importar', 'Importar CSV'],
+      ['/lancamentos/7/editar', 'Editar lançamento'],
+      ['/lancamentos/7', 'Lançamento'],
+    ]) {
+      expect(topoDaRota(caminho)).toEqual({
+        titulo,
+        mostrarMes: false,
+        voltar: { href: '/lancamentos', destino: 'Lançamentos' },
+      })
+    }
+  })
+
+  it('rota desconhecida mostra só o nome do app', () => {
+    expect(topoDaRota('/outra')).toEqual({ titulo: 'PoupaMais', mostrarMes: false })
+  })
+
+  it('só os formulários escondem a barra inferior', () => {
+    expect(escondeBottomNav('/lancamentos/novo')).toBe(true)
+    expect(escondeBottomNav('/lancamentos/3/editar')).toBe(true)
+    expect(escondeBottomNav('/lancamentos/3')).toBe(false)
+    expect(escondeBottomNav('/lancamentos/lixeira')).toBe(false)
+  })
+})
