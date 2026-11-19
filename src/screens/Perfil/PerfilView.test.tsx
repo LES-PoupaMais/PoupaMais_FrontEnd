@@ -226,10 +226,17 @@ describe('Perfil', () => {
     acoes.excluirConta.mockResolvedValueOnce({ ok: false, motivo: 'senha-incorreta' })
     await usuario.click(within(dialogo).getByRole('button', { name: 'Excluir conta' }))
     expect(await within(dialogo).findByText('Senha incorreta.')).toBeInTheDocument()
+    // O botão fica em "enviando" (aria-busy) até a transição acabar: antes disso o clique é ignorado
+    const botaoLivre = () =>
+      waitFor(() =>
+        expect(within(dialogo).getByRole('button', { name: 'Excluir conta' })).not.toHaveAttribute('aria-busy'),
+      )
+    await botaoLivre()
 
     acoes.excluirConta.mockResolvedValueOnce({ ok: false, motivo: 'conexao' })
     await usuario.click(within(dialogo).getByRole('button', { name: 'Excluir conta' }))
     await waitFor(() => expect(avisos.error).toHaveBeenCalledWith(expect.stringMatching(/conectar/)))
+    await botaoLivre()
 
     acoes.excluirConta.mockResolvedValueOnce({ ok: true })
     const limpar = vi.spyOn(queryClient, 'clear')
