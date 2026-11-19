@@ -31,10 +31,13 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
 - **Telas prontas e integradas (B4, branch `feat/telas-integradas`):** as 9 linhas da seção "Telas" (acesso, Dashboard, Lançamentos com
   visualização e Lixeira, Novo/Editar, Importar e Exportar, Categorias, Perfil, Landing, Privacidade, 404 e erro), com Context + View +
   MSW e E2E do roteiro da demo. Na integração ficou **uma versão de cada peça comum**: `useOnline` (conexão), `mostrarToastDesfazer` +
-  `hooks/use-lixeira-adiada` (lixeira com Desfazer na lista, na visualização e no Editar), `categoria-dialog` (Categorias, folha Criar e
+  `hooks/use-lixeira` (lixeira com Desfazer na lista, na visualização e no Editar), `categoria-dialog` (Categorias, folha Criar e
   campo do formulário), `transaction-detail` (visualização e Editar de item na lixeira), `useBaixarModeloCsv` (Lançamentos, Importar e
   vazio do Dashboard), `lib/baixar-arquivo` (exportar, modelo e "Baixar meus dados"), `lib/erro-categoria` sobre `traduzirErro` e
   `lib/format.plural`.
+- **Revisão geral (19/11):** corrigida na própria branch (link de categoria do Dashboard, status no POST/PUT, `destinoSeguro`,
+  BFF com lista de rotas, lixeira com DELETE na hora + restaurar, regra única de mensagens de erro em `lib/http`, entre
+  outros). Depende do back `feat/status-no-lancamento` (contrato **v1.2.0**).
 - **Próximo passo:** revisar as Pendências abaixo com a equipe (as marcadas "decidir" esperam o líder/design).
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
@@ -303,12 +306,16 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 
 ### Conta no saldo e Lixeira (RN004 / RN006 / UC010)
 
-- **"Conta no saldo"** (switch; nunca "Ativo"): ATIVO ⇄ INATIVO (`PATCH /lancamentos/{id}/status`). Fora do saldo continua na lista,
+- **"Conta no saldo"** (switch; nunca "Ativo"): ATIVO ⇄ INATIVO (`PATCH /lancamentos/{id}/status`; no formulário, o `status` vai no
+  próprio `POST`/`PUT`, numa chamada só). Fora do saldo continua na lista,
   com o valor suave (`MoneyText suave`), e sai do dashboard.
-- **"Mover para a lixeira"**, sem modal: a linha some na hora e aparece o toast "Movido para a lixeira · **Desfazer**" (5 s, com contador).
-  O `DELETE /lancamentos/{id}` (`useMoverParaLixeira`) **só é enviado quando o toast fecha sem Desfazer** (ou ao sair da página).
-- **Lixeira** (`/lancamentos/lixeira`, `status=DELETADO`): sem switch e sem Editar; ação **Restaurar** (`useRestaurarLancamento`) e o toast
-  "Restaurado como inativo. Ative para voltar ao dashboard."
+- **"Mover para a lixeira"**, sem modal (decisão do líder, 19/11): o `DELETE /lancamentos/{id}` vai **na hora**, a linha some e
+  aparece o toast "Movido para a lixeira · **Desfazer**" (5 s, com contador e barra). O **Desfazer chama o restaurar**, que volta ao
+  status de antes (v1.2.0). Tudo em `hooks/use-lixeira` (`useMoverParaLixeiraComDesfazer`), usado na lista, na visualização e no
+  Editar; erro no DELETE ou no restaurar mostra o aviso e recarrega lista, dashboard e lixeira.
+- **Lixeira** (`/lancamentos/lixeira`, `status=DELETADO`): sem switch e sem Editar; ação **Restaurar** (`useRestaurarLancamento`, só pelo
+  `POST /restaurar`: o `PATCH /status` de item na lixeira dá `422`) e o toast pelo status devolvido (`constants/textos`):
+  "Restaurado como inativo. Ative para voltar ao dashboard." (INATIVO) ou "Lançamento restaurado" (ATIVO).
 - Lançamento na lixeira não pode ser editado: em `/lancamentos/[id]/editar` mostrar o aviso e Restaurar.
 - A exportação segue o filtro: só exporta itens da lixeira quando o filtro é a Lixeira.
 
@@ -377,10 +384,11 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
 - **RN002**: várias categorias por lançamento; criar pelo próprio campo; categorias inativas não podem ser selecionadas.
 - **RN003/RN004**: o dashboard só reflete lançamentos que contam no saldo (ATIVO); após mudar "Conta no saldo", invalidar o dashboard
   (as mutations de `hooks/use-mutacoes-lancamento.ts` já invalidam lista, dashboard e categorias). `taxaGasto` `null` → "Não disponível para o período".
-- **RN006**: ATIVO/INATIVO alternam livremente; DELETADO só pode ser restaurado (volta INATIVO).
+- **RN006**: ATIVO/INATIVO alternam livremente; DELETADO só sai pelo restaurar (v1.2.0: volta ao status anterior; itens antigos sem
+  esse dado voltam INATIVO).
 - **RN007**: após importar, resumo "X lançamentos importados, Y linhas ignoradas" + linha e motivo de cada falha + categorias criadas.
 - **RN008**: gráficos de 4 meses, top 5 despesas e `pesoMaioresDespesas` vêm prontos da API; o front só renderiza.
-- **RN010 / RNI003**: mostrar a `mensagem` da API (neutra). **Nunca** recomendar investimento.
+- **RN010 / RNI003**: mostrar a `mensagem` do dashboard (neutra). **Nunca** recomendar investimento.
 - **RF005 / RN013**: filtros por descrição, mês, ano, tipo, status e categoria; a exportação usa os filtros ativos.
 - **RN011**: `schemas/auth.schema.ts`: nome ≤ 150, e-mail válido ≤ 100, senha de 6 a 72 com confirmação, aceite da Política obrigatório.
 - **RN012**: antes de enviar o CSV, checar no front se tem até 2 MB (a API também recusa acima de 5.000 linhas).
@@ -388,7 +396,9 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
 - **RN015**: foto JPG/PNG/WEBP até 2 MB (validar antes de enviar). E-mail não editável. Trocar a senha devolve token novo (Server Action troca o cookie).
 - **RN016**: excluir conta → diálogo (digitar EXCLUIR + senha, oferecendo antes "Baixar meus dados") → Server Action → apagar o cookie → `/` com toast.
 - **RNF006**: botão que envia dados fica **desabilitado com spinner** até a resposta (`<Button loading={isPending}>`). Lançamentos iguais são válidos.
-- Mensagens claras, em português, sem termos técnicos (RNF007, RNF009, RNF010); nunca a mensagem crua da API.
+- Mensagens claras, em português, sem termos técnicos (RNF007, RNF009, RNF010). **Erros (decisão de 19/11):** o front não deduz a
+  causa pelo texto nem por status genérico. Mensagem da API → como veio; `erros[]` com campo → no campo; sem mensagem → a frase da
+  tela ou do status; sem conexão, 401 e 5xx → frases do front. Tudo em `lib/http.traduzirErro` (mude lá, não nas telas).
 
 ## Contrato da API (espelho do CLAUDE.md do backend)
 
@@ -417,9 +427,13 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
 - `GET /lancamentos?descricao=&mes=&ano=&tipo=&status=&categoriaId=&pagina=&tamanho=` (sem `status` = ATIVO + INATIVO; `status=DELETADO` = Lixeira)
   → `{itens: [<lançamento>], pagina, tamanho, total, totalPaginas}`. `pagina` desde 0 (padrão 0), `tamanho` 1–100 (padrão 12); fora disso → `400`.
   "Mostrar mais" com `useInfiniteQuery`; o contador "Mostrando 12 de 30" vem de `total`. A exportação ignora a paginação.
-- `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, data: "2026-11-05", valor, categoriaIds}`
+- `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, data: "2026-11-05", valor, categoriaIds, status?}`
   (`data` ISO; o front mostra dd/mm/aaaa). Dia que não existe (`2026-02-31`) ou formato errado → `400` no campo `data`; fora de 2000–2100 → `422`.
-- `PATCH /lancamentos/{id}/status {status: "ATIVO"|"INATIVO"}` (`422` se DELETADO) · `DELETE /lancamentos/{id}` → status DELETADO · `POST /lancamentos/{id}/restaurar` → volta INATIVO
+  **v1.2.0:** `status` opcional (`ATIVO`|`INATIVO`): no POST o padrão é ATIVO; no PUT, omitido, mantém; `DELETADO` → `400` no campo
+  `status`. PUT de item na lixeira → `422`. O POST nasce com `dataAtualizacao: null`.
+- `PATCH /lancamentos/{id}/status {status: "ATIVO"|"INATIVO"}` (`422` se DELETADO: não tira da lixeira) · `DELETE /lancamentos/{id}` →
+  status DELETADO, guardando o status anterior · `POST /lancamentos/{id}/restaurar` → volta ao status anterior (sem esse dado, INATIVO);
+  fora da lixeira → `422`
 - `POST /lancamentos/importar` multipart, campo `arquivo` → `{totalLinhas, importados, falhas: [{linha, conteudo, motivo}], categoriasCriadas}`
 - `GET /lancamentos/exportar?formato=csv|xlsx&<filtros>` → arquivo (baixar como blob, nome vindo do `Content-Disposition`)
 - `GET /lancamentos/template-csv` → arquivo
@@ -428,9 +442,10 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
   (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa)
 
 Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
-(`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC, ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
+(`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC (`dataAtualizacao` `null` até a primeira alteração), ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
 `dataExclusao` preenchida ao ir para a Lixeira e `null` ao restaurar).
-Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir `mensagem` em toast e `erros` nos campos (`setError` do RHF).
+Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir com `lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos
+campos (`setError` do RHF), como vieram.
 
 CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
 A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula de data.
@@ -515,14 +530,13 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    valor também diverge (schema/CLAUDE.md R$ 999.999.999,99; README do MoneyField R$ 99.999.999.999.999,99). Decidir com a equipe e alinhar.
    Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido. A prancheta `novo-erros-celular`
    ainda pede "A descrição é obrigatória." e "Informe pelo menos uma categoria."; o formulário usa as do schema até a decisão.
-3. **Tradução de erros (parcial):** `lib/http.traduzirErro(erro, { porStatus?, porCampo? })` aceita `ErroApi`, o resultado de uma
-   Server Action (`{ status, erros }`) ou qualquer valor e devolve `{ status, mensagem, campos }` com frases do DS
-   (`MENSAGENS_POR_STATUS`; campo sem mensagem própria → "Confira este campo."). Use `mensagem` no toast/aviso e `campos` no `setError`;
-   nunca `erro.message` do `ErroApi`. Já usam: telas de acesso e `lib/erro-categoria`. **Ainda mostram a mensagem da API:**
-   - `screens/Categorias/CategoriasContext.tsx` (`mensagemDe`) e `screens/AppShell/useNovaCategoria.ts` (toast de erro que não é do campo);
-   - `screens/Importar/ImportarContext.tsx` (arquivo recusado e sem conexão) e os `falhas[].motivo` do resultado (vêm da API por contrato);
-   - `screens/LancamentoForm`: os `erros[]` do `400` vão para os campos com a mensagem da própria API (os toasts já são do front);
-   - Perfil e as telas de Lançamentos/Lixeira usam textos próprios por caso ("Não foi possível …"), sem `traduzirErro`.
+3. **Mensagens de erro back↔front a definir (líder):** desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
+   (regra em `lib/http.traduzirErro`; sem conexão, 401 e 5xx com frases do front). O líder vai repensar as mensagens entre back e
+   front: mudar só em `lib/http` (e no back). Ficaram no front só os status que o contrato dá a um caso único e que mudam a tela:
+   401 no login (credenciais), 409 no cadastro e na categoria (campo E-mail/Nome; a mensagem da API vai no campo), 422 no
+   redefinir senha (link expirado) e no excluir categoria (em uso), 404 no `GET` por id (não encontrado). Sem `campo` no
+   `erros[]`, a senha atual errada (troca de senha) agora sai em toast, não no campo; com um `erros[]` por campo do back, volta
+   para o campo sozinha.
 4. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
    Context da tela. Atualizar nos dois repositórios juntos.
 5. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
@@ -561,13 +575,11 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
    - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
-   - "Mover para a lixeira" (lista, visualização e Editar): o toast segue aberto ao trocar de tela (fila global em
-     `hooks/use-lixeira-adiada.ts`); o DELETE vai quando o toast fecha sem Desfazer ou no `pagehide`. Fechar a aba logo após mover pode
-     perder o DELETE (fetch sem `keepalive`).
-   - Textos sem prancheta (escolhidos nas telas, revisar e registrar no DS): toasts "Lançamento fora do saldo. Ele continua na lista." /
-     "Lançamento de volta ao saldo" / "Arquivo exportado" / "Modelo CSV baixado" e erros "Não foi possível …"; vazio de filtro "Nada
-     encontrado com esses filtros". Os mesmos textos de toast (restaurar, Conta no saldo, lixeira) se repetem nos Contexts de
-     Lançamentos, Lixeira, visualização e formulário: juntar num só lugar se forem mudar.
+   - Textos sem prancheta: aprovados em 19/11 (seção "Textos fora do DS"); falta registrar no DS. Os toasts de Conta no saldo e
+     lixeira ainda se repetem nos Contexts de Lançamentos, Lixeira, visualização e formulário: juntar em `constants/textos` se mudarem.
+   - **Restaurar volta ao status anterior (v1.2.0), decidir:** a visualização de item na lixeira diz "Não · volta desligado ao
+     restaurar" (`transaction-detail`, prancheta), o que só vale para itens antigos. A resposta da API não traz o status anterior:
+     acrescentar `statusAnterior` no back ou trocar o texto (design).
 9. **Importar e Categorias:**
    - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
      o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.
@@ -581,9 +593,6 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      prancheta fala também da senha ("…igual a EXCLUIR e a senha estiver preenchida." / "Tudo certo: o botão está liberado."). O
      `ConfirmDialog` não aceita `aria-describedby` no botão de confirmar nem um aviso dentro da descrição: o aviso "Não dá para desfazer."
      fica fora do `aria-describedby` do diálogo. Se o DS quiser, acrescentar essas duas props à molécula.
-   - `actions/perfil.actions.ts` tem o próprio `fetch` (e lê o `API_URL` uma vez); `lib/api-servidor.chamarApiDoServidor` faz o mesmo, mas
-     não devolve a `mensagem`, que a troca de senha usa para separar os dois `422` ("senha atual errada" × "igual à atual"). Juntar quando
-     o back mandar um `erros[]`/código para cada caso, ou quando o `chamarApiDoServidor` puder devolver um motivo.
    - `useMontado` fica em `screens/Perfil/usePerfilAmbiente.ts` (só o Perfil usa).
    - Sem prancheta de tablet do Perfil: a 834px fica em 1 coluna (as 2 colunas só aparecem com 420px cada, como o `auto-fit` da
      prancheta do computador).
@@ -600,3 +609,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      `landing-dados`, `politica-privacidade`.
    - Landing: a prévia do Saldo do mês usa o `highlight-card`; a prévia de "Despesas por categoria" continua desenhada na própria
      `landing-passos` (o `category-bar-chart` tem links, total e a dica de toque, que a prancheta `landing-*` não tem).
+12. **Integração e contrato:**
+   - **Depende do back `feat/status-no-lancamento` (v1.2.0):** `status` no POST/PUT, restaurar ao status anterior e `PATCH /status`
+     com `422` na lixeira. Sem essa versão, o formulário perde o "Conta no saldo" desligado no POST e o Desfazer devolve INATIVO.
+   - **Rodar o roteiro da demo contra a API real** (ambiente integrado em planejamento): os E2E usam a API simulada (`e2e/fixtures/`,
+     `e2e/api-falsa.mjs`), alinhada às mensagens do back em 19/11.
