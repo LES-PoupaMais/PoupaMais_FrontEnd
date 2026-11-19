@@ -1,9 +1,9 @@
-import { ArrowRight, CalendarDays, Info, Percent, ShieldCheck, TrendingUp } from 'lucide-react'
+import { ArrowRight, Info, Percent, ShieldCheck, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/atoms/badge'
 import { buttonVariants } from '@/components/atoms/button'
-import { MoneyText } from '@/components/atoms/money-text'
 import { StatCard } from '@/components/molecules/stat-card'
+import { HighlightCard } from '@/components/organisms/highlight-card'
 import { formatarMoeda } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
@@ -52,20 +52,12 @@ export function LandingHero({ hrefCadastro, hrefLogin }: LandingHeroProps) {
 function LandingPrevia() {
   return (
     <figure aria-label="Prévia do Início com dados de exemplo" className="flex flex-col gap-3">
-      <article
-        aria-label="Saldo do mês de novembro de 2026"
-        className="rounded-grande border-destaque-borda bg-destaque-card text-sobre-destaque-card shadow-card flex flex-col gap-3 border p-5"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-rotulo-secao uppercase">Saldo do mês</p>
-          <span className="text-legenda flex items-center gap-1">
-            <CalendarDays className="size-4" strokeWidth={1.75} aria-hidden="true" />
-            Novembro 2026
-          </span>
-        </div>
-        <MoneyText valor={4920} tipo="RECEITA" tamanho="destaque" ajustar className="text-destaque-positivo" />
-        <p className="text-corpo">Você fechou o mês com {formatarMoeda(4920)} positivos.</p>
-      </article>
+      <HighlightCard
+        saldo={4920}
+        mes={11}
+        ano={2026}
+        mensagem={`Você fechou o mês com ${formatarMoeda(4920)} positivos.`}
+      />
       <div role="list" aria-label="Resumo de novembro de 2026" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatCard funcao="receita" rotulo="Receitas" valor={formatarMoeda(12480.5)} />
         <StatCard funcao="despesa" rotulo="Despesas" valor={formatarMoeda(7560.5)} />
