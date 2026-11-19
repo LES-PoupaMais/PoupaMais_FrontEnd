@@ -73,6 +73,10 @@ describe('traduzirErro (lib/http)', () => {
     expect(traduzirErro({ status: 422, mensagem: 'Da API' }, opcoes).mensagem).toBe('Da API')
   })
 
+  it('só tem frase para os status que o back manda', () => {
+    expect(Object.keys(MENSAGENS_POR_STATUS).map(Number)).toEqual([0, 400, 401, 404, 409, 422, 503])
+  })
+
   it('qualquer outro valor cai na genérica; ehSessaoVencida', () => {
     expect(traduzirErro(new Error('boom'))).toEqual({ status: -1, mensagem: MENSAGEM_ERRO_PADRAO, campos: {} })
     expect(traduzirErro(null).mensagem).toBe(MENSAGEM_ERRO_PADRAO)

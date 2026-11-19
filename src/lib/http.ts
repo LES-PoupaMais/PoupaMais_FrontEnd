@@ -129,17 +129,17 @@ export const http = {
 // - sem conexão (0), sessão vencida (401) e erro do servidor (5xx) → sempre as frases do front.
 // As mensagens entre back e front ainda vão ser repensadas (Pendências do CLAUDE.md): mude aqui, não nas telas.
 
-/** Mensagem padrão de cada status (pode ser trocada por tela em `opcoes.porStatus`). Frases do DS. */
+/**
+ * Frase de cada status quando a API não mandou mensagem. A do 401 é do Design System; as demais foram aprovadas pelo
+ * líder em 19/11/2026. Só os status que o back manda (403, 413 e 429 não existem nele).
+ */
 export const MENSAGENS_POR_STATUS: Readonly<Record<number, string>> = {
   0: MENSAGEM_SEM_CONEXAO,
   400: 'Confira os campos destacados e tente de novo.',
   401: 'Sua sessão venceu. Entre de novo para continuar.',
-  403: 'Você não tem acesso a este conteúdo.',
   404: 'Não encontramos o que você procurou. Pode ter sido removido.',
   409: 'Isso já está cadastrado.',
-  413: 'O arquivo é grande demais.',
   422: 'Não foi possível concluir. Confira os dados e tente de novo.',
-  429: 'Muitas tentativas seguidas. Espere um pouco e tente de novo.',
   503: 'O servidor está indisponível no momento. Tente de novo em instantes.',
 }
 
