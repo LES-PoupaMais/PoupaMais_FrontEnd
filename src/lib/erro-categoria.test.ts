@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { categoriaEmUso, erroDoNomeDaCategoria, MENSAGEM_CATEGORIA_DUPLICADA } from './erro-categoria'
-import { ErroApi } from './http'
+import { ErroApi, MENSAGEM_CAMPO_PADRAO } from './http'
 
 describe('erros de categoria', () => {
-  it('409 vira a mensagem de duplicada; 400 usa o primeiro erros[]; o resto vai para o toast', () => {
+  it('409 vira a mensagem de duplicada; 400 usa o primeiro erros[] traduzido; o resto vai para o toast', () => {
     expect(erroDoNomeDaCategoria(new ErroApi(409, 'x'))).toBe(MENSAGEM_CATEGORIA_DUPLICADA)
+    // nunca a mensagem crua da API (traduzirErro)
     expect(erroDoNomeDaCategoria(new ErroApi(400, 'x', [{ campo: 'descricao', mensagem: 'Muito longo.' }]))).toBe(
-      'Muito longo.',
+      MENSAGEM_CAMPO_PADRAO,
     )
     expect(erroDoNomeDaCategoria(new ErroApi(400, 'x'))).toBeNull()
     expect(erroDoNomeDaCategoria(new ErroApi(500, 'x'))).toBeNull()
