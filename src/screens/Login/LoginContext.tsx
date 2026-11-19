@@ -61,8 +61,9 @@ export function LoginProvider({
         router.replace(voltarPara)
         return
       }
-      const credencial = resultado.status === 401 || resultado.status === 400
-      setErro(credencial ? ERRO_CREDENCIAIS : traduzirErro(resultado).mensagem)
+      // Pelo contrato, 401 no login = credenciais inválidas (frase do DS, que nunca diz qual dos dois errou).
+      // O resto segue a regra de lib/http (mensagem da API como veio).
+      setErro(resultado.status === 401 ? ERRO_CREDENCIAIS : traduzirErro(resultado).mensagem)
     })
 
   return (

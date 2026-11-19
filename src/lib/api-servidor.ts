@@ -3,11 +3,11 @@ import type { ErroCampo } from './http'
 
 // Chamada à API Spring feita PELO SERVIDOR do Next (Server Actions: login, cadastro, troca de senha, excluir conta).
 // O navegador nunca vê a URL da API nem o token. As telas usam o `lib/http` (BFF); isto é só para `actions/`.
-// Devolve um resultado simples e serializável (a action repassa `status` e `erros` para a tela traduzir com
-// `traduzirErro`), sem a `mensagem` crua da API.
+// Devolve um resultado simples e serializável: em erro, `status`, a `mensagem` da API (ou `null`) e os `erros[]`, que a
+// action repassa para a tela mostrar com `traduzirErro` (lib/http, a regra de mensagens de 19/11).
 
 export type RespostaDoServidor<T> =
-  { ok: true; status: number; dados: T } | { ok: false; status: number; erros: ErroCampo[] }
+  { ok: true; status: number; dados: T } | { ok: false; status: number; mensagem: string | null; erros: ErroCampo[] }
 
 /** URL da API lida a cada chamada (o E2E troca por uma API falsa com a variável de ambiente). */
 function urlDaApi(): string {
@@ -32,15 +32,16 @@ export async function chamarApiDoServidor<T = unknown>(
       cache: 'no-store',
     })
   } catch {
-    return { ok: false, status: 0, erros: [] } // sem conexão com a API
+    return { ok: false, status: 0, mensagem: null, erros: [] } // sem conexão com a API
   }
 
   const json: unknown = await resposta.json().catch(() => undefined)
   if (!resposta.ok) {
-    const erros = (json as { erros?: unknown } | undefined)?.erros
+    const { erros, mensagem } = (json ?? {}) as { erros?: unknown; mensagem?: unknown }
     return {
       ok: false,
       status: resposta.status,
+      mensagem: typeof mensagem === 'string' && mensagem.trim() !== '' ? mensagem : null,
       erros: Array.isArray(erros) ? erros.filter((e): e is ErroCampo => typeof e?.campo === 'string') : [],
     }
   }

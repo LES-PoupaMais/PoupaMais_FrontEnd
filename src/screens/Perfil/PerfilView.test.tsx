@@ -76,13 +76,17 @@ describe('Perfil', () => {
     expect(await screen.findByLabelText('Nome')).toHaveValue(usuarioDemo.nome)
   })
 
-  it('salva o nome com toast; erro da API vira toast e mensagem no campo', async () => {
+  it('salva o nome com toast; o erro do campo vem da API como veio', async () => {
     let falhar = false
     server.use(
       msw.put('*/api/usuarios/me', async ({ request }) =>
         falhar
           ? HttpResponse.json(
-              { status: 400, mensagem: 'x', erros: [{ campo: 'nome', mensagem: 'tamanho' }] },
+              {
+                status: 400,
+                mensagem: 'Dados inválidos',
+                erros: [{ campo: 'nome', mensagem: 'O nome deve ter no máximo 150 caracteres' }],
+              },
               { status: 400 },
             )
           : HttpResponse.json({ ...usuarioDemo, ...((await request.json()) as object) }),
@@ -98,10 +102,10 @@ describe('Perfil', () => {
     falhar = true
     await usuario.click(screen.getByRole('button', { name: 'Salvar nome' }))
     await waitFor(() => expect(avisos.error).toHaveBeenCalledWith('Não foi possível salvar o nome.'))
-    expect(await screen.findByText('Confira o nome: use até 150 caracteres.')).toBeInTheDocument()
+    expect(await screen.findByText('O nome deve ter no máximo 150 caracteres')).toBeInTheDocument()
   })
 
-  it('foto: recusa antes de enviar acima de 2 MB; envia a válida; traduz o 422 da API; remove', async () => {
+  it('foto: recusa antes de enviar acima de 2 MB; envia a válida; mostra o 422 da API como veio; remove', async () => {
     let possuiFoto = false
     server.use(
       msw.get('*/api/usuarios/me', () => HttpResponse.json({ ...usuarioDemo, possuiFoto })),
@@ -127,9 +131,15 @@ describe('Perfil', () => {
     expect(await screen.findByLabelText('Trocar foto')).toBeInTheDocument()
 
     const { ErroApi } = await import('@/lib/http')
-    put.mockRejectedValueOnce(new ErroApi(422, 'A foto deve ser uma imagem JPG, PNG ou WEBP'))
+    // Sem deduzir pelo texto: a mensagem da API vai como veio (aqui, a de tamanho)
+    put.mockRejectedValueOnce(new ErroApi(422, 'A foto deve ter no máximo 2 MB', [], true))
     await usuario.upload(screen.getByLabelText('Trocar foto'), new File(['x'], 'eu.webp', { type: 'image/webp' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('A foto deve ser uma imagem JPG, PNG ou WEBP.')
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^A foto deve ter no máximo 2 MB$/)
+
+    // Sem mensagem da API: a frase da tela
+    put.mockRejectedValueOnce(new ErroApi(500, 'x'))
+    await usuario.upload(screen.getByLabelText('Trocar foto'), new File(['x'], 'eu.webp', { type: 'image/webp' }))
+    expect(await screen.findByText('Não foi possível enviar a foto. Tente de novo.')).toBeInTheDocument()
 
     await usuario.click(screen.getByRole('button', { name: 'Remover foto' }))
     await waitFor(() => expect(avisos.success).toHaveBeenCalledWith('Foto removida'))
@@ -137,7 +147,7 @@ describe('Perfil', () => {
     put.mockRestore()
   })
 
-  it('troca a senha: sucesso limpa e avisa; senha atual errada aparece no campo; sessão vencida vai ao login', async () => {
+  it('troca a senha: sucesso limpa e avisa; erro da API como veio (campo ou toast); sessão vencida vai ao login', async () => {
     const { usuario } = renderizar()
     const preencher = async () => {
       await usuario.type(await screen.findByLabelText('Senha atual'), 'poupa2025')
@@ -146,9 +156,15 @@ describe('Perfil', () => {
       await usuario.click(screen.getByRole('button', { name: 'Alterar senha' }))
     }
 
-    acoes.trocarSenha.mockResolvedValueOnce({ ok: false, motivo: 'senha-incorreta' })
+    // 422 sem campo: a mensagem da API vai no toast, como veio
+    acoes.trocarSenha.mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      mensagem: 'A senha atual está incorreta',
+      erros: [],
+    })
     await preencher()
-    expect(await screen.findByText('A senha atual está incorreta.')).toBeInTheDocument()
+    await waitFor(() => expect(avisos.error).toHaveBeenCalledWith('A senha atual está incorreta'))
     expect(acoes.trocarSenha).toHaveBeenCalledWith({ senhaAtual: 'poupa2025', novaSenha: 'poupa2026' })
 
     for (const campo of ['Senha atual', 'Nova senha', 'Confirmar nova senha'])
@@ -158,19 +174,25 @@ describe('Perfil', () => {
     await waitFor(() => expect(avisos.success).toHaveBeenCalledWith('Senha alterada'))
     expect(screen.getByLabelText('Senha atual')).toHaveValue('')
 
-    acoes.trocarSenha.mockResolvedValueOnce({ ok: false, motivo: 'senha-igual' })
+    // Com campo: no campo
+    acoes.trocarSenha.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      mensagem: 'Dados inválidos',
+      erros: [{ campo: 'novaSenha', mensagem: 'A senha deve ter entre 6 e 72 caracteres' }],
+    })
     await preencher()
-    expect(await screen.findByText('A nova senha deve ser diferente da atual.')).toBeInTheDocument()
+    expect(await screen.findByText('A senha deve ter entre 6 e 72 caracteres')).toBeInTheDocument()
 
     for (const campo of ['Senha atual', 'Nova senha', 'Confirmar nova senha'])
       await usuario.clear(screen.getByLabelText(campo))
-    acoes.trocarSenha.mockResolvedValueOnce({ ok: false, motivo: 'sessao' })
+    acoes.trocarSenha.mockResolvedValueOnce({ ok: false, status: 401, mensagem: null, erros: [] })
     await preencher()
     await waitFor(() => expect(rota.replace).toHaveBeenCalledWith('/login?voltar=%2Fperfil'))
 
     for (const campo of ['Senha atual', 'Nova senha', 'Confirmar nova senha'])
       await usuario.clear(screen.getByLabelText(campo))
-    acoes.trocarSenha.mockResolvedValueOnce({ ok: false, motivo: 'erro' })
+    acoes.trocarSenha.mockResolvedValueOnce({ ok: false, status: 500, mensagem: 'NullPointerException', erros: [] })
     await preencher()
     await waitFor(() => expect(avisos.error).toHaveBeenCalledWith('Não foi possível alterar a senha.'))
   })
@@ -223,9 +245,9 @@ describe('Perfil', () => {
     await usuario.type(within(dialogo).getByLabelText('Sua senha'), 'errada')
     await usuario.type(within(dialogo).getByLabelText('Para confirmar, digite EXCLUIR'), 'EXCLUIR')
 
-    acoes.excluirConta.mockResolvedValueOnce({ ok: false, motivo: 'senha-incorreta' })
+    acoes.excluirConta.mockResolvedValueOnce({ ok: false, status: 422, mensagem: 'Senha incorreta', erros: [] })
     await usuario.click(within(dialogo).getByRole('button', { name: 'Excluir conta' }))
-    expect(await within(dialogo).findByText('Senha incorreta.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Senha incorreta')).toBeInTheDocument()
     // O botão fica em "enviando" (aria-busy) até a transição acabar: antes disso o clique é ignorado
     const botaoLivre = () =>
       waitFor(() =>
@@ -233,7 +255,7 @@ describe('Perfil', () => {
       )
     await botaoLivre()
 
-    acoes.excluirConta.mockResolvedValueOnce({ ok: false, motivo: 'conexao' })
+    acoes.excluirConta.mockResolvedValueOnce({ ok: false, status: 0, mensagem: null, erros: [] })
     await usuario.click(within(dialogo).getByRole('button', { name: 'Excluir conta' }))
     await waitFor(() => expect(avisos.error).toHaveBeenCalledWith(expect.stringMatching(/conectar/)))
     await botaoLivre()

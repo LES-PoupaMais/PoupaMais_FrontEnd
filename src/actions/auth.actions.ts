@@ -12,10 +12,10 @@ import type { LoginResponse } from '@/types/api'
 // A API não tem endpoint de logout (o token expira sozinho): sair = apagar o cookie e voltar ao login.
 
 /**
- * Resultado de login e cadastro (serializável). A tela traduz o erro com `traduzirErro` (lib/http):
- * `status` 0 = sem conexão, 400 = `erros[]` por campo, 401 = credenciais inválidas, 409 = e-mail já usado.
+ * Resultado de login e cadastro (serializável). A tela mostra o erro com `traduzirErro` (lib/http): a `mensagem` e os
+ * `erros[]` da API como vieram. `status` 0 = sem conexão; pelo contrato, 401 no login = credenciais inválidas.
  */
-export type ResultadoAuth = { ok: true } | { ok: false; status: number; erros: ErroCampo[] }
+export type ResultadoAuth = { ok: true } | { ok: false; status: number; mensagem: string | null; erros: ErroCampo[] }
 
 function errosDaValidacao(issues: { path: PropertyKey[] }[]): ErroCampo[] {
   return issues.map((issue) => ({ campo: issue.path.join('.'), mensagem: '' }))
@@ -23,7 +23,7 @@ function errosDaValidacao(issues: { path: PropertyKey[] }[]): ErroCampo[] {
 
 async function entrar(email: string, senha: string): Promise<ResultadoAuth> {
   const resposta = await chamarApiDoServidor<LoginResponse>('POST', '/auth/login', { corpo: { email, senha } })
-  if (!resposta.ok) return { ok: false, status: resposta.status, erros: resposta.erros }
+  if (!resposta.ok) return resposta
   await gravarSessao(resposta.dados.token, resposta.dados.expiraEm)
   return { ok: true }
 }
@@ -31,7 +31,8 @@ async function entrar(email: string, senha: string): Promise<ResultadoAuth> {
 /** Login (RF010): grava o cookie da sessão. Quem decide para onde ir (`?voltar=`) é a tela. */
 export async function loginAction(dados: LoginInput): Promise<ResultadoAuth> {
   const validado = loginSchema.safeParse(dados)
-  if (!validado.success) return { ok: false, status: 400, erros: errosDaValidacao(validado.error.issues) }
+  if (!validado.success)
+    return { ok: false, status: 400, mensagem: null, erros: errosDaValidacao(validado.error.issues) }
   return entrar(validado.data.email, validado.data.senha)
 }
 
@@ -41,11 +42,12 @@ export async function loginAction(dados: LoginInput): Promise<ResultadoAuth> {
  */
 export async function cadastroAction(dados: CadastroInput): Promise<ResultadoAuth> {
   const validado = cadastroSchema.safeParse(dados)
-  if (!validado.success) return { ok: false, status: 400, erros: errosDaValidacao(validado.error.issues) }
+  if (!validado.success)
+    return { ok: false, status: 400, mensagem: null, erros: errosDaValidacao(validado.error.issues) }
 
   const { nome, email, senha, aceiteTermos } = validado.data
   const criado = await chamarApiDoServidor('POST', '/auth/cadastro', { corpo: { nome, email, senha, aceiteTermos } })
-  if (!criado.ok) return { ok: false, status: criado.status, erros: criado.erros }
+  if (!criado.ok) return criado
   return entrar(email, senha)
 }
 

@@ -14,7 +14,6 @@ export const nomeSchema = z.object({
     .max(NOME_MAXIMO, `O nome pode ter até ${NOME_MAXIMO} caracteres.`),
 })
 
-export const MENSAGEM_SENHA_ATUAL_INCORRETA = 'A senha atual está incorreta.'
 export const MENSAGEM_SENHA_IGUAL = 'A nova senha deve ser diferente da atual.'
 
 export const trocarSenhaSchema = z

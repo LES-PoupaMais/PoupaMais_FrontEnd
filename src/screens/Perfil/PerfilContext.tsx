@@ -16,19 +16,15 @@ import { useOnline } from '@/hooks/use-online'
 import { useAtualizarNome, useBaixarMeusDados, useRemoverFoto, useTrocarFoto } from '@/hooks/use-perfil'
 import { fotoDoUsuario, useUsuario } from '@/hooks/use-usuario'
 import { salvarArquivo } from '@/lib/baixar-arquivo'
-import { ErroApi, MENSAGEM_SEM_CONEXAO } from '@/lib/http'
-import {
-  MENSAGEM_SENHA_ATUAL_INCORRETA,
-  MENSAGEM_SENHA_IGUAL,
-  validarFoto,
-  type TrocarSenhaInput,
-} from '@/schemas/perfil.schema'
+import { traduzirErro } from '@/lib/http'
+import { validarFoto, type TrocarSenhaInput } from '@/schemas/perfil.schema'
 import type { Usuario } from '@/types/api'
 import { useMontado } from './usePerfilAmbiente'
 
 // Estado e ações do Perfil (RN015/RN016): nome, foto, senha (Server Action que troca o cookie), tema (next-themes),
 // "Baixar meus dados" (LGPD), excluir conta (Server Action que apaga o cookie → "/" com toast) e "Sair" (celular).
-// Toda ação termina em toast; erros de campo voltam para os organismos (nunca a mensagem crua da API).
+// Toda ação termina em toast. Erros: `traduzirErro` (lib/http) mostra a mensagem da API como veio e os `erros[]` nos
+// campos; sem conexão, sessão e 5xx ficam com as frases do front. A tela não deduz a causa pelo texto.
 
 const NOME_ARQUIVO_DADOS = 'meus-dados-poupamais.json'
 const LOGIN_VOLTANDO_AO_PERFIL = `${ROTAS.login}?voltar=${encodeURIComponent(ROTAS.perfil)}`
@@ -78,21 +74,6 @@ type PerfilContextValue = {
 
 const PerfilContext = createContext<PerfilContextValue | null>(null)
 
-/** Foto recusada pela API (422): traduz para as mensagens do DS (nunca o texto cru). */
-function mensagemDaFoto(erro: unknown): string {
-  if (erro instanceof ErroApi && erro.status === 422) {
-    return /2\s*MB/i.test(erro.message)
-      ? 'A foto deve ter no máximo 2 MB. Escolha uma imagem menor.'
-      : 'A foto deve ser uma imagem JPG, PNG ou WEBP.'
-  }
-  if (erro instanceof ErroApi && erro.status === 0) return MENSAGEM_SEM_CONEXAO
-  return 'Não foi possível enviar a foto. Tente de novo.'
-}
-
-function semConexao(erro: unknown) {
-  return erro instanceof ErroApi && erro.status === 0
-}
-
 export function PerfilProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -117,11 +98,10 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
   const [excluindo, iniciarExclusao] = useTransition()
   const [saindo, iniciarSaida] = useTransition()
 
-  /** Falhas comuns das Server Actions (sessão vencida, sem internet, erro do servidor) */
-  function tratarFalhaComum(resultado: Exclude<ResultadoPerfil, { ok: true }>, mensagemErro: string) {
-    if (resultado.motivo === 'sessao') router.replace(LOGIN_VOLTANDO_AO_PERFIL)
-    else if (resultado.motivo === 'conexao') toast.error(MENSAGEM_SEM_CONEXAO)
-    else toast.error(mensagemErro)
+  /** Falha de Server Action: sessão vencida vai para o login; o resto vira toast (mensagem da API ou a da tela) */
+  function tratarFalha(resultado: Exclude<ResultadoPerfil, { ok: true }>, padrao: string) {
+    if (resultado.status === 401) router.replace(LOGIN_VOLTANDO_AO_PERFIL)
+    else toast.error(traduzirErro(resultado, { padrao }).mensagem)
   }
 
   const salvarNome = (dados: { nome: string }) => {
@@ -129,9 +109,11 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
     atualizarNome.mutate(dados, {
       onSuccess: () => toast.success('Nome salvo'),
       onError: (erro) => {
-        const doCampo = erro instanceof ErroApi ? erro.erros.find((e) => e.campo === 'nome') : undefined
-        if (doCampo) setErroNome('Confira o nome: use até 150 caracteres.')
-        toast.error(semConexao(erro) ? MENSAGEM_SEM_CONEXAO : 'Não foi possível salvar o nome.')
+        const padrao = 'Não foi possível salvar o nome.'
+        const { mensagem, campos } = traduzirErro(erro, { padrao })
+        // Erro do campo: a mensagem da API vai no campo e o toast só resume
+        if (campos.nome) setErroNome(campos.nome)
+        toast.error(campos.nome ? padrao : mensagem)
       },
     })
   }
@@ -142,7 +124,8 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
     if (invalida) return
     trocarFoto.mutate(arquivo, {
       onSuccess: () => toast.success('Foto atualizada'),
-      onError: (erro) => setErroFoto(mensagemDaFoto(erro)),
+      onError: (erro) =>
+        setErroFoto(traduzirErro(erro, { padrao: 'Não foi possível enviar a foto. Tente de novo.' }).mensagem),
     })
   }
 
@@ -150,7 +133,7 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
     setErroFoto(null)
     removerFotoMutation.mutate(undefined, {
       onSuccess: () => toast.success('Foto removida'),
-      onError: (erro) => toast.error(semConexao(erro) ? MENSAGEM_SEM_CONEXAO : 'Não foi possível remover a foto.'),
+      onError: (erro) => toast.error(traduzirErro(erro, { padrao: 'Não foi possível remover a foto.' }).mensagem),
     })
   }
 
@@ -160,12 +143,12 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
       if (resultado.ok) {
         controle.limpar()
         toast.success('Senha alterada')
-      } else if (resultado.motivo === 'senha-incorreta') {
-        controle.definirErro('senhaAtual', MENSAGEM_SENHA_ATUAL_INCORRETA)
-      } else if (resultado.motivo === 'senha-igual') {
-        controle.definirErro('novaSenha', MENSAGEM_SENHA_IGUAL)
       } else {
-        tratarFalhaComum(resultado, 'Não foi possível alterar a senha.')
+        // `erros[]` com campo vão para o campo; sem campo, a mensagem da API vai no toast
+        const { campos } = traduzirErro(resultado)
+        const doCampo = (['senhaAtual', 'novaSenha'] as const).filter((campo) => campos[campo])
+        doCampo.forEach((campo) => controle.definirErro(campo, campos[campo]))
+        if (doCampo.length === 0) tratarFalha(resultado, 'Não foi possível alterar a senha.')
       }
     })
 
@@ -175,7 +158,7 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
         salvarArquivo(blob, nomeArquivo ?? NOME_ARQUIVO_DADOS)
         toast.success('Seus dados foram baixados')
       },
-      onError: (erro) => toast.error(semConexao(erro) ? MENSAGEM_SEM_CONEXAO : 'Não foi possível baixar seus dados.'),
+      onError: (erro) => toast.error(traduzirErro(erro, { padrao: 'Não foi possível baixar seus dados.' }).mensagem),
     })
 
   const excluirConta = ({ senha }: { senha: string }) =>
@@ -187,10 +170,14 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
         queryClient.clear()
         toast.success('Sua conta foi excluída.')
         router.replace(ROTAS.inicio)
-      } else if (resultado.motivo === 'senha-incorreta') {
-        setErroSenhaExcluir('Senha incorreta.')
+      } else if (resultado.status === 401) {
+        tratarFalha(resultado, 'Não foi possível excluir a conta.')
       } else {
-        tratarFalhaComum(resultado, 'Não foi possível excluir a conta.')
+        // O diálogo mostra o erro no campo de senha: o do `erros[]` (campo senha) ou a mensagem da API como veio
+        const { mensagem, campos } = traduzirErro(resultado, { padrao: 'Não foi possível excluir a conta.' })
+        const daApi = resultado.status >= 400 && resultado.status < 500 && (campos.senha || resultado.mensagem)
+        if (daApi) setErroSenhaExcluir(campos.senha ?? mensagem)
+        else toast.error(mensagem)
       }
     })
 

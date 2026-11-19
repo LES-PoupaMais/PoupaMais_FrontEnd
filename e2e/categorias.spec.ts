@@ -11,7 +11,7 @@ async function simularCategorias(page: Page, iniciais: Categoria[]) {
     [...categorias].sort((a, b) => Number(b.ativa) - Number(a.ativa) || a.descricao.localeCompare(b.descricao))
   const repetida = (nome: string, id?: number) =>
     categorias.some((c) => c.id !== id && c.descricao.toLowerCase() === nome.toLowerCase())
-  const duplicada = { status: 409, json: { status: 409, mensagem: 'Categoria duplicada' } }
+  const duplicada = { status: 409, json: { status: 409, mensagem: 'Já existe uma categoria com essa descrição' } }
 
   await page.route(/\/api\/categorias(\?.*)?$/, async (rota) => {
     if (rota.request().method() === 'POST') {
@@ -59,7 +59,7 @@ test.describe('categorias', () => {
     const dialogo = page.getByRole('dialog', { name: 'Nova categoria' })
     await dialogo.getByLabel(/Nome/).fill('mercado')
     await dialogo.getByRole('button', { name: 'Criar categoria' }).click()
-    await expect(dialogo.getByText('Já existe uma categoria com esse nome.')).toBeVisible()
+    await expect(dialogo.getByText('Já existe uma categoria com essa descrição')).toBeVisible()
     await dialogo.getByLabel(/Nome/).fill('Assinaturas')
     await dialogo.getByRole('button', { name: 'Criar categoria' }).click()
     await expect(dialogo).toBeHidden()

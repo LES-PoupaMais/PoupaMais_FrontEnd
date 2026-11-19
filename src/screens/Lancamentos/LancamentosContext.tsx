@@ -13,6 +13,7 @@ import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { useMoverParaLixeiraComDesfazer } from '@/hooks/use-lixeira'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useAlterarStatusLancamento } from '@/hooks/use-mutacoes-lancamento'
+import { traduzirErro } from '@/lib/http'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
 import type { CategoriaComContagem, FormatoExportacao, Lancamento, MesAno } from '@/types/api'
 import { comFiltros, lerFiltros, lerVer, paraApi } from './filtrosDaUrl'
@@ -127,7 +128,7 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
       { id: lancamento.id, status },
       {
         onSuccess: () => toast.success(contaNoSaldo ? TOAST_SALDO.ligado : TOAST_SALDO.desligado),
-        onError: () => toast.error(TOAST_SALDO.erro),
+        onError: (erro) => toast.error(traduzirErro(erro, { padrao: TOAST_SALDO.erro }).mensagem),
         onSettled: () =>
           setStatusOtimista((atual) => {
             const novo = new Map(atual)
@@ -150,9 +151,9 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
     // O DELETE vai na hora (a linha some) e o Desfazer do toast restaura ao status de antes (hooks/use-lixeira)
     const movido = moverComDesfazer(lancamento.id, { onErroAoDesfazer: () => toast.error(TOAST_LIXEIRA.erroDesfazer) })
     const idToast = mostrarToastDesfazer({ mensagem: TOAST_LIXEIRA.mensagem, onDesfazer: () => void movido.desfazer() })
-    movido.envio.catch(() => {
+    movido.envio.catch((erro: unknown) => {
       toast.dismiss(idToast)
-      toast.error(TOAST_LIXEIRA.erro)
+      toast.error(traduzirErro(erro, { padrao: TOAST_LIXEIRA.erro }).mensagem)
     })
   }
 
@@ -182,14 +183,14 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
           setExportarAberto(false)
           toast.success(TOAST_EXPORTAR.sucesso)
         },
-        onError: () => toast.error(TOAST_EXPORTAR.erro),
+        onError: (erro) => toast.error(traduzirErro(erro, { padrao: TOAST_EXPORTAR.erro }).mensagem),
       },
     )
   const modelo = useBaixarModeloCsv()
   const baixarModelo = () =>
     modelo.mutate(undefined, {
       onSuccess: () => toast.success(TOAST_MODELO.sucesso),
-      onError: () => toast.error(TOAST_MODELO.erro),
+      onError: (erro) => toast.error(traduzirErro(erro, { padrao: TOAST_MODELO.erro }).mensagem),
     })
 
   const valor: LancamentosContextValue = {

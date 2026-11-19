@@ -163,7 +163,7 @@ describe('AppShell (Context + View)', () => {
         const corpo = (await request.json()) as { descricao: string }
         enviados.push(corpo)
         return corpo.descricao === 'Mercado'
-          ? HttpResponse.json({ status: 409, mensagem: 'Duplicada' }, { status: 409 })
+          ? HttpResponse.json({ status: 409, mensagem: 'Já existe uma categoria com essa descrição' }, { status: 409 })
           : corpo.descricao === 'Erro'
             ? HttpResponse.json({ status: 500, mensagem: 'Falhou no servidor.' }, { status: 500 })
             : HttpResponse.json({ id: 9, descricao: corpo.descricao, ativa: true }, { status: 201 })
@@ -187,12 +187,14 @@ describe('AppShell (Context + View)', () => {
     const nome = within(dialogo).getByLabelText(/Nome/)
     await usuario.type(nome, 'Mercado')
     await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
-    expect(await within(dialogo).findByText('Já existe uma categoria com esse nome.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Já existe uma categoria com essa descrição')).toBeInTheDocument()
 
     await usuario.clear(nome)
     await usuario.type(nome, 'Erro')
     await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
-    expect((await screen.findAllByText('Falhou no servidor.'))[0]).toBeInTheDocument()
+    expect(
+      (await screen.findAllByText('Não foi possível concluir a operação. Tente novamente.'))[0],
+    ).toBeInTheDocument()
 
     await usuario.clear(nome)
     await usuario.type(nome, 'Pet')

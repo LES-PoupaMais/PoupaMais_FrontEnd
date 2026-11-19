@@ -56,6 +56,7 @@ describe('auth.actions', () => {
     await expect(loginAction({ email: 'ana@x.com', senha: 'errada' })).resolves.toEqual({
       ok: false,
       status: 401,
+      mensagem: 'x',
       erros: [],
     })
     expect(loja.set).not.toHaveBeenCalled()
@@ -67,6 +68,7 @@ describe('auth.actions', () => {
     expect(resultado).toEqual({
       ok: false,
       status: 400,
+      mensagem: null,
       erros: [
         { campo: 'email', mensagem: '' },
         { campo: 'senha', mensagem: '' },
@@ -103,6 +105,7 @@ describe('auth.actions', () => {
     await expect(cadastroAction({ ...cadastro, aceiteTermos: false })).resolves.toEqual({
       ok: false,
       status: 400,
+      mensagem: null,
       erros: [{ campo: 'aceiteTermos', mensagem: '' }],
     })
   })

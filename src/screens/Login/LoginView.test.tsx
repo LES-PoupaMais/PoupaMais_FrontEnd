@@ -55,7 +55,7 @@ describe('Login', () => {
   })
 
   it('credenciais inválidas: mensagem genérica, sem dizer qual campo', async () => {
-    loginAction.mockResolvedValue({ ok: false, status: 401, erros: [] })
+    loginAction.mockResolvedValue({ ok: false, status: 401, mensagem: 'E-mail ou senha inválidos', erros: [] })
     const { usuario } = renderizar()
 
     await entrar(usuario)
@@ -65,7 +65,7 @@ describe('Login', () => {
   })
 
   it('servidor fora do ar: mensagem traduzida, nunca a da API', async () => {
-    loginAction.mockResolvedValue({ ok: false, status: 0, erros: [] })
+    loginAction.mockResolvedValue({ ok: false, status: 0, mensagem: null, erros: [] })
     const { usuario } = renderizar()
 
     await entrar(usuario)

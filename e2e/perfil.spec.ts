@@ -54,11 +54,14 @@ test.describe('perfil', () => {
     await expect(page.getByRole('img', { name: 'Avatar de Leonardo Nascimento' })).toBeVisible()
   })
 
-  test('troca a senha: senha atual errada fica no campo; certa troca o cookie da sessão', async ({ page, context }) => {
+  test('troca a senha: senha atual errada mostra a mensagem da API; certa troca o cookie da sessão', async ({
+    page,
+    context,
+  }) => {
     await page.goto('/perfil')
 
     await preencherSenha(page, 'senha-errada')
-    await expect(page.getByText('A senha atual está incorreta.')).toBeVisible()
+    await expect(page.getByText('A senha atual está incorreta', { exact: true })).toBeVisible()
     expect((await context.cookies()).find((c) => c.name === 'pm_token')?.value).toBe('token-falso-e2e')
 
     await preencherSenha(page, 'poupa2025')
@@ -114,7 +117,7 @@ test.describe('perfil', () => {
     await dialogo.getByLabel('Para confirmar, digite EXCLUIR').fill('EXCLUIR')
     await expect(dialogo.getByText('Tudo certo: o botão está liberado.')).toBeVisible()
     await excluir.click()
-    await expect(dialogo.getByText('Senha incorreta.')).toBeVisible()
+    await expect(dialogo.getByText('Senha incorreta', { exact: true })).toBeVisible()
 
     await dialogo.getByLabel('Sua senha').fill('poupa2026')
     await excluir.click()

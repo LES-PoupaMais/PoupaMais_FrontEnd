@@ -11,6 +11,9 @@ import { LancamentoFormProvider, useLancamentoFormContext } from './LancamentoFo
 import { LancamentoFormSkeleton } from './LancamentoFormSkeleton'
 import { LancamentoFormView } from './LancamentoFormView'
 
+// Os testes digitam o formulário inteiro: com a máquina carregada passam dos 5 s padrão
+vi.setConfig({ testTimeout: 15_000 })
+
 const rota = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }))
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: rota.replace, push: rota.push }),
@@ -78,7 +81,7 @@ beforeEach(() => {
     http.post('*/api/categorias', async ({ request }) => {
       const { descricao } = await registrar(request)
       return descricao.toLowerCase() === 'mercado'
-        ? HttpResponse.json({ status: 409, mensagem: 'Categoria duplicada' }, { status: 409 })
+        ? HttpResponse.json({ status: 409, mensagem: 'Já existe uma categoria com essa descrição' }, { status: 409 })
         : HttpResponse.json({ id: 77, descricao, ativa: true }, { status: 201 })
     }),
   )
@@ -201,16 +204,30 @@ describe('Novo lançamento', () => {
   })
 
   it.each([
-    [422, 'Uma das categorias escolhidas está inativa. Escolha outra.'],
-    [404, 'Uma das categorias escolhidas não existe mais. Escolha outra.'],
-  ])('%i no envio vira uma mensagem clara', async (status, mensagem) => {
-    server.use(http.post('*/api/lancamentos', () => HttpResponse.json({ status, mensagem: 'cru' }, { status })))
+    [422, 'A categoria "Lazer" está inativa e não pode ser usada'],
+    [404, 'Categoria não encontrada'],
+  ])('%i no envio: a mensagem da API vai no toast como veio, sem deduzir a causa', async (status, mensagem) => {
+    server.use(http.post('*/api/lancamentos', () => HttpResponse.json({ status, mensagem }, { status })))
     const { usuario } = renderizar()
     await preencher(usuario)
     await usuario.click(botaoSalvar())
 
     expect(await screen.findByText(mensagem)).toBeInTheDocument()
-    expect(screen.queryByText('cru')).toBeNull()
+    expect(rota.replace).not.toHaveBeenCalled()
+  })
+
+  it('5xx no envio: a frase do formulário, nunca a mensagem da API', async () => {
+    server.use(
+      http.post('*/api/lancamentos', () =>
+        HttpResponse.json({ status: 500, mensagem: 'NullPointerException' }, { status: 500 }),
+      ),
+    )
+    const { usuario } = renderizar()
+    await preencher(usuario)
+    await usuario.click(botaoSalvar())
+
+    expect(await screen.findByText('Não foi possível salvar. O que você preencheu continua aqui.')).toBeInTheDocument()
+    expect(screen.queryByText('NullPointerException')).toBeNull()
   })
 
   it('cria a categoria pelo campo (409 no diálogo) e ela já entra escolhida', async () => {
@@ -221,7 +238,7 @@ describe('Novo lançamento', () => {
     await usuario.click(screen.getByRole('button', { name: 'Criar "mercado"' }))
     const dialogo = await screen.findByRole('dialog', { name: 'Nova categoria' })
     await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
-    expect(await within(dialogo).findByText('Já existe uma categoria com esse nome.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Já existe uma categoria com essa descrição')).toBeInTheDocument()
 
     const campo = within(dialogo).getByLabelText(/Nome da categoria/)
     await usuario.clear(campo)

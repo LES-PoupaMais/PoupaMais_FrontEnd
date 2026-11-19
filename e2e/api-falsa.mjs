@@ -21,7 +21,8 @@ createServer((req, res) => {
     if (req.method === 'POST' && req.url?.startsWith('/api/auth/')) {
       const dados = texto ? JSON.parse(texto) : {}
       if (req.url === '/api/auth/login') {
-        if (dados.senha === SENHA_ERRADA) return responder(res, 401, { status: 401, mensagem: 'Credenciais inválidas' })
+        if (dados.senha === SENHA_ERRADA)
+          return responder(res, 401, { status: 401, mensagem: 'E-mail ou senha inválidos' })
         return responder(res, 200, {
           token: 'token-login-e2e',
           expiraEm: new Date(Date.now() + 86_400_000).toISOString(),
@@ -30,7 +31,7 @@ createServer((req, res) => {
       }
       if (req.url === '/api/auth/cadastro') {
         if (dados.email === 'usado@poupamais.com.br')
-          return responder(res, 409, { status: 409, mensagem: 'E-mail já cadastrado' })
+          return responder(res, 409, { status: 409, mensagem: 'Este e-mail já está cadastrado' })
         return responder(res, 201, { id: 2, nome: dados.nome, email: dados.email })
       }
       if (req.url === '/api/auth/recuperar-senha') return responder(res, 202)

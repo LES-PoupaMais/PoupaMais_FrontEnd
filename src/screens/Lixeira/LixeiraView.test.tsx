@@ -88,13 +88,14 @@ describe('Lixeira', () => {
   it('restaurar com erro: toast de erro', async () => {
     server.use(
       msw.post('*/api/lancamentos/:id/restaurar', () =>
-        HttpResponse.json({ status: 422, mensagem: 'x' }, { status: 422 }),
+        HttpResponse.json({ status: 422, mensagem: 'Só é possível restaurar um lançamento excluído' }, { status: 422 }),
       ),
     )
     const { usuario } = renderizar()
     await screen.findByRole('heading', { name: '2 lançamentos na lixeira' })
     await usuario.click(screen.getAllByRole('button', { name: 'Restaurar Lanche' })[0])
-    expect(await screen.findByText('Não foi possível restaurar.')).toBeInTheDocument()
+    // 4xx: a mensagem da API como veio
+    expect(await screen.findByText('Só é possível restaurar um lançamento excluído')).toBeInTheDocument()
   })
 
   it('vazia: "A lixeira está vazia" com Ver lançamentos', async () => {

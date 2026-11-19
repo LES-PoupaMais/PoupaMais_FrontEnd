@@ -15,7 +15,7 @@ import { useOnline } from '@/hooks/use-online'
 import { useRestaurarLancamento, useSalvarLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { hojeIso, partesDaData } from '@/lib/data'
 import { erroDoNomeDaCategoria } from '@/lib/erro-categoria'
-import { ErroApi } from '@/lib/http'
+import { ehSessaoVencida, ErroApi, traduzirErro } from '@/lib/http'
 import { comPeriodo } from '@/lib/periodo'
 import type { Categoria, Lancamento } from '@/types/api'
 import { useAvisoAoSair, type PedidoDeSaida } from './useAvisoAoSair'
@@ -28,8 +28,6 @@ export const MENSAGENS_FORMULARIO = {
   salvo: 'Lançamento salvo',
   erroSalvar: 'Não foi possível salvar. O que você preencheu continua aqui.',
   confiraCampos: 'Confira os campos marcados.',
-  categoriaInativa: 'Uma das categorias escolhidas está inativa. Escolha outra.',
-  categoriaInexistente: 'Uma das categorias escolhidas não existe mais. Escolha outra.',
   categoriaCriada: (nome: string) => `Categoria "${nome}" criada`,
   erroCategoria: 'Não foi possível criar a categoria. Tente de novo.',
   movido: 'Movido para a lixeira',
@@ -168,22 +166,20 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
     router.replace(destino)
   }
 
+  // Regra de lib/http (19/11): `erros[]` com campo vão para os campos; a mensagem da API (ex.: categoria inativa ou
+  // inexistente) vai no toast como veio; sem conexão, 5xx ou sem mensagem → a frase do formulário com "Tentar de novo".
   const tratarErroDoEnvio = (erro: unknown, dados: LancamentoFormDados) => {
-    if (erro instanceof ErroApi) {
-      if (erro.status === 401) return // o AppProviders leva ao login
-      if (erro.status === 400 && erro.erros.length > 0) {
-        setErrosDoServidor(erro.erros)
-        toast.error(MENSAGENS_FORMULARIO.confiraCampos)
-        return
-      }
-      if (erro.status === 422 && !erro.erros.length) {
-        toast.error(MENSAGENS_FORMULARIO.categoriaInativa)
-        return
-      }
-      if (erro.status === 404) {
-        toast.error(MENSAGENS_FORMULARIO.categoriaInexistente)
-        return
-      }
+    if (ehSessaoVencida(erro)) return // o AppProviders leva ao login
+    const { status, mensagem, campos } = traduzirErro(erro)
+    const doCampo = Object.entries(campos).map(([campo, texto]) => ({ campo, mensagem: texto }))
+    if (doCampo.length > 0) {
+      setErrosDoServidor(doCampo)
+      toast.error(MENSAGENS_FORMULARIO.confiraCampos)
+      return
+    }
+    if (erro instanceof ErroApi && erro.daApi && status >= 400 && status < 500) {
+      toast.error(mensagem)
+      return
     }
     toast.error(MENSAGENS_FORMULARIO.erroSalvar, {
       action: { label: 'Tentar de novo', onClick: () => salvar(dados) },
@@ -233,8 +229,8 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
           const doCampo = erroDoNomeDaCategoria(erro)
           if (doCampo) {
             setNovaCategoria((atual) => ({ ...atual, erro: doCampo }))
-          } else if (!(erro instanceof ErroApi && erro.status === 401)) {
-            toast.error(MENSAGENS_FORMULARIO.erroCategoria)
+          } else if (!ehSessaoVencida(erro)) {
+            toast.error(traduzirErro(erro, { padrao: MENSAGENS_FORMULARIO.erroCategoria }).mensagem)
           }
         },
       },
@@ -266,15 +262,16 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
     if (!idValido) return
     // Como na lista (hooks/use-lixeira): o DELETE vai na hora e o Desfazer do toast restaura
     const movido = moverComDesfazer(idValido, {
-      onErroAoDesfazer: () => toast.error(MENSAGENS_FORMULARIO.erroRestaurar),
+      onErroAoDesfazer: (erro) =>
+        toast.error(traduzirErro(erro, { padrao: MENSAGENS_FORMULARIO.erroRestaurar }).mensagem),
     })
     const idToast = mostrarToastDesfazer({
       mensagem: MENSAGENS_FORMULARIO.movido,
       onDesfazer: () => void movido.desfazer(),
     })
-    movido.envio.catch(() => {
+    movido.envio.catch((erro: unknown) => {
       toast.dismiss(idToast)
-      toast.error(MENSAGENS_FORMULARIO.erroMover)
+      toast.error(traduzirErro(erro, { padrao: MENSAGENS_FORMULARIO.erroMover }).mensagem)
     })
     sair(hrefLista)
   }
@@ -284,7 +281,8 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
     restaurarLancamento.mutate(idValido, {
       onSuccess: (restaurado) => toast.success(textoRestaurado(restaurado.status)),
       onError: (erro) => {
-        if (!(erro instanceof ErroApi && erro.status === 401)) toast.error(MENSAGENS_FORMULARIO.erroRestaurar)
+        if (!ehSessaoVencida(erro))
+          toast.error(traduzirErro(erro, { padrao: MENSAGENS_FORMULARIO.erroRestaurar }).mensagem)
       },
     })
   }

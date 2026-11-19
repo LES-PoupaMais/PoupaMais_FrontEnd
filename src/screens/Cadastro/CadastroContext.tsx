@@ -44,11 +44,12 @@ export function CadastroProvider({ children }: { children: ReactNode }) {
         router.replace(ROTAS.dashboard)
         return
       }
+      // Pelo contrato, 409 no cadastro = e-mail já usado: vai no campo E-mail, com a mensagem da API como veio
+      const traduzido = traduzirErro(resultado, { porStatus: { 409: ERRO_EMAIL_USADO } })
       if (resultado.status === 409) {
-        setErrosDaApi({ email: ERRO_EMAIL_USADO })
+        setErrosDaApi({ email: traduzido.mensagem })
         return
       }
-      const traduzido = traduzirErro(resultado)
       if (Object.keys(traduzido.campos).length > 0) setErrosDaApi(traduzido.campos)
       else setErro(traduzido.mensagem)
     })

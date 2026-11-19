@@ -3,10 +3,18 @@ import { categoriaEmUso, erroDoNomeDaCategoria, MENSAGEM_CATEGORIA_DUPLICADA } f
 import { ErroApi, MENSAGEM_CAMPO_PADRAO } from './http'
 
 describe('erros de categoria', () => {
-  it('409 vira a mensagem de duplicada; 400 usa o primeiro erros[] traduzido; o resto vai para o toast', () => {
+  it('409 vai para o campo Nome: a mensagem da API como veio (ou a do DS, se não veio)', () => {
+    expect(erroDoNomeDaCategoria(new ErroApi(409, 'Já existe uma categoria com essa descrição', [], true))).toBe(
+      'Já existe uma categoria com essa descrição',
+    )
     expect(erroDoNomeDaCategoria(new ErroApi(409, 'x'))).toBe(MENSAGEM_CATEGORIA_DUPLICADA)
-    // nunca a mensagem crua da API (traduzirErro)
-    expect(erroDoNomeDaCategoria(new ErroApi(400, 'x', [{ campo: 'descricao', mensagem: 'Muito longo.' }]))).toBe(
+  })
+
+  it('400 usa o primeiro erros[] como veio; o resto vai para o toast', () => {
+    expect(erroDoNomeDaCategoria(new ErroApi(400, 'x', [{ campo: 'descricao', mensagem: 'Muito longo.' }], true))).toBe(
+      'Muito longo.',
+    )
+    expect(erroDoNomeDaCategoria(new ErroApi(400, 'x', [{ campo: 'descricao', mensagem: '' }]))).toBe(
       MENSAGEM_CAMPO_PADRAO,
     )
     expect(erroDoNomeDaCategoria(new ErroApi(400, 'x'))).toBeNull()

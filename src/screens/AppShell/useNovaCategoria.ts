@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useSalvarCategoria } from '@/hooks/use-categorias'
 import { erroDoNomeDaCategoria } from '@/lib/erro-categoria'
-import { ErroApi, MENSAGEM_ERRO_PADRAO } from '@/lib/http'
+import { traduzirErro } from '@/lib/http'
 
 // "Nova categoria" da folha Criar (celular): abre o categoria-dialog ali mesmo, sem trocar de tela (DS: CreateSheet).
 export function useNovaCategoria() {
@@ -22,7 +22,7 @@ export function useNovaCategoria() {
         onError: (erro) => {
           const doCampo = erroDoNomeDaCategoria(erro)
           if (doCampo) setErroNome(doCampo)
-          else toast.error(erro instanceof ErroApi ? erro.message : MENSAGEM_ERRO_PADRAO)
+          else toast.error(traduzirErro(erro).mensagem)
         },
       },
     )

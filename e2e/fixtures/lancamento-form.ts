@@ -67,7 +67,10 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     if (rota.request().method() === 'GET') return rota.fulfill({ json: categorias })
     const { descricao } = registrar(rota) as { descricao: string }
     if (categorias.some((c) => c.descricao.toLowerCase() === descricao.toLowerCase())) {
-      return rota.fulfill({ status: 409, json: { status: 409, mensagem: 'Categoria duplicada' } })
+      return rota.fulfill({
+        status: 409,
+        json: { status: 409, mensagem: 'Já existe uma categoria com essa descrição' },
+      })
     }
     const nova = { id: proximoId++, descricao, ativa: true, quantidadeLancamentos: 0 }
     categorias.push(nova)
@@ -97,7 +100,7 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     const req = rota.request()
     const [, id, acao] = /\/lancamentos\/(\d+)(\/\w+)?$/.exec(new URL(req.url()).pathname) ?? []
     const atual = lancamentos.get(Number(id))
-    if (!atual) return rota.fulfill({ status: 404, json: { status: 404, mensagem: 'Não encontrado' } })
+    if (!atual) return rota.fulfill({ status: 404, json: { status: 404, mensagem: 'Lançamento não encontrado' } })
     if (req.method() === 'GET') return rota.fulfill({ json: atual })
     const corpo = registrar(rota) as Record<string, unknown> | null
     // Regras da API v1.2.0 para o item da lixeira

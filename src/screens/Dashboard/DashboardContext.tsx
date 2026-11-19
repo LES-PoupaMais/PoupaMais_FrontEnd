@@ -7,6 +7,7 @@ import { useDashboard } from '@/hooks/use-dashboard'
 import { TOAST_MODELO_CSV, useBaixarModeloCsv } from '@/hooks/use-exportacao'
 import { useOnline } from '@/hooks/use-online'
 import { useUsuario } from '@/hooks/use-usuario'
+import { traduzirErro } from '@/lib/http'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
 import type { Dashboard, MesAno } from '@/types/api'
 
@@ -62,7 +63,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     baixarModelo: () =>
       modelo.mutate(undefined, {
         onSuccess: () => toast.success(TOAST_MODELO_CSV.sucesso),
-        onError: () => toast.error(TOAST_MODELO_CSV.erro),
+        onError: (erro) => toast.error(traduzirErro(erro, { padrao: TOAST_MODELO_CSV.erro }).mensagem),
       }),
   }
   return <DashboardContext.Provider value={valor}>{children}</DashboardContext.Provider>

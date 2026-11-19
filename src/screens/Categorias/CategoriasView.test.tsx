@@ -89,7 +89,7 @@ describe('Categorias (Context + View)', () => {
         const corpo = (await request.json()) as { descricao: string }
         enviados = [...enviados, corpo]
         return corpo.descricao === 'Mercado'
-          ? HttpResponse.json({ status: 409, mensagem: 'Duplicada' }, { status: 409 })
+          ? HttpResponse.json({ status: 409, mensagem: 'Já existe uma categoria com essa descrição' }, { status: 409 })
           : HttpResponse.json({ id: 9, descricao: corpo.descricao, ativa: true }, { status: 201 })
       }),
     )
@@ -100,7 +100,7 @@ describe('Categorias (Context + View)', () => {
     const dialogo = screen.getByRole('dialog', { name: 'Nova categoria' })
     await usuario.type(within(dialogo).getByLabelText(/Nome/), 'Mercado')
     await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
-    expect(await within(dialogo).findByText('Já existe uma categoria com esse nome.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Já existe uma categoria com essa descrição')).toBeInTheDocument()
 
     await usuario.clear(within(dialogo).getByLabelText(/Nome/))
     await usuario.type(within(dialogo).getByLabelText(/Nome/), 'Assinaturas')
@@ -182,25 +182,32 @@ describe('Categorias (Context + View)', () => {
 
     falhar = true
     await usuario.click(cartoes().getByRole('button', { name: 'Reativar Academia' }))
-    expect(await screen.findByText('Não foi possível salvar.')).toBeInTheDocument()
+    // 5xx: a frase do front, nunca a mensagem da API
+    expect(await screen.findByText('Não foi possível concluir a operação. Tente novamente.')).toBeInTheDocument()
   })
 
-  it('outros erros ao salvar, inativar e excluir viram toast', async () => {
-    const erro = () => HttpResponse.json({ status: 500, mensagem: 'Falhou no servidor.' }, { status: 500 })
+  it('outros erros ao salvar, inativar e excluir viram toast com a mensagem da API', async () => {
+    const erro = () => HttpResponse.json({ status: 422, mensagem: 'Recusado pela API' }, { status: 422 })
     server.use(
       http.put('*/api/categorias/:id', erro),
       http.patch('*/api/categorias/:id/status', erro),
-      http.delete('*/api/categorias/:id', erro),
+      // No DELETE o 422 é "em uso" (contrato): o erro genérico aqui é um 500, com a frase do front
+      http.delete('*/api/categorias/:id', () =>
+        HttpResponse.json({ status: 500, mensagem: 'NullPointerException' }, { status: 500 }),
+      ),
     )
     const { usuario } = renderizar()
 
     await usuario.click(await naLista('button', { name: 'Editar categoria Mercado' }))
     await usuario.click(screen.getByRole('button', { name: 'Salvar' }))
-    expect(await screen.findAllByText('Falhou no servidor.')).toHaveLength(1)
+    expect(await screen.findAllByText('Recusado pela API')).toHaveLength(1)
     await usuario.click(screen.getByRole('button', { name: 'Inativar categoria' }))
-    await waitFor(() => expect(screen.getAllByText('Falhou no servidor.').length).toBeGreaterThanOrEqual(2))
+    await waitFor(() => expect(screen.getAllByText('Recusado pela API').length).toBeGreaterThanOrEqual(2))
     await usuario.click(screen.getByRole('button', { name: 'Excluir categoria' }))
-    await waitFor(() => expect(screen.getAllByText('Falhou no servidor.').length).toBeGreaterThanOrEqual(3))
+    expect(
+      (await screen.findAllByText('Não foi possível concluir a operação. Tente novamente.'))[0],
+    ).toBeInTheDocument()
+    expect(screen.queryByText('NullPointerException')).toBeNull()
     expect(screen.getByRole('dialog', { name: 'Editar categoria' })).toBeInTheDocument()
   })
 

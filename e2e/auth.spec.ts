@@ -88,7 +88,7 @@ test.describe('cadastro', () => {
 
     await preencher(page, 'usado@poupamais.com.br')
 
-    await expect(page.getByText('Já existe uma conta com esse e-mail.')).toBeVisible()
+    await expect(page.getByText('Este e-mail já está cadastrado')).toBeVisible()
     await expect(page).toHaveURL(/\/cadastro$/)
   })
 

@@ -6,7 +6,7 @@ import { TOAST_MODELO_CSV, useBaixarModeloCsv } from '@/hooks/use-exportacao'
 import { useImportarCsv } from '@/hooks/use-importacao'
 import { useOnline } from '@/hooks/use-online'
 import { plural } from '@/lib/format'
-import { ErroApi, MENSAGEM_ERRO_PADRAO } from '@/lib/http'
+import { traduzirErro } from '@/lib/http'
 import type { ResultadoImportacao } from '@/types/api'
 
 // Importar CSV (RN007/RN012): escolher o arquivo (a UploadArea confere tipo e 2 MB antes de enviar), importar e mostrar
@@ -39,7 +39,7 @@ export function ImportarProvider({ children }: { children: ReactNode }) {
   const baixarModelo = () =>
     modelo.mutate(undefined, {
       onSuccess: () => toast.success(TOAST_MODELO_CSV.sucesso),
-      onError: () => toast.error(TOAST_MODELO_CSV.erro),
+      onError: (erro) => toast.error(traduzirErro(erro, { padrao: TOAST_MODELO_CSV.erro }).mensagem),
     })
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [erroArquivo, setErroArquivo] = useState<string | null>(null)
@@ -61,8 +61,11 @@ export function ImportarProvider({ children }: { children: ReactNode }) {
         }
       },
       onError: (erro) => {
-        if (erro instanceof ErroApi && erro.status === 0) toast.error(erro.message)
-        else setErroArquivo(erro instanceof ErroApi ? erro.message : MENSAGEM_ERRO_PADRAO)
+        // Regra de lib/http: arquivo recusado (4xx) mostra a mensagem da API como veio, junto do arquivo; sem conexão,
+        // sessão e 5xx ficam com as frases do front (sem conexão em toast, o resto junto do arquivo)
+        const { status, mensagem } = traduzirErro(erro)
+        if (status === 0) toast.error(mensagem)
+        else setErroArquivo(mensagem)
       },
     })
   }

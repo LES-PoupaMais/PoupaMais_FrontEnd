@@ -8,7 +8,7 @@ import { useAlterarStatusCategoria, useExcluirCategoria } from '@/hooks/use-muta
 import { useOnline } from '@/hooks/use-online'
 import { categoriaEmUso, erroDoNomeDaCategoria } from '@/lib/erro-categoria'
 import { formatarPeriodo } from '@/lib/format'
-import { ErroApi, MENSAGEM_ERRO_PADRAO } from '@/lib/http'
+import { traduzirErro } from '@/lib/http'
 import { lerPeriodo } from '@/lib/periodo'
 import type { Categoria, CategoriaComContagem } from '@/types/api'
 
@@ -44,7 +44,8 @@ type CategoriasContextValue = {
 
 const CategoriasContext = createContext<CategoriasContextValue | null>(null)
 
-const mensagemDe = (erro: unknown) => (erro instanceof ErroApi ? erro.message : MENSAGEM_ERRO_PADRAO)
+/** Regra de lib/http: a mensagem da API como veio; sem conexão, sessão e 5xx com as frases do front */
+const mensagemDe = (erro: unknown) => traduzirErro(erro).mensagem
 
 export function CategoriasProvider({ children }: { children: ReactNode }) {
   const parametros = useSearchParams()

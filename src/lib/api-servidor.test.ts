@@ -25,11 +25,11 @@ describe('chamarApiDoServidor (Server Actions → API)', () => {
     expect(corpo).toEqual({ email: 'a@b.com' })
   })
 
-  it('erro da API: devolve status e erros[] válidos, sem a mensagem crua', async () => {
+  it('erro da API: devolve status, a mensagem e os erros[] válidos', async () => {
     server.use(
       msw.post('*/api/auth/cadastro', () =>
         HttpResponse.json(
-          { status: 400, mensagem: 'crua', erros: [{ campo: 'email', mensagem: 'x' }, { foo: 1 }] },
+          { status: 400, mensagem: 'Dados inválidos', erros: [{ campo: 'email', mensagem: 'x' }, { foo: 1 }] },
           { status: 400 },
         ),
       ),
@@ -37,7 +37,12 @@ describe('chamarApiDoServidor (Server Actions → API)', () => {
 
     const resposta = await chamarApiDoServidor('POST', '/auth/cadastro', { corpo: {} })
 
-    expect(resposta).toEqual({ ok: false, status: 400, erros: [{ campo: 'email', mensagem: 'x' }] })
+    expect(resposta).toEqual({
+      ok: false,
+      status: 400,
+      mensagem: 'Dados inválidos',
+      erros: [{ campo: 'email', mensagem: 'x' }],
+    })
   })
 
   it('erro sem corpo e resposta 204 sem JSON', async () => {
@@ -46,13 +51,13 @@ describe('chamarApiDoServidor (Server Actions → API)', () => {
       msw.post('*/api/y', () => new HttpResponse(null, { status: 204 })),
     )
 
-    expect(await chamarApiDoServidor('POST', '/x')).toEqual({ ok: false, status: 500, erros: [] })
+    expect(await chamarApiDoServidor('POST', '/x')).toEqual({ ok: false, status: 500, mensagem: null, erros: [] })
     expect(await chamarApiDoServidor('POST', '/y')).toEqual({ ok: true, status: 204, dados: undefined })
   })
 
   it('sem conexão vira status 0', async () => {
     server.use(msw.get('*/api/z', () => HttpResponse.error()))
 
-    expect(await chamarApiDoServidor('GET', '/z')).toEqual({ ok: false, status: 0, erros: [] })
+    expect(await chamarApiDoServidor('GET', '/z')).toEqual({ ok: false, status: 0, mensagem: null, erros: [] })
   })
 })

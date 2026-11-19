@@ -11,6 +11,7 @@ import { useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
+import { traduzirErro } from '@/lib/http'
 import { partesDaData } from '@/lib/data'
 import type { FormatoExportacao, Lancamento } from '@/types/api'
 
@@ -89,7 +90,7 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
           action: { label: 'Ver', onClick: () => router.push(listaDoMes(lancamento)) },
         })
       },
-      onError: () => toast.error(TOAST_RESTAURAR_ERRO),
+      onError: (erro) => toast.error(traduzirErro(erro, { padrao: TOAST_RESTAURAR_ERRO }).mensagem),
       onSettled: () =>
         setOcupados((atual) => {
           const novo = new Set(atual)
@@ -118,7 +119,7 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
           setExportarAberto(false)
           toast.success('Arquivo exportado')
         },
-        onError: () => toast.error('Não foi possível exportar.'),
+        onError: (erro) => toast.error(traduzirErro(erro, { padrao: 'Não foi possível exportar.' }).mensagem),
       },
     )
 

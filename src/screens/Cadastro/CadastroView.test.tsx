@@ -62,28 +62,41 @@ describe('Cadastro', () => {
     expect(queryClient.getQueryData(['x'])).toBeUndefined()
   })
 
-  it('e-mail já usado (409) aparece no campo', async () => {
-    cadastroAction.mockResolvedValue({ ok: false, status: 409, erros: [] })
+  it('e-mail já usado (409) aparece no campo, com a mensagem da API como veio', async () => {
+    cadastroAction.mockResolvedValue({ ok: false, status: 409, mensagem: 'Este e-mail já está cadastrado', erros: [] })
+    const { usuario } = renderizar()
+
+    await preencherEEnviar(usuario)
+
+    expect(await screen.findByText('Este e-mail já está cadastrado')).toBeInTheDocument()
+    expect(replace).not.toHaveBeenCalled()
+  })
+
+  it('409 sem mensagem da API usa a frase do DS', async () => {
+    cadastroAction.mockResolvedValue({ ok: false, status: 409, mensagem: null, erros: [] })
     const { usuario } = renderizar()
 
     await preencherEEnviar(usuario)
 
     expect(await screen.findByText('Já existe uma conta com esse e-mail.')).toBeInTheDocument()
-    expect(replace).not.toHaveBeenCalled()
   })
 
-  it('erros por campo da API (400) vão para os campos, traduzidos', async () => {
-    cadastroAction.mockResolvedValue({ ok: false, status: 400, erros: [{ campo: 'nome', mensagem: 'size must be…' }] })
+  it('erros por campo da API (400) vão para os campos, como vieram', async () => {
+    cadastroAction.mockResolvedValue({
+      ok: false,
+      status: 400,
+      mensagem: 'Dados inválidos',
+      erros: [{ campo: 'nome', mensagem: 'O nome deve ter no máximo 150 caracteres' }],
+    })
     const { usuario } = renderizar()
 
     await preencherEEnviar(usuario)
 
-    expect(await screen.findByText('Confira este campo.')).toBeInTheDocument()
-    expect(screen.queryByText('size must be…')).not.toBeInTheDocument()
+    expect(await screen.findByText('O nome deve ter no máximo 150 caracteres')).toBeInTheDocument()
   })
 
-  it('outros erros viram aviso traduzido', async () => {
-    cadastroAction.mockResolvedValue({ ok: false, status: 500, erros: [] })
+  it('5xx vira a frase do front, nunca a mensagem da API', async () => {
+    cadastroAction.mockResolvedValue({ ok: false, status: 500, mensagem: 'NullPointerException', erros: [] })
     const { usuario } = renderizar()
 
     await preencherEEnviar(usuario)

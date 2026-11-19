@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   ErroApi,
+  ehSessaoVencida,
   MENSAGEM_CAMPO_PADRAO,
   MENSAGEM_ERRO_PADRAO,
   MENSAGEM_SEM_CONEXAO,
@@ -8,45 +9,75 @@ import {
   traduzirErro,
 } from './http'
 
+// Regra de 19/11/2026: a mensagem da API vai como veio; o front não deduz a causa pelo texto nem pelo status.
 describe('traduzirErro (lib/http)', () => {
-  it('nunca devolve a mensagem crua da API', () => {
-    const erro = new ErroApi(409, 'DataIntegrityViolationException: uk_usuario_email')
-
-    const traduzido = traduzirErro(erro)
-
-    expect(traduzido).toEqual({ status: 409, mensagem: MENSAGENS_POR_STATUS[409], campos: {} })
-    expect(traduzido.mensagem).not.toContain('Exception')
-  })
-
-  it('sem conexão (status 0) e sessão vencida (401) usam as frases do DS', () => {
-    expect(traduzirErro(new ErroApi(0, 'x')).mensagem).toBe(MENSAGEM_SEM_CONEXAO)
-    expect(traduzirErro(new ErroApi(401, 'x')).mensagem).toBe('Sua sessão venceu. Entre de novo para continuar.')
-  })
-
-  it('status sem frase própria e erros 5xx caem na mensagem padrão', () => {
-    expect(traduzirErro(new ErroApi(500, 'NullPointerException')).mensagem).toBe(MENSAGEM_ERRO_PADRAO)
-    expect(traduzirErro(new ErroApi(418, 'teapot')).mensagem).toBe(MENSAGEM_ERRO_PADRAO)
-  })
-
-  it('a tela troca a mensagem de um status e a de cada campo', () => {
-    const erro = new ErroApi(400, 'Requisição inválida', [
-      { campo: 'email', mensagem: 'must be a well-formed email address' },
-      { campo: 'nome', mensagem: 'size must be between 1 and 150' },
-      { campo: '', mensagem: 'global' },
-    ])
-
-    const traduzido = traduzirErro(erro, {
-      porStatus: { 400: 'Confira os dados.' },
-      porCampo: { email: 'Informe um e-mail válido.' },
+  it('mostra a mensagem que a API mandou, como veio', () => {
+    const erro = new ErroApi(422, 'A categoria "Lazer" está inativa e não pode ser usada', [], true)
+    expect(traduzirErro(erro)).toEqual({
+      status: 422,
+      mensagem: 'A categoria "Lazer" está inativa e não pode ser usada',
+      campos: {},
     })
-
-    expect(traduzido.mensagem).toBe('Confira os dados.')
-    expect(traduzido.campos).toEqual({ email: 'Informe um e-mail válido.', nome: MENSAGEM_CAMPO_PADRAO })
+    expect(traduzirErro({ status: 422, mensagem: 'A senha atual está incorreta', erros: [] }).mensagem).toBe(
+      'A senha atual está incorreta',
+    )
   })
 
-  it('aceita o resultado de uma Server Action ({ status, erros }) e qualquer outro valor', () => {
-    expect(traduzirErro({ status: 422 }).mensagem).toBe(MENSAGENS_POR_STATUS[422])
+  it('cada erros[] com campo vai para o seu campo com a mensagem da API', () => {
+    const erro = new ErroApi(
+      400,
+      'Dados inválidos',
+      [
+        { campo: 'data', mensagem: 'Informe uma data que exista' },
+        { campo: 'nome', mensagem: '' },
+        { campo: '', mensagem: 'global' },
+      ],
+      true,
+    )
+    expect(traduzirErro(erro)).toEqual({
+      status: 400,
+      mensagem: 'Dados inválidos',
+      campos: { data: 'Informe uma data que exista', nome: MENSAGEM_CAMPO_PADRAO },
+    })
+  })
+
+  it('sem mensagem da API: a frase do status (ou a da tela), senão a genérica', () => {
+    expect(traduzirErro(new ErroApi(409, MENSAGEM_ERRO_PADRAO)).mensagem).toBe(MENSAGENS_POR_STATUS[409])
+    expect(traduzirErro({ status: 409 }, { porStatus: { 409: 'Já existe.' } }).mensagem).toBe('Já existe.')
+    expect(traduzirErro({ status: 418, mensagem: '' }).mensagem).toBe(MENSAGEM_ERRO_PADRAO)
+    // A frase da tela não passa por cima da mensagem da API
+    expect(traduzirErro({ status: 409, mensagem: 'Da API' }, { porStatus: { 409: 'Da tela' } }).mensagem).toBe('Da API')
+  })
+
+  it('sem conexão, sessão vencida e 5xx: sempre as frases do front, mesmo com mensagem da API', () => {
+    expect(traduzirErro(new ErroApi(0, 'x')).mensagem).toBe(MENSAGEM_SEM_CONEXAO)
+    expect(traduzirErro(new ErroApi(401, 'Sessão inválida', [], true)).mensagem).toBe(
+      'Sua sessão venceu. Entre de novo para continuar.',
+    )
+    expect(traduzirErro(new ErroApi(500, 'NullPointerException', [], true))).toEqual({
+      status: 500,
+      mensagem: MENSAGEM_ERRO_PADRAO,
+      campos: {},
+    })
+    expect(traduzirErro(new ErroApi(503, 'x', [{ campo: 'a', mensagem: 'b' }], true)).mensagem).toBe(
+      MENSAGENS_POR_STATUS[503],
+    )
+  })
+
+  it('frase genérica da tela (padrao): sem mensagem da API e em 5xx; nunca no lugar de sem conexão e sessão', () => {
+    const opcoes = { padrao: 'Não foi possível salvar o nome.' }
+    expect(traduzirErro({ status: 422 }, opcoes).mensagem).toBe(opcoes.padrao)
+    expect(traduzirErro({ status: 500 }, opcoes).mensagem).toBe(opcoes.padrao)
+    expect(traduzirErro({ status: 503 }, opcoes).mensagem).toBe(MENSAGENS_POR_STATUS[503])
+    expect(traduzirErro({ status: 0 }, opcoes).mensagem).toBe(MENSAGEM_SEM_CONEXAO)
+    expect(traduzirErro({ status: 422, mensagem: 'Da API' }, opcoes).mensagem).toBe('Da API')
+  })
+
+  it('qualquer outro valor cai na genérica; ehSessaoVencida', () => {
     expect(traduzirErro(new Error('boom'))).toEqual({ status: -1, mensagem: MENSAGEM_ERRO_PADRAO, campos: {} })
     expect(traduzirErro(null).mensagem).toBe(MENSAGEM_ERRO_PADRAO)
+    expect(ehSessaoVencida(new ErroApi(401, 'x'))).toBe(true)
+    expect(ehSessaoVencida({ status: 422 })).toBe(false)
+    expect(ehSessaoVencida('x')).toBe(false)
   })
 })

@@ -11,7 +11,7 @@ import { useOnline } from '@/hooks/use-online'
 import { useLancamento } from '@/hooks/use-lancamentos'
 import { useMoverParaLixeiraComDesfazer } from '@/hooks/use-lixeira'
 import { useAlterarStatusLancamento, useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
-import { ErroApi } from '@/lib/http'
+import { ErroApi, traduzirErro } from '@/lib/http'
 import { partesDaData } from '@/lib/data'
 import type { Lancamento } from '@/types/api'
 
@@ -65,7 +65,8 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
           toast.success(
             contaNoSaldo ? 'Lançamento de volta ao saldo' : 'Lançamento fora do saldo. Ele continua na lista.',
           ),
-        onError: () => toast.error('Não foi possível mudar Conta no saldo.'),
+        onError: (erro) =>
+          toast.error(traduzirErro(erro, { padrao: 'Não foi possível mudar Conta no saldo.' }).mensagem),
         onSettled: () => setStatusOtimista(null),
       },
     )
@@ -75,15 +76,15 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
   const moverParaLixeira = () => {
     if (!lancamento) return
     const movido = moverComDesfazer(lancamento.id, {
-      onErroAoDesfazer: () => toast.error('Não foi possível restaurar.'),
+      onErroAoDesfazer: (erro) => toast.error(traduzirErro(erro, { padrao: 'Não foi possível restaurar.' }).mensagem),
     })
     const idToast = mostrarToastDesfazer({
       mensagem: 'Movido para a lixeira',
       onDesfazer: () => void movido.desfazer(),
     })
-    movido.envio.catch(() => {
+    movido.envio.catch((erro: unknown) => {
       toast.dismiss(idToast)
-      toast.error('Não foi possível mover para a lixeira.')
+      toast.error(traduzirErro(erro, { padrao: 'Não foi possível mover para a lixeira.' }).mensagem)
     })
     router.push(listaDoMes(lancamento))
   }
@@ -96,7 +97,7 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
         toast(textoRestaurado(restaurado.status), {
           icon: <RotateCcw className="size-5" aria-hidden="true" />,
         }),
-      onError: () => toast.error('Não foi possível restaurar.'),
+      onError: (erro) => toast.error(traduzirErro(erro, { padrao: 'Não foi possível restaurar.' }).mensagem),
     })
   }
 
