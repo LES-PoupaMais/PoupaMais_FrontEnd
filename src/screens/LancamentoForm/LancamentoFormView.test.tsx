@@ -35,11 +35,12 @@ Element.prototype.releasePointerCapture ??= () => {}
 type Enviado = { metodo: string; caminho: string; corpo: unknown }
 let enviados: Enviado[] = []
 
+// Como a API v1.2.0: o status vem do corpo (padrão ATIVO)
 const lancamentoSalvo = (corpo: Record<string, unknown>, id = 50): Lancamento => ({
   ...(lancamentosDemo[0] as Lancamento),
+  status: 'ATIVO',
   ...(corpo as Partial<Lancamento>),
   id,
-  status: 'ATIVO',
 })
 
 const naLixeira: Lancamento = {
@@ -136,22 +137,26 @@ describe('Novo lançamento', () => {
       {
         metodo: 'POST',
         caminho: '/api/lancamentos',
-        corpo: { descricao: 'Mercado do mês', tipo: 'DESPESA', data: '2026-11-05', valor: 1120.35, categoriaIds: [2] },
+        corpo: {
+          descricao: 'Mercado do mês',
+          tipo: 'DESPESA',
+          data: '2026-11-05',
+          valor: 1120.35,
+          categoriaIds: [2],
+          status: 'ATIVO',
+        },
       },
     ])
   })
 
-  it('"Conta no saldo" desligado: depois de criar, manda o PATCH de status INATIVO', async () => {
+  it('"Conta no saldo" desligado: o status INATIVO vai no próprio POST, sem PATCH depois', async () => {
     const { usuario } = renderizar()
     await preencher(usuario, { saldo: false })
     await usuario.click(botaoSalvar())
 
     await waitFor(() => expect(rota.replace).toHaveBeenCalled())
-    expect(enviados.map((e) => `${e.metodo} ${e.caminho}`)).toEqual([
-      'POST /api/lancamentos',
-      'PATCH /api/lancamentos/50/status',
-    ])
-    expect(enviados[1].corpo).toEqual({ status: 'INATIVO' })
+    expect(enviados.map((e) => `${e.metodo} ${e.caminho}`)).toEqual(['POST /api/lancamentos'])
+    expect(enviados[0].corpo).toMatchObject({ status: 'INATIVO' })
   })
 
   it('sem resposta da API: o formulário continua preenchido e o toast oferece tentar de novo', async () => {
@@ -340,9 +345,27 @@ describe('Editar lançamento', () => {
       {
         metodo: 'PUT',
         caminho: '/api/lancamentos/3',
-        corpo: { descricao: 'Mercado do mês', tipo: 'DESPESA', data: '2026-11-05', valor: 1200, categoriaIds: [2] },
+        corpo: {
+          descricao: 'Mercado do mês',
+          tipo: 'DESPESA',
+          data: '2026-11-05',
+          valor: 1200,
+          categoriaIds: [2],
+          status: 'ATIVO',
+        },
       },
     ])
+  })
+
+  it('tirar do saldo no Editar: o status INATIVO vai no próprio PUT, numa chamada só', async () => {
+    const { usuario } = renderizar({ modo: 'editar', id: 3 })
+    expect(await screen.findByDisplayValue('Mercado do mês')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('switch', { name: 'Conta no saldo' }))
+    await usuario.click(botaoSalvar())
+
+    await waitFor(() => expect(rota.replace).toHaveBeenCalled())
+    expect(enviados.map((e) => `${e.metodo} ${e.caminho}`)).toEqual(['PUT /api/lancamentos/3'])
+    expect(enviados[0].corpo).toMatchObject({ status: 'INATIVO' })
   })
 
   it('não encontrado (404 ou endereço sem número)', async () => {

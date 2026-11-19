@@ -1,7 +1,7 @@
 import type { Page, Route } from '@playwright/test'
 
 // API simulada do formulário de lançamento (Novo/Editar): categorias com criar (409 em duplicada), lançamento por id,
-// POST/PUT/PATCH de status e restaurar. Guarda o que foi enviado para o teste conferir.
+// POST/PUT (com o status de "Conta no saldo" no corpo, v1.2.0), PATCH de status e restaurar. Guarda o que foi enviado para o teste conferir.
 export type Enviado = { metodo: string; caminho: string; corpo: unknown }
 
 type Categoria = { id: number; descricao: string; ativa: boolean; quantidadeLancamentos: number }
@@ -80,10 +80,11 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     if (rota.request().method() !== 'POST')
       return rota.fulfill({ json: { itens: [], pagina: 0, tamanho: 12, total: 0, totalPaginas: 0 } })
     const corpo = registrar(rota) as { categoriaIds: number[] } & Record<string, unknown>
+    // Contrato v1.2.0: o status vem no corpo (padrão ATIVO)
     const novo = {
       ...corpo,
       id: proximoId++,
-      status: 'ATIVO',
+      status: corpo.status ?? 'ATIVO',
       categorias: corpo.categoriaIds.map((id) => categorias.find((c) => c.id === id)),
       dataCadastro: '2026-11-18T12:00:00Z',
       dataAtualizacao: '2026-11-18T12:00:00Z',
@@ -102,7 +103,7 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     let novo = atual
     if (acao === '/status') novo = { ...atual, status: corpo?.status }
     else if (acao === '/restaurar') novo = { ...atual, status: 'INATIVO', dataExclusao: null }
-    else if (req.method() === 'PUT') novo = { ...atual, ...corpo }
+    else if (req.method() === 'PUT') novo = { ...atual, ...corpo, status: corpo?.status ?? atual.status }
     else if (req.method() === 'DELETE') novo = { ...atual, status: 'DELETADO' }
     lancamentos.set(Number(id), novo)
     return rota.fulfill({ json: novo })

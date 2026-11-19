@@ -54,8 +54,9 @@ test('roteiro da demo: cria a categoria pelo campo e salva com duas categorias e
     data: '2026-11-05',
     valor: 86.4,
     categoriaIds: [100, 2],
+    status: 'ATIVO',
   })
-  // "Conta no saldo" ligado: nasce ATIVO, sem PATCH de status
+  // "Conta no saldo" vai no próprio POST: nenhum PATCH de status depois
   expect(enviados.some((e) => e.caminho.endsWith('/status'))).toBe(false)
 })
 
@@ -76,7 +77,7 @@ test('validação: data que não existe, valor zero e sem categoria não enviam'
   expect(enviados).toHaveLength(0)
 })
 
-test('editar: muda o valor e tira do saldo (PUT + PATCH de status)', async ({ page }) => {
+test('editar: muda o valor e tira do saldo (status no próprio PUT)', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/lancamentos/3/editar')
 
@@ -91,12 +92,9 @@ test('editar: muda o valor e tira do saldo (PUT + PATCH de status)', async ({ pa
   const put = enviados.find((e) => e.metodo === 'PUT')
   expect(put).toMatchObject({
     caminho: '/api/lancamentos/3',
-    corpo: { valor: 1200, data: '2026-11-05', categoriaIds: [2] },
+    corpo: { valor: 1200, data: '2026-11-05', categoriaIds: [2], status: 'INATIVO' },
   })
-  expect(enviados.find((e) => e.metodo === 'PATCH')).toMatchObject({
-    caminho: '/api/lancamentos/3/status',
-    corpo: { status: 'INATIVO' },
-  })
+  expect(enviados.some((e) => e.metodo === 'PATCH')).toBe(false)
 })
 
 test('descartar alterações: pelo ‹ e pelo Voltar do navegador', async ({ page }) => {

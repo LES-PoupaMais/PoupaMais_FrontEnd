@@ -11,20 +11,16 @@ import { useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
 import { useLancamento } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useOnline } from '@/hooks/use-online'
-import {
-  useAlterarStatusLancamento,
-  useRestaurarLancamento,
-  useSalvarLancamento,
-} from '@/hooks/use-mutacoes-lancamento'
+import { useRestaurarLancamento, useSalvarLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { hojeIso, partesDaData } from '@/lib/data'
 import { erroDoNomeDaCategoria } from '@/lib/erro-categoria'
 import { ErroApi } from '@/lib/http'
 import { comPeriodo } from '@/lib/periodo'
-import type { Categoria, Lancamento, StatusLancamento } from '@/types/api'
+import type { Categoria, Lancamento } from '@/types/api'
 import { useAvisoAoSair, type PedidoDeSaida } from './useAvisoAoSair'
 
 // Novo e Editar lançamento (pranchetas novo-*, editar-*, nova-categoria-inline-celular, novo-categorias-celular).
-// Dados (lançamento e categorias), envio (POST/PUT + "Conta no saldo" pelo PATCH de status), criar categoria pelo campo,
+// Dados (lançamento e categorias), envio (POST/PUT com o status de "Conta no saldo" no mesmo corpo), criar categoria pelo campo,
 // "Descartar alterações?", Mover para a lixeira (Desfazer) e Restaurar (lançamento na lixeira), com os toasts.
 
 export const MENSAGENS_FORMULARIO = {
@@ -123,7 +119,6 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
   const consulta = useLancamento(idValido)
   const consultaCategorias = useCategorias()
   const salvarLancamento = useSalvarLancamento()
-  const alterarStatus = useAlterarStatusLancamento()
   const salvarCategoria = useSalvarCategoria()
   const { adiar, desfazer, confirmar } = useMoverParaLixeiraAdiado()
   const restaurarLancamento = useRestaurarLancamento()
@@ -197,16 +192,15 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
 
   async function salvar(dados: LancamentoFormDados) {
     if (enviando || semConexao) return
-    const { contaNoSaldo, ...corpo } = dados
-    const statusDesejado: Exclude<StatusLancamento, 'DELETADO'> = contaNoSaldo ? 'ATIVO' : 'INATIVO'
+    const { contaNoSaldo, ...resto } = dados
+    // "Conta no saldo" vai no próprio POST/PUT (contrato v1.2.0): uma chamada só
+    const corpo = { ...resto, status: contaNoSaldo ? ('ATIVO' as const) : ('INATIVO' as const) }
     setEnviando(true)
     setErrosDoServidor([])
     try {
       const salvo = await salvarLancamento.mutateAsync(
         modo === 'editar' && idValido ? { ...corpo, id: idValido } : corpo,
       )
-      // "Conta no saldo" não vai no POST/PUT: o lançamento novo nasce ATIVO; a mudança vai pelo PATCH de status
-      if (salvo.status !== statusDesejado) await alterarStatus.mutateAsync({ id: salvo.id, status: statusDesejado })
       toast.success(MENSAGENS_FORMULARIO.salvo)
       sair(listaDoMes(salvo.data))
     } catch (erro) {

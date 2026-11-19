@@ -70,6 +70,8 @@ export type LancamentoRequest = {
   data: DataIso
   valor: number
   categoriaIds: number[]
+  /** "Conta no saldo" (v1.2.0): no POST o padrão é ATIVO; no PUT, se omitido, mantém o atual */
+  status?: Exclude<StatusLancamento, 'DELETADO'>
 }
 
 /** Filtros da lista (e da exportação, que ignora a paginação). Sem `status` = ATIVO + INATIVO; `DELETADO` = Lixeira. */
