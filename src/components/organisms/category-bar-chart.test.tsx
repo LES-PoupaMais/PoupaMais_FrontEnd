@@ -1,5 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { lerPeriodo } from '@/lib/periodo'
+import { lerFiltros } from '@/screens/Lancamentos/filtrosDaUrl'
 import { CategoryBarChart, hrefDaCategoria } from './category-bar-chart'
 
 const dados = [
@@ -21,7 +23,7 @@ describe('CategoryBarChart', () => {
       'Mercado: R$ 1.480,35. Ver lançamentos de Mercado',
       'Outros: R$ 202,00. Ver lançamentos de Outros',
     ])
-    expect(links[1]).toHaveAttribute('href', '/lancamentos?categoriaId=2&mes=11&ano=2026&tipo=DESPESA')
+    expect(links[1]).toHaveAttribute('href', '/lancamentos?categoria=2&mes=11&ano=2026&tipo=DESPESA')
     expect(secao).toHaveTextContent('Tocar numa categoria abre Lançamentos filtrados por ela.')
   })
 
@@ -34,6 +36,12 @@ describe('CategoryBarChart', () => {
   it('carregando e o link montado', () => {
     const { container } = render(<CategoryBarChart dados={[]} total={0} mes={1} ano={2026} carregando />)
     expect(container.querySelector('[data-slot="grafico-carregando"]')).not.toBeNull()
-    expect(hrefDaCategoria(4, 1, 2027)).toBe('/lancamentos?categoriaId=4&mes=1&ano=2027&tipo=DESPESA')
+    expect(hrefDaCategoria(4, 1, 2027)).toBe('/lancamentos?categoria=4&mes=1&ano=2027&tipo=DESPESA')
+  })
+
+  it('o link usa os parâmetros que a tela de Lançamentos lê (categoria, tipo e mês aplicados)', () => {
+    const busca = new URL(hrefDaCategoria(2, 11, 2026), 'http://localhost').searchParams
+    expect(lerFiltros(busca)).toEqual({ q: '', tipo: 'DESPESA', status: null, categoriaId: 2 })
+    expect(lerPeriodo(busca)).toMatchObject({ mes: 11, ano: 2026 })
   })
 })

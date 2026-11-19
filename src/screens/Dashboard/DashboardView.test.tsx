@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { lerFiltros } from '@/screens/Lancamentos/filtrosDaUrl'
 import { dashboardDemo } from '@/test/msw/handlers'
 import { server } from '@/test/msw/server'
 import { renderComProviders } from '@/test/utils'
@@ -56,11 +57,13 @@ describe('Dashboard', () => {
     expect(resumo).toHaveTextContent('Dentro do limite')
     expect(screen.getByRole('region', { name: 'Receitas × Despesas' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Saldo mensal' })).toBeInTheDocument()
-    expect(
-      within(screen.getByRole('region', { name: 'Despesas por categoria' })).getByRole('link', {
-        name: /Ver lançamentos de Mercado/,
-      }),
-    ).toHaveAttribute('href', '/lancamentos?categoriaId=2&mes=11&ano=2026&tipo=DESPESA')
+    const mercado = within(screen.getByRole('region', { name: 'Despesas por categoria' })).getByRole('link', {
+      name: /Ver lançamentos de Mercado/,
+    })
+    expect(mercado).toHaveAttribute('href', '/lancamentos?categoria=2&mes=11&ano=2026&tipo=DESPESA')
+    // A tela de Lançamentos aplica o filtro que o link leva (mesmo nome de parâmetro)
+    const busca = new URL(mercado.getAttribute('href')!, 'http://localhost').searchParams
+    expect(lerFiltros(busca)).toMatchObject({ categoriaId: 2, tipo: 'DESPESA' })
     expect(screen.getByRole('region', { name: 'Maiores despesas' })).toHaveTextContent('64,7% das despesas do mês')
     expect(await screen.findByText('Olá, Usuário')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument()

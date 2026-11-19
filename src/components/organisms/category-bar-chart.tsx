@@ -9,7 +9,8 @@ import { DashboardSecao, GraficoCarregando } from './dashboard-secao'
 
 // CategoryBarChart do Design System: despesas do mês por categoria em barras horizontais, todas em despesa-grafico
 // (a cor diferencia tipos, não categorias), da maior para a menor, com o valor exato no fim da barra.
-// Cada linha é um link para Lançamentos filtrado pela categoria e pelo mesmo mês (`?categoriaId=&mes=&ano=&tipo=DESPESA`).
+// Cada linha é um link para Lançamentos filtrado pela categoria e pelo mesmo mês (`?categoria=&mes=&ano=&tipo=DESPESA`,
+// os mesmos nomes que a tela de Lançamentos lê da URL).
 // A lista de links já é a versão em texto do gráfico (a barra é decorativa). RN009: os valores vêm divididos da API.
 
 type CategoryBarChartProps = Omit<React.ComponentProps<'section'>, 'children'> & {
@@ -22,10 +23,10 @@ type CategoryBarChartProps = Omit<React.ComponentProps<'section'>, 'children'> &
   carregando?: boolean
 }
 
-/** Lançamentos da categoria no mês: `/lancamentos?categoriaId=2&mes=11&ano=2026&tipo=DESPESA` */
+/** Lançamentos da categoria no mês: `/lancamentos?categoria=2&mes=11&ano=2026&tipo=DESPESA` */
 export function hrefDaCategoria(categoriaId: number, mes: number, ano: number): string {
   const busca = new URLSearchParams({
-    categoriaId: String(categoriaId),
+    categoria: String(categoriaId),
     mes: String(mes),
     ano: String(ano),
     tipo: 'DESPESA',

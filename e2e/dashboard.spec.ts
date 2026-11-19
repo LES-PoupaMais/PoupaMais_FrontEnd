@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { simularApiBasica } from './fixtures/api'
 import { simularDashboard } from './fixtures/dashboard'
+import { simularApiDeLancamentos } from './fixtures/lancamentos'
 import { entrarComSessaoFalsa } from './fixtures/sessao'
 
 // Dashboard (pranchetas dashboard-*): números do mês, troca de mês pela URL, vazio, erro e o atalho para Lançamentos.
@@ -72,10 +73,21 @@ test.describe('dashboard', () => {
 
   test('tocar numa categoria leva a Lançamentos filtrado pela categoria e pelo mês', async ({ page }) => {
     await simularDashboard(page)
+    const api = await simularApiDeLancamentos(page)
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/dashboard?mes=11&ano=2026')
 
     await page.getByRole('link', { name: 'Mercado: R$ 1.480,35. Ver lançamentos de Mercado' }).click()
-    await expect(page).toHaveURL(/\/lancamentos\?categoriaId=2&mes=11&ano=2026&tipo=DESPESA/)
+    await expect(page).toHaveURL(/\/lancamentos\?categoria=2&mes=11&ano=2026&tipo=DESPESA/)
+
+    // O filtro foi aplicado na tela de Lançamentos: a barra mostra Mercado e Despesa, e a lista só tem os de Mercado
+    const barra = page.getByRole('search', { name: 'Filtrar lançamentos' })
+    await expect(barra.getByRole('combobox', { name: 'Categoria' })).toHaveText('Mercado', { timeout: 15_000 })
+    await expect(barra.getByRole('combobox', { name: 'Tipo' })).toHaveText('Despesa')
+    const deMercado = api.lancamentos.filter(
+      (l) => l.status !== 'DELETADO' && l.data.startsWith('2026-11') && l.categorias.some((c) => c.id === 2),
+    ).length
+    await expect(barra.getByRole('status')).toHaveText(`${deMercado} lançamentos`)
+    await expect(page.getByRole('table').getByRole('link', { name: 'Ver Salário' })).toBeHidden()
   })
 })
