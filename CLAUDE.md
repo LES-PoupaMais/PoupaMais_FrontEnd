@@ -19,17 +19,23 @@ O contrato está repetido abaixo; se mudar aqui, mude lá também.
 
 O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, switch "ATIVO") **não vale mais**: use o Design System e as pranchetas.
 
-## Estado atual (18/11/2026)
+## Estado atual (19/11/2026)
 
 - **Fundação pronta (B1, branch `feat/fundacao-front`):** arquitetura `app/ → screens/ → components/`, tokens do Design System com tema
   claro/escuro, Plus Jakarta Sans, templates (`app-shell`, `auth`, `public`, `dashboard`, `form-page`), `MoneyText`, `Logo`, contrato v1.1.0
-  em `types/`, `services/`, `hooks/` e `schemas/`, regras de arquitetura no ESLint. As telas ainda são **placeholders** no padrão novo
-  (landing, login, cadastro, dashboard).
+  em `types/`, `services/`, `hooks/` e `schemas/`, regras de arquitetura no ESLint.
 - **Navegação da área logada pronta (B2, branch `feat/navegacao`):** `month-navigator` (molécula), `sidebar`, `bottom-nav`, `top-bar` e
   `create-sheet` (organismos) ligados na `AppShellView`, e a `logoutAction` em `actions/auth.actions.ts`.
 - **Componentes comuns prontos (B2, branches `feat/componentes-form` e `feat/componentes-feedback`):** átomos alinhados ao DS e moléculas
   de formulário e de exibição/feedback (✓ na tabela do Atomic Design).
-- **Próximo bloco (plano da Fase B):** B4 = telas na ordem da seção "Telas"; cada tela cria os organismos que só ela usa. Cada bloco termina com a pipeline local verde e push.
+- **Telas prontas e integradas (B4, branch `feat/telas-integradas`):** as 9 linhas da seção "Telas" (acesso, Dashboard, Lançamentos com
+  visualização e Lixeira, Novo/Editar, Importar e Exportar, Categorias, Perfil, Landing, Privacidade, 404 e erro), com Context + View +
+  MSW e E2E do roteiro da demo. Na integração ficou **uma versão de cada peça comum**: `useOnline` (conexão), `mostrarToastDesfazer` +
+  `hooks/use-lixeira-adiada` (lixeira com Desfazer na lista, na visualização e no Editar), `categoria-dialog` (Categorias, folha Criar e
+  campo do formulário), `transaction-detail` (visualização e Editar de item na lixeira), `useBaixarModeloCsv` (Lançamentos, Importar e
+  vazio do Dashboard), `lib/baixar-arquivo` (exportar, modelo e "Baixar meus dados"), `lib/erro-categoria` sobre `traduzirErro` e
+  `lib/format.plural`.
+- **Próximo passo:** revisar as Pendências abaixo com a equipe (as marcadas "decidir" esperam o líder/design).
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
 - Entrega do código no GitHub até **26/11/2026**. Sem deploy (decisão de 12/11/2026): roda localmente, API com
@@ -477,25 +483,25 @@ reservado (cores, navegação, casca de visualização) para crescer sem refazer
 Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 
 1. **Navegação (sobras do B2):**
-   - "Nova categoria" na folha Criar leva à tela Categorias; o DS pede abrir o diálogo de categoria ali mesmo (trocar `href` por
-     `onSelect` quando o organismo `categoria-dialog` existir, B4).
-   - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; ligar ao `date-picker` no modo mês quando ele existir.
+   - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; nenhuma tela liga ainda. Ligar ao `date-picker` no modo mês
+     (o `calendar` já tem `modo="mes"`).
    - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
-   - Ao entrar (`loginAction`, B4), limpar o cache do TanStack Query para não mostrar dados da sessão anterior (o "Sair" não limpa:
-     o redirect da action interrompe o código depois dela).
-2. **Mensagens do schema × DS:** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
+2. **Mensagens do schema × DS (decidir):** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
    o DS (MoneyField/DatePicker) pede "Informe um valor maior que zero." e "Informe uma data válida, no formato dd/mm/aaaa.". O limite do
    valor também diverge (schema/CLAUDE.md R$ 999.999.999,99; README do MoneyField R$ 99.999.999.999.999,99). Decidir com a equipe e alinhar.
-   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido.
-3. **Hooks que faltam:** importar CSV, exportar, baixar modelo, perfil (nome, foto, dados) e inativar/excluir categoria. Os services já existem;
-   os hooks entram com as telas (B4) seguindo os de `hooks/use-mutacoes-lancamento.ts`.
-4. **Telas placeholder** (Landing, Login, Cadastro, Dashboard): o B4 troca pelo conteúdo real (organismos, dados, estados e E2E do fluxo).
-   Faltam as rotas de esqueci/redefinir senha, lançamentos, categorias, lixeira, perfil, privacidade, `not-found` e `error`.
-5. **Tradução de erros em `lib/http`:** o DS pede que nenhuma tela mostre a mensagem crua da API (mapear status e `erros[]`). Hoje o
-   `ErroApi` carrega a `mensagem` da API; a tradução entra com as primeiras telas que enviam dados.
-6. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
+   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido. A prancheta `novo-erros-celular`
+   ainda pede "A descrição é obrigatória." e "Informe pelo menos uma categoria."; o formulário usa as do schema até a decisão.
+3. **Tradução de erros (parcial):** `lib/http.traduzirErro(erro, { porStatus?, porCampo? })` aceita `ErroApi`, o resultado de uma
+   Server Action (`{ status, erros }`) ou qualquer valor e devolve `{ status, mensagem, campos }` com frases do DS
+   (`MENSAGENS_POR_STATUS`; campo sem mensagem própria → "Confira este campo."). Use `mensagem` no toast/aviso e `campos` no `setError`;
+   nunca `erro.message` do `ErroApi`. Já usam: telas de acesso e `lib/erro-categoria`. **Ainda mostram a mensagem da API:**
+   - `screens/Categorias/CategoriasContext.tsx` (`mensagemDe`) e `screens/AppShell/useNovaCategoria.ts` (toast de erro que não é do campo);
+   - `screens/Importar/ImportarContext.tsx` (arquivo recusado e sem conexão) e os `falhas[].motivo` do resultado (vêm da API por contrato);
+   - `screens/LancamentoForm`: os `erros[]` do `400` vão para os campos com a mensagem da própria API (os toasts já são do front);
+   - Perfil e as telas de Lançamentos/Lixeira usam textos próprios por caso ("Não foi possível …"), sem `traduzirErro`.
+4. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
    Context da tela. Atualizar nos dois repositórios juntos.
-7. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
+5. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
    - **Desbloqueado no merge do B2:** o átomo `alert-dialog` e o `button` (`perigo`, `padrao` 48px) já existem; falta aplicar abaixo.
    - `confirm-dialog` usa o primitivo `AlertDialog` do Radix direto (o átomo `alert-dialog` ainda não existia); trocar
      pelos componentes dele mantendo a API. O botão destrutivo usa `className` de perigo (`bg-destructive`) e `h-12` até o `button`
@@ -503,83 +509,70 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
-   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.
-8. **Dashboard (B4):**
+   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover (decidir).
+   - `upload-area` ganhou na integração a prop opcional `onBaixarModelo` (botão com o mesmo visual do link `modeloHref`), para o modelo
+     CSV baixar pelo hook com toast: registrar no README do UploadArea.
+6. **Dashboard:**
    - `maioresDespesas` do contrato não traz a `data`: as pranchetas mostram "1 nov · Aluguel", a tela mostra só as categorias.
      Acrescentar `data` em `maioresDespesas[]` (back + os dois `CLAUDE.md`) e exibir com `formatarDataCurta`.
-   - "Baixar modelo CSV" do estado vazio leva a `/lancamentos/importar#modelo-csv` (a tela Importar baixa o modelo). Trocar pelo
-     download direto quando o hook de baixar o modelo existir (Pendência 3), ou garantir o `id="modelo-csv"` na tela Importar.
    - O "mês vazio" é deduzido de `receitas = despesas = 0`: um mês só com lançamentos fora do saldo também cai no "Comece pelo seu
      primeiro lançamento". Resolver com uma contagem de lançamentos do mês no `GET /dashboard` (decisão com o back).
    - O gráfico de área não abre a dica no mês atual por padrão (a prancheta mostra "Nov" aberto como exemplo); abre com mouse, toque
      e teclado (setas, `accessibilityLayer` do Recharts).
-9. **Novo/Editar lançamento (B4, tela 4):**
+7. **Novo/Editar lançamento:**
    - "Limpar" do celular é um botão fixo sobre a TopBar (a `TopBar` da casca não tem slot de ação). Proposta: prop `acao` na `TopBar`
      preenchida pela tela.
    - O campo de categorias abre em popover também no celular; a prancheta `novo-categorias-celular` pede folha de baixo. Proposta: prop
      `apresentacao` (`popover`/`folha`) no `multi-select`, como no `date-picker`.
-   - Sem o lápis de editar/reativar categoria no campo: entra quando o `categoria-dialog` (tela Categorias) existir; aí o
-     `nova-categoria-dialog` (só cria) pode virar o modo "criar" dele.
-   - `lancamento-na-lixeira` (Editar de item na lixeira) desenha os dados à mão: trocar pelo `transaction-detail` quando existir.
-   - "Mover para a lixeira" no Editar: toast com Desfazer sem a barra/contador de 5 s e a linha ainda aparece na lista até o toast fechar;
-     o DELETE não sai se a pessoa fechar a aba nesses 5 s. Reusar o toast da lista (tela 3) quando existir.
-   - Mensagens do `lancamento.schema` × prancheta `novo-erros-celular` ("A descrição é obrigatória.", "Informe um valor maior que zero.",
-     "Informe pelo menos uma categoria."): a tela usa as do schema até a decisão da Pendência 2.
-   - `erros[]` da API vão para os campos com a mensagem da própria API; os toasts usam textos do front (pendência 5 continua).
-   - `useSemConexao` está em `screens/LancamentoForm`: mover para `hooks/` quando outra tela precisar.
-10. **Lançamentos, visualização, exportar e Lixeira (B4, telas 3, 5-exportar e 7):**
+   - Criar categoria pelo campo já usa o `categoria-dialog` (modo "nova", com os textos da prancheta `nova-categoria-inline-celular`);
+     falta o lápis de editar/reativar categoria dentro do campo (o `multi-select` não tem a ação; o diálogo já tem o modo editar).
+   - Editar de item na lixeira usa o `transaction-detail`: a auditoria aparece na `timeline` ("Histórico"), como na visualização
+     (item 8), e não nas duas linhas "Criado em / Movido para a lixeira em" da prancheta `editar-lixeira-computador`.
+   - Sessão vencida: o login mostra o aviso, mas o formulário não guarda rascunho; a frase "Seu rascunho foi guardado" (prancheta e DS)
+     só entra quando houver rascunho.
+8. **Lançamentos, visualização, exportar e Lixeira:**
    - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
      desenham uma página. A Lixeira ganhou um "Exportar" (não está na prancheta `lixeira-*`) para cumprir "só exporta a lixeira com o
-     filtro Lixeira"; confirmar com o design.
+     filtro Lixeira"; confirmar com o design (decidir).
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
    - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
-   - "Mover para a lixeira": o toast segue aberto ao trocar de tela (fila global em `hooks/use-lixeira-adiada.ts`); o DELETE vai quando o
-     toast fecha sem Desfazer ou no `pagehide`. Fechar a aba logo após mover pode perder o DELETE (fetch sem `keepalive`).
-   - Textos sem prancheta (escolhidos aqui, revisar): toasts "Lançamento fora do saldo. Ele continua na lista." / "Lançamento de volta ao
-     saldo" / "Arquivo exportado" / "Modelo CSV baixado" e erros "Não foi possível …"; vazio de filtro "Nada encontrado com esses filtros".
-   - `useBaixarModeloCsv` (em `hooks/use-exportacao.ts`) e `useConexao` (`hooks/use-conexao.ts`) podem duplicar hooks de Importar/outras
-     telas no merge: manter um só.
-
-11. **Importar e Categorias (B4):**
+   - "Mover para a lixeira" (lista, visualização e Editar): o toast segue aberto ao trocar de tela (fila global em
+     `hooks/use-lixeira-adiada.ts`); o DELETE vai quando o toast fecha sem Desfazer ou no `pagehide`. Fechar a aba logo após mover pode
+     perder o DELETE (fetch sem `keepalive`).
+   - Textos sem prancheta (escolhidos nas telas, revisar e registrar no DS): toasts "Lançamento fora do saldo. Ele continua na lista." /
+     "Lançamento de volta ao saldo" / "Arquivo exportado" / "Modelo CSV baixado" e erros "Não foi possível …"; vazio de filtro "Nada
+     encontrado com esses filtros". Os mesmos textos de toast (restaurar, Conta no saldo, lixeira) se repetem nos Contexts de
+     Lançamentos, Lixeira, visualização e formulário: juntar num só lugar se forem mudar.
+9. **Importar e Categorias:**
    - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
      o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.
    - "Excluir categoria" exclui direto (sem ConfirmDialog), como na prancheta `categoria-editar-celular`; decidir se pede confirmação.
    - Editar uma categoria **inativa** (computador) mostra só Nome e Excluir: não há prancheta de "Reativar" dentro do diálogo (Reativar fica na linha).
    - Textos dos toasts de categoria ("Categoria criada/renomeada/inativada/reativada/excluída") não estão no DS: registrar no DS.
    - Importar sem `stepper`: as pranchetas `importar-*` não têm indicador de passos (escolher → importando → resultado na mesma tela).
-   - "Baixar modelo CSV" é um link direto para `/api/lancamentos/template-csv` (o BFF repassa com o cookie; o navegador usa o
-     `Content-Disposition`), sem hook de download. Se a sessão vencer, o navegador baixa o JSON do erro.
-   - Os motivos das linhas ignoradas (`falhas[].motivo`) e o erro de arquivo recusado aparecem como a API manda (ver pendência 5).
    - O DS (ImportResult/UploadArea) cita `ResultadoImportacao`/`ImportarDialog`; no código são `import-result` e a tela `screens/Importar`.
-12. **Perfil (B4):**
+10. **Perfil:**
    - `excluir-conta-dialog` compõe o `ConfirmDialog` com os campos nos `children` (não usa `confirmacaoDigitada`), porque a ajuda da
      prancheta fala também da senha ("…igual a EXCLUIR e a senha estiver preenchida." / "Tudo certo: o botão está liberado."). O
      `ConfirmDialog` não aceita `aria-describedby` no botão de confirmar nem um aviso dentro da descrição: o aviso "Não dá para desfazer."
      fica fora do `aria-describedby` do diálogo. Se o DS quiser, acrescentar essas duas props à molécula.
-   - `salvarArquivo` (download de blob) e `useMontado` ficam em `screens/Perfil/usePerfilAmbiente.ts`; quando a exportação precisar,
-     mover `salvarArquivo` para `lib/`.
+   - `actions/perfil.actions.ts` tem o próprio `fetch` (e lê o `API_URL` uma vez); `lib/api-servidor.chamarApiDoServidor` faz o mesmo, mas
+     não devolve a `mensagem`, que a troca de senha usa para separar os dois `422` ("senha atual errada" × "igual à atual"). Juntar quando
+     o back mandar um `erros[]`/código para cada caso, ou quando o `chamarApiDoServidor` puder devolver um motivo.
+   - `useMontado` fica em `screens/Perfil/usePerfilAmbiente.ts` (só o Perfil usa).
    - Sem prancheta de tablet do Perfil: a 834px fica em 1 coluna (as 2 colunas só aparecem com 420px cada, como o `auto-fit` da
      prancheta do computador).
-   - E2E das Server Actions (trocar senha, excluir conta): o `playwright.config.ts` sobe a API falsa `e2e/api-falsa.mjs` na porta
-     `PORT + 1000` e passa `API_URL` para o Next. Login e cadastro podem usar a mesma API falsa.
-13. **Telas de acesso e públicas (B4, branch `feat/tela-auth`):**
-   - **Feito:** pendência 1 (último item: o `LoginContext` e o `CadastroContext` chamam `queryClient.clear()` ao entrar) e pendência 5
-     (tradução de erros). Rotas novas: `esqueci-senha`, `redefinir-senha?token=`, `privacidade`, `not-found`, `error` e `(app)/error`.
-     Componentes novos (fora da tabela): molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
-     `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`, `landing-passos`,
-     `landing-dados`, `politica-privacidade`.
-   - **Como traduzir erros (todas as telas):** `traduzirErro(erro, { porStatus?, porCampo? })` de `lib/http` aceita `ErroApi` (BFF), o
-     resultado de uma Server Action (`{ status, erros }`) ou qualquer valor, e devolve `{ status, mensagem, campos }` com frases do DS
-     (`MENSAGENS_POR_STATUS`; campo sem mensagem própria → "Confira este campo."). Use `mensagem` no toast/aviso e `campos` no `setError`.
-     Nunca mostre `erro.message` do `ErroApi` (continua existindo, sem mudança, para quem já usa).
-   - **Server Actions → API:** `lib/api-servidor.ts` (`server-only`, `chamarApiDoServidor`) devolve `{ ok, status, dados | erros }`
-     serializável; use nas actions do Perfil (troca de senha, excluir conta) em vez de outro `fetch`.
-   - **Sessão vencida:** o `AppProviders` agora manda para `/login?voltar=…&sessao=vencida`; o login mostra o aviso e "Entre de novo".
-     O rascunho guardado (texto da prancheta e do DS) depende da tela de formulário: quando existir, acrescentar "Seu rascunho foi guardado".
+   - E2E das Server Actions: o `playwright.config.ts` sobe a API falsa `e2e/api-falsa.mjs` na porta `PORT + 1000` (rotas `/api/auth/*`,
+     troca de senha e excluir conta) e passa `API_URL` para o Next.
+11. **Telas de acesso e públicas:**
    - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
-   - **AuthTemplate no celular:** a prancheta `login-celular` não tem card (logo no topo à esquerda, texto alinhado à esquerda, rodapé só
-     com a política); o template aprovado mantém o card central em todas as larguras. Decidir se o template ganha o layout do celular.
+   - **AuthTemplate no celular (decidir):** a prancheta `login-celular` não tem card (logo no topo à esquerda, texto alinhado à esquerda,
+     rodapé só com a política); o template aprovado mantém o card central em todas as larguras. Decidir se o template ganha o layout do celular.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
    - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
-
+   - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
+     `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`, `landing-passos`,
+     `landing-dados`, `politica-privacidade`.
+   - Landing: a prévia do Saldo do mês usa o `highlight-card`; a prévia de "Despesas por categoria" continua desenhada na própria
+     `landing-passos` (o `category-bar-chart` tem links, total e a dica de toque, que a prancheta `landing-*` não tem).
