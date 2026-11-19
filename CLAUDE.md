@@ -226,8 +226,8 @@ Navegador ──► Next (mesma origem)                                   ──
 | --- | --- | --- | --- |
 | **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
 | **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, **highlight-card** ✓, **income-expense-chart** ✓, **balance-chart** ✓, **category-bar-chart** ✓, **maiores-despesas** ✓, **dashboard-secao** ✓ (card das seções do Dashboard), **transaction-row** ✓, **transaction-table** ✓, **transaction-detail** ✓, **filter-bar** ✓, **lancamento-form** ✓, **export-dialog** ✓, **categoria-dialog** ✓, **import-result** ✓, excluir-conta-dialog, login-form, cadastro-form |
-| **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, **highlight-card** ✓, **income-expense-chart** ✓, **balance-chart** ✓, **category-bar-chart** ✓, **maiores-despesas** ✓, **dashboard-secao** ✓ (card das seções do Dashboard), **transaction-row** ✓, **transaction-table** ✓, **transaction-detail** ✓, **filter-bar** ✓, **lancamento-form** ✓, **export-dialog** ✓, **categoria-dialog** ✓, **import-result** ✓, **excluir-conta-dialog** ✓, login-form, cadastro-form |
+| **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓, **perfil-secao** ✓, **foto-perfil** ✓, **dados-pessoais-form** ✓, **alterar-senha-form** ✓, **aparencia-tema** ✓, **perfil-atalhos** ✓, **perfil-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
 tokens, estados e acessibilidade. Passo a passo: skill `componente-atomic`.
@@ -552,3 +552,14 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      `Content-Disposition`), sem hook de download. Se a sessão vencer, o navegador baixa o JSON do erro.
    - Os motivos das linhas ignoradas (`falhas[].motivo`) e o erro de arquivo recusado aparecem como a API manda (ver pendência 5).
    - O DS (ImportResult/UploadArea) cita `ResultadoImportacao`/`ImportarDialog`; no código são `import-result` e a tela `screens/Importar`.
+12. **Perfil (B4):**
+   - `excluir-conta-dialog` compõe o `ConfirmDialog` com os campos nos `children` (não usa `confirmacaoDigitada`), porque a ajuda da
+     prancheta fala também da senha ("…igual a EXCLUIR e a senha estiver preenchida." / "Tudo certo: o botão está liberado."). O
+     `ConfirmDialog` não aceita `aria-describedby` no botão de confirmar nem um aviso dentro da descrição: o aviso "Não dá para desfazer."
+     fica fora do `aria-describedby` do diálogo. Se o DS quiser, acrescentar essas duas props à molécula.
+   - `salvarArquivo` (download de blob) e `useMontado` ficam em `screens/Perfil/usePerfilAmbiente.ts`; quando a exportação precisar,
+     mover `salvarArquivo` para `lib/`.
+   - Sem prancheta de tablet do Perfil: a 834px fica em 1 coluna (as 2 colunas só aparecem com 420px cada, como o `auto-fit` da
+     prancheta do computador).
+   - E2E das Server Actions (trocar senha, excluir conta): o `playwright.config.ts` sobe a API falsa `e2e/api-falsa.mjs` na porta
+     `PORT + 1000` e passa `API_URL` para o Next. Login e cadastro podem usar a mesma API falsa.
