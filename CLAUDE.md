@@ -226,7 +226,7 @@ Navegador ──► Next (mesma origem)                                   ──
 | --- | --- | --- | --- |
 | **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
 | **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, **highlight-card** ✓, **income-expense-chart** ✓, **balance-chart** ✓, **category-bar-chart** ✓, **maiores-despesas** ✓, **dashboard-secao** ✓ (card das seções do Dashboard), **transaction-row** ✓, **transaction-table** ✓, **transaction-detail** ✓, **filter-bar** ✓, **lancamento-form** ✓, **export-dialog** ✓, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, **highlight-card** ✓, **income-expense-chart** ✓, **balance-chart** ✓, **category-bar-chart** ✓, **maiores-despesas** ✓, **dashboard-secao** ✓ (card das seções do Dashboard), **transaction-row** ✓, **transaction-table** ✓, **transaction-detail** ✓, **filter-bar** ✓, **lancamento-form** ✓, **export-dialog** ✓, **categoria-dialog** ✓, **import-result** ✓, excluir-conta-dialog, login-form, cadastro-form |
 | **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
@@ -541,3 +541,14 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - `useBaixarModeloCsv` (em `hooks/use-exportacao.ts`) e `useConexao` (`hooks/use-conexao.ts`) podem duplicar hooks de Importar/outras
      telas no merge: manter um só.
 
+11. **Importar e Categorias (B4):**
+   - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
+     o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.
+   - "Excluir categoria" exclui direto (sem ConfirmDialog), como na prancheta `categoria-editar-celular`; decidir se pede confirmação.
+   - Editar uma categoria **inativa** (computador) mostra só Nome e Excluir: não há prancheta de "Reativar" dentro do diálogo (Reativar fica na linha).
+   - Textos dos toasts de categoria ("Categoria criada/renomeada/inativada/reativada/excluída") não estão no DS: registrar no DS.
+   - Importar sem `stepper`: as pranchetas `importar-*` não têm indicador de passos (escolher → importando → resultado na mesma tela).
+   - "Baixar modelo CSV" é um link direto para `/api/lancamentos/template-csv` (o BFF repassa com o cookie; o navegador usa o
+     `Content-Disposition`), sem hook de download. Se a sessão vencer, o navegador baixa o JSON do erro.
+   - Os motivos das linhas ignoradas (`falhas[].motivo`) e o erro de arquivo recusado aparecem como a API manda (ver pendência 5).
+   - O DS (ImportResult/UploadArea) cita `ResultadoImportacao`/`ImportarDialog`; no código são `import-result` e a tela `screens/Importar`.
