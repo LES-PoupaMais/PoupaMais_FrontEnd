@@ -41,7 +41,13 @@ export function LoginForm({
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema), defaultValues: { email: emailInicial, senha: '' } })
 
   return (
-    <form aria-label="Entrar" noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form
+      method="post"
+      aria-label="Entrar"
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col gap-4"
+    >
       <EmailField {...register('email')} error={errors.email?.message} />
       <PasswordField
         label="Senha"

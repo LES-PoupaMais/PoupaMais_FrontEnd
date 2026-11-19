@@ -50,6 +50,7 @@ export function AlterarSenhaForm({ enviando = false, onSubmit, bloqueado = false
   return (
     <PerfilSecao titulo="Alterar senha" icone={KeyRound}>
       <form
+        method="post"
         aria-label="Alterar senha"
         noValidate
         className="flex flex-col gap-4"

@@ -68,7 +68,7 @@ export function CadastroForm({
   )
 
   return (
-    <form aria-label="Criar conta" noValidate onSubmit={enviar} className="flex flex-col gap-4">
+    <form method="post" aria-label="Criar conta" noValidate onSubmit={enviar} className="flex flex-col gap-4">
       {comErros > 0 && <ActionBanner variante="erro" texto={resumo(comErros)} />}
       <FormField label="Nome completo" error={errors.nome?.message}>
         <Input autoComplete="name" placeholder="Ex.: Ana Souza" {...register('nome')} />

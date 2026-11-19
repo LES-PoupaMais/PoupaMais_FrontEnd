@@ -50,6 +50,7 @@ export function DadosPessoaisForm({
   return (
     <PerfilSecao titulo="Dados" icone={UserPen}>
       <form
+        method="post"
         aria-label="Dados pessoais"
         noValidate
         className="flex flex-col gap-4"

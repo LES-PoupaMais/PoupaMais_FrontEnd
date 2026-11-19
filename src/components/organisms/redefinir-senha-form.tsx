@@ -33,6 +33,7 @@ export function RedefinirSenhaForm({ onSubmit, enviando = false, erro, semConexa
   return (
     <div className="flex flex-col gap-6">
       <form
+        method="post"
         aria-label="Criar nova senha"
         noValidate
         onSubmit={handleSubmit((dados) => onSubmit(dados))}
