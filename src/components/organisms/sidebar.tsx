@@ -179,6 +179,8 @@ export function Sidebar({
                           className={ITEM}
                           disabled={saindo}
                           aria-busy={saindo || undefined}
+                          // Sai da página: telas com alterações não salvas perguntam antes (data-confirmar-saida)
+                          data-confirmar-saida=""
                           onClick={onSair}
                         >
                           <IconeDoItem icone={LogOut} />

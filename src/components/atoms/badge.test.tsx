@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { render, screen } from '@testing-library/react'
 import { EyeOff } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
@@ -27,7 +28,7 @@ describe('Badge', () => {
   it('repassa para o filho com asChild', () => {
     render(
       <Badge asChild variant="receita">
-        <a href="/lancamentos">Receita</a>
+        <Link href="/lancamentos">Receita</Link>
       </Badge>,
     )
     expect(screen.getByRole('link', { name: 'Receita' })).toHaveAttribute('data-slot', 'badge')

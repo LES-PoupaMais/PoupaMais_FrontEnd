@@ -1,23 +1,21 @@
 'use client'
 
 import { createContext, useContext, type ReactNode } from 'react'
+import { ROTAS } from '@/constants/rotas'
 
-// PLACEHOLDER (B1): a landing de verdade é do B4 (pranchetas landing-*.dc.html). Aqui o Context só guarda o conteúdo
-// estático, como exemplo vivo do padrão Context + View. Prometa só o que o sistema faz (DS: Voz e texto).
-type Destaque = { titulo: string; texto: string }
-
-type LandingContextValue = { destaques: Destaque[] }
-
-const DESTAQUES: Destaque[] = [
-  { titulo: 'Dashboard do mês', texto: 'Receitas, despesas, saldo e taxa de gasto de cada mês, com gráficos.' },
-  { titulo: 'Importe e exporte', texto: 'Traga seus lançamentos de uma planilha CSV e exporte quando quiser.' },
-  { titulo: 'Organize por categorias', texto: 'Um lançamento pode ter várias categorias, criadas por você.' },
-]
+// Landing (pranchetas landing-celular e landing-computador). Conteúdo estático: o Context só entrega os destinos.
+type LandingContextValue = { hrefCadastro: string; hrefLogin: string; hrefPrivacidade: string }
 
 const LandingContext = createContext<LandingContextValue | null>(null)
 
+const VALOR: LandingContextValue = {
+  hrefCadastro: ROTAS.cadastro,
+  hrefLogin: ROTAS.login,
+  hrefPrivacidade: ROTAS.privacidade,
+}
+
 export function LandingProvider({ children }: { children: ReactNode }) {
-  return <LandingContext.Provider value={{ destaques: DESTAQUES }}>{children}</LandingContext.Provider>
+  return <LandingContext.Provider value={VALOR}>{children}</LandingContext.Provider>
 }
 
 export function useLandingContext() {

@@ -32,10 +32,10 @@ export const lancamentosService = {
   alterarStatus: (id: number, status: Exclude<StatusLancamento, 'DELETADO'>) =>
     http.patch<Lancamento>(`/lancamentos/${id}/status`, { corpo: { status } }),
 
-  /** Mover para a lixeira (status DELETADO) */
+  /** Mover para a lixeira (status DELETADO; a API guarda o status anterior) */
   moverParaLixeira: (id: number) => http.delete<void>(`/lancamentos/${id}`),
 
-  /** Restaurar da lixeira: volta como INATIVO */
+  /** Restaurar da lixeira: volta ao status anterior (itens antigos sem esse dado voltam INATIVO) */
   restaurar: (id: number) => http.post<Lancamento>(`/lancamentos/${id}/restaurar`),
 
   /** CSV `descricao;tipo;data;valor;categorias` (multipart, campo `arquivo`) */

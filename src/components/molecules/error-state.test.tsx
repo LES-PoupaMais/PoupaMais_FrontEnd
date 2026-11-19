@@ -30,4 +30,16 @@ describe('ErrorState', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Página não encontrada' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Voltar ao início' })).toHaveAttribute('href', '/dashboard')
   })
+
+  it('mostra a ação secundária opcional como link de texto', () => {
+    render(
+      <ErrorState
+        tipo="nao-encontrado"
+        href="/dashboard"
+        acaoSecundaria={{ rotulo: 'Ver lançamentos', href: '/lancamentos' }}
+      />,
+    )
+
+    expect(screen.getByRole('link', { name: 'Ver lançamentos' })).toHaveAttribute('href', '/lancamentos')
+  })
 })

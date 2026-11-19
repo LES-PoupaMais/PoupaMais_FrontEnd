@@ -59,7 +59,8 @@ export type Lancamento = {
   status: StatusLancamento
   categorias: CategoriaResumo[]
   dataCadastro: InstanteIso
-  dataAtualizacao: InstanteIso
+  /** `null` até a primeira alteração (v1.2.0: o POST nasce com `null`) */
+  dataAtualizacao: InstanteIso | null
   /** Preenchida ao ir para a lixeira; `null` ao restaurar */
   dataExclusao: InstanteIso | null
 }
@@ -70,6 +71,8 @@ export type LancamentoRequest = {
   data: DataIso
   valor: number
   categoriaIds: number[]
+  /** "Conta no saldo" (v1.2.0): no POST o padrão é ATIVO; no PUT, se omitido, mantém o atual */
+  status?: Exclude<StatusLancamento, 'DELETADO'>
 }
 
 /** Filtros da lista (e da exportação, que ignora a paginação). Sem `status` = ATIVO + INATIVO; `DELETADO` = Lixeira. */
@@ -117,3 +120,7 @@ export type Dashboard = {
 
 /** Mês do filtro (Dashboard e Lançamentos), sempre na URL: `?mes=11&ano=2026` */
 export type MesAno = { mes: number; ano: number }
+
+// ---------- recuperação de senha (RN014), via BFF ----------
+export type RecuperarSenhaRequest = { email: string }
+export type RedefinirSenhaRequest = { token: string; novaSenha: string }

@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { LandingProvider, useLandingContext } from './LandingContext'
 import { LandingView } from './LandingView'
 
-describe('Landing (placeholder)', () => {
-  it('apresenta o PoupaMais e leva ao cadastro', () => {
+describe('Landing', () => {
+  it('apresenta o PoupaMais, leva ao cadastro e ao login e tem o rodapé do site', () => {
     render(
       <LandingProvider>
         <LandingView />
@@ -12,8 +12,16 @@ describe('Landing (placeholder)', () => {
     )
 
     expect(screen.getByRole('heading', { level: 1, name: /Veja para onde vai o seu dinheiro/ })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Começar gratuitamente' })).toHaveAttribute('href', '/cadastro')
-    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(3)
+    expect(within(screen.getByRole('main')).getAllByRole('link', { name: 'Criar conta' })[0]).toHaveAttribute(
+      'href',
+      '/cadastro',
+    )
+    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/login')
+    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Privacidade' })).toHaveAttribute(
+      'href',
+      '/privacidade',
+    )
+    expect(screen.getByRole('navigation', { name: 'Links do rodapé' })).toBeInTheDocument()
   })
 
   it('o Context exige o Provider', () => {

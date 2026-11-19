@@ -62,6 +62,7 @@ describe('topo do celular e barra inferior', async () => {
   it('só os formulários escondem a barra inferior', () => {
     expect(escondeBottomNav('/lancamentos/novo')).toBe(true)
     expect(escondeBottomNav('/lancamentos/3/editar')).toBe(true)
+    expect(escondeBottomNav('/lancamentos/importar')).toBe(true)
     expect(escondeBottomNav('/lancamentos/3')).toBe(false)
     expect(escondeBottomNav('/lancamentos/lixeira')).toBe(false)
   })

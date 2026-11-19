@@ -102,6 +102,7 @@ describe('http (cliente do BFF)', () => {
       status: 400,
       message: 'Dados inválidos',
       erros: [{ campo: 'valor', mensagem: 'O valor deve ser maior que zero' }],
+      daApi: true,
     })
   })
 
@@ -110,7 +111,7 @@ describe('http (cliente do BFF)', () => {
 
     const erro = await http.patch('/lancamentos/1/status', { corpo: { status: 'ATIVO' } }).catch((e: unknown) => e)
 
-    expect(erro).toMatchObject({ status: 502, message: MENSAGEM_ERRO_PADRAO, erros: [] })
+    expect(erro).toMatchObject({ status: 502, message: MENSAGEM_ERRO_PADRAO, erros: [], daApi: false })
   })
 
   it('avisa quando não há conexão', async () => {

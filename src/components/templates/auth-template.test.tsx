@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { Mail } from 'lucide-react'
 import { AuthTemplate } from './auth-template'
 
 describe('AuthTemplate', () => {
@@ -24,5 +25,23 @@ describe('AuthTemplate', () => {
 
     expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeInTheDocument()
     expect(screen.queryByText('Não tem conta?')).not.toBeInTheDocument()
+  })
+
+  it('props opcionais: aviso acima do título, ícone decorativo e texto lateral do computador', () => {
+    const { container } = render(
+      <AuthTemplate
+        titulo="Entre de novo"
+        aviso={<p role="status">Sua sessão venceu.</p>}
+        icone={{ Icone: Mail, tom: 'primaria' }}
+        lateral={<p>Comece a organizar o seu dinheiro</p>}
+      >
+        formulário
+      </AuthTemplate>,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent('Sua sessão venceu.')
+    expect(container.querySelector('[aria-hidden="true"] svg')).toBeInTheDocument()
+    expect(screen.getByText('Comece a organizar o seu dinheiro')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Entre de novo' })).toBeInTheDocument()
   })
 })

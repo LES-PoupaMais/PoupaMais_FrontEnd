@@ -37,7 +37,7 @@ describe('CreateSheet', () => {
     expect(folha).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Novo lançamento/ })).toHaveAttribute('href', '/lancamentos/novo')
     expect(screen.getByRole('link', { name: /Importar CSV/ })).toHaveAttribute('href', '/lancamentos/importar')
-    expect(screen.getByRole('link', { name: /Nova categoria/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Nova categoria/ })).toBeInTheDocument()
     expect(screen.getByText('Registre uma receita ou despesa do mês.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Novo lançamento/ })).toHaveFocus()
   })

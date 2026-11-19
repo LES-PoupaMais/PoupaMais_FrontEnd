@@ -19,17 +19,26 @@ O contrato está repetido abaixo; se mudar aqui, mude lá também.
 
 O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, switch "ATIVO") **não vale mais**: use o Design System e as pranchetas.
 
-## Estado atual (18/11/2026)
+## Estado atual (19/11/2026)
 
 - **Fundação pronta (B1, branch `feat/fundacao-front`):** arquitetura `app/ → screens/ → components/`, tokens do Design System com tema
   claro/escuro, Plus Jakarta Sans, templates (`app-shell`, `auth`, `public`, `dashboard`, `form-page`), `MoneyText`, `Logo`, contrato v1.1.0
-  em `types/`, `services/`, `hooks/` e `schemas/`, regras de arquitetura no ESLint. As telas ainda são **placeholders** no padrão novo
-  (landing, login, cadastro, dashboard).
+  em `types/`, `services/`, `hooks/` e `schemas/`, regras de arquitetura no ESLint.
 - **Navegação da área logada pronta (B2, branch `feat/navegacao`):** `month-navigator` (molécula), `sidebar`, `bottom-nav`, `top-bar` e
   `create-sheet` (organismos) ligados na `AppShellView`, e a `logoutAction` em `actions/auth.actions.ts`.
 - **Componentes comuns prontos (B2, branches `feat/componentes-form` e `feat/componentes-feedback`):** átomos alinhados ao DS e moléculas
   de formulário e de exibição/feedback (✓ na tabela do Atomic Design).
-- **Próximo bloco (plano da Fase B):** B4 = telas na ordem da seção "Telas"; cada tela cria os organismos que só ela usa. Cada bloco termina com a pipeline local verde e push.
+- **Telas prontas e integradas (B4, branch `feat/telas-integradas`):** as 9 linhas da seção "Telas" (acesso, Dashboard, Lançamentos com
+  visualização e Lixeira, Novo/Editar, Importar e Exportar, Categorias, Perfil, Landing, Privacidade, 404 e erro), com Context + View +
+  MSW e E2E do roteiro da demo. Na integração ficou **uma versão de cada peça comum**: `useOnline` (conexão), `mostrarToastDesfazer` +
+  `hooks/use-lixeira` (lixeira com Desfazer na lista, na visualização e no Editar), `categoria-dialog` (Categorias, folha Criar e
+  campo do formulário), `transaction-detail` (visualização e Editar de item na lixeira), `useBaixarModeloCsv` (Lançamentos, Importar e
+  vazio do Dashboard), `lib/baixar-arquivo` (exportar, modelo e "Baixar meus dados"), `lib/erro-categoria` sobre `traduzirErro` e
+  `lib/format.plural`.
+- **Revisão geral (19/11):** corrigida na própria branch (link de categoria do Dashboard, status no POST/PUT, `destinoSeguro`,
+  BFF com lista de rotas, lixeira com DELETE na hora + restaurar, regra única de mensagens de erro em `lib/http`, entre
+  outros). Depende do back `feat/status-no-lancamento` (contrato **v1.2.0**).
+- **Próximo passo:** revisar as Pendências abaixo com a equipe (as marcadas "decidir" esperam o líder/design).
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
 - Entrega do código no GitHub até **26/11/2026**. Sem deploy (decisão de 12/11/2026): roda localmente, API com
@@ -189,7 +198,10 @@ Navegador ──► Next (mesma origem)                                   ──
 - **Por quê:** o token não fica em `localStorage` (protegido contra XSS); não há CORS (tudo é mesma origem); a URL da API fica escondida.
 - `src/proxy.ts`: protege `/dashboard`, `/lancamentos/**`, `/categorias` e `/perfil` (guardando o destino em `?voltar=`) e manda quem já
   está logado de `/login`/`/cadastro` para `/dashboard`. Só confere a **presença** do cookie; quem valida o token é a API.
-- BFF: um único handler para GET/POST/PUT/PATCH/DELETE. Repassa query, body (inclusive multipart, com `duplex: 'half'`) e devolve status,
+- BFF: só repassa as rotas da lista de `lib/bff-rotas.ts` (as que os `services/` usam: `lancamentos/*`, `categorias/*`, `dashboard`,
+  `usuarios/me`, `usuarios/me/foto`, `usuarios/me/dados`, `auth/recuperar-senha` e `auth/redefinir-senha`); o resto, inclusive
+  `auth/login`, `auth/cadastro`, `usuarios/me/senha` e `usuarios/me/excluir` (Server Actions), e segmento vazio, `.` ou `..` (mesmo
+  codificado) respondem 404 sem chamar a API. Rota nova no `services/` entra nessa lista. Um único handler para GET/POST/PUT/PATCH/DELETE. Repassa query, body (inclusive multipart, com `duplex: 'half'`) e devolve status,
   corpo e headers (`Content-Type`, `Content-Disposition`). Se a API responder 401, apaga o cookie e devolve 401; o `AppProviders` então
   leva a pessoa para `/login?voltar=<página atual>`. O login volta para lá com `lib/destino.destinoSeguro` (só caminho interno).
 - `src/lib/session.ts` (`import 'server-only'`): `obterToken()`, `gravarSessao(token, expiraEm)`, `encerrarSessao()`; nome do cookie em `lib/sessao-cookie.ts`.
@@ -226,8 +238,8 @@ Navegador ──► Next (mesma origem)                                   ──
 | --- | --- | --- | --- |
 | **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
 | **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
-| **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, **highlight-card** ✓, **income-expense-chart** ✓, **balance-chart** ✓, **category-bar-chart** ✓, **maiores-despesas** ✓, **dashboard-secao** ✓ (card das seções do Dashboard), **transaction-row** ✓, **transaction-table** ✓, **transaction-detail** ✓, **filter-bar** ✓, **lancamento-form** ✓, **export-dialog** ✓, **categoria-dialog** ✓, **import-result** ✓, **formato-csv** ✓ (Importar), **categoria-lista** ✓ (Categorias), **excluir-conta-dialog** ✓, **login-form** ✓, **cadastro-form** ✓; do Perfil: **perfil-secao** ✓, **foto-perfil** ✓, **dados-pessoais-form** ✓, **alterar-senha-form** ✓, **aparencia-tema** ✓, **perfil-atalhos** ✓ |
+| **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓, **perfil-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
 tokens, estados e acessibilidade. Passo a passo: skill `componente-atomic`.
@@ -294,14 +306,39 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 
 ### Conta no saldo e Lixeira (RN004 / RN006 / UC010)
 
-- **"Conta no saldo"** (switch; nunca "Ativo"): ATIVO ⇄ INATIVO (`PATCH /lancamentos/{id}/status`). Fora do saldo continua na lista,
+- **"Conta no saldo"** (switch; nunca "Ativo"): ATIVO ⇄ INATIVO (`PATCH /lancamentos/{id}/status`; no formulário, o `status` vai no
+  próprio `POST`/`PUT`, numa chamada só). Fora do saldo continua na lista,
   com o valor suave (`MoneyText suave`), e sai do dashboard.
-- **"Mover para a lixeira"**, sem modal: a linha some na hora e aparece o toast "Movido para a lixeira · **Desfazer**" (5 s, com contador).
-  O `DELETE /lancamentos/{id}` (`useMoverParaLixeira`) **só é enviado quando o toast fecha sem Desfazer** (ou ao sair da página).
-- **Lixeira** (`/lancamentos/lixeira`, `status=DELETADO`): sem switch e sem Editar; ação **Restaurar** (`useRestaurarLancamento`) e o toast
-  "Restaurado como inativo. Ative para voltar ao dashboard."
+- **"Mover para a lixeira"**, sem modal (decisão do líder, 19/11): o `DELETE /lancamentos/{id}` vai **na hora**, a linha some e
+  aparece o toast "Movido para a lixeira · **Desfazer**" (5 s, com contador e barra). O **Desfazer chama o restaurar**, que volta ao
+  status de antes (v1.2.0). Tudo em `hooks/use-lixeira` (`useMoverParaLixeiraComDesfazer`), usado na lista, na visualização e no
+  Editar; erro no DELETE ou no restaurar mostra o aviso e recarrega lista, dashboard e lixeira.
+- **Lixeira** (`/lancamentos/lixeira`, `status=DELETADO`): sem switch e sem Editar; ação **Restaurar** (`useRestaurarLancamento`, só pelo
+  `POST /restaurar`: o `PATCH /status` de item na lixeira dá `422`) e o toast pelo status devolvido (`constants/textos`):
+  "Restaurado como inativo. Ative para voltar ao dashboard." (INATIVO) ou "Lançamento restaurado" (ATIVO).
 - Lançamento na lixeira não pode ser editado: em `/lancamentos/[id]/editar` mostrar o aviso e Restaurar.
 - A exportação segue o filtro: só exporta itens da lixeira quando o filtro é a Lixeira.
+
+## Textos fora do DS, aprovados em 19/11
+
+Textos escolhidos nas telas, sem prancheta nem frase no Design System. O líder aprovou mantê-los em 19/11/2026: não troque
+sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas ficam em `constants/textos.ts`.
+
+- **Toasts de lançamento:** "Lançamento salvo", "Lançamento fora do saldo. Ele continua na lista.", "Lançamento de volta ao
+  saldo", "Movido para a lixeira" (com Desfazer), "Restaurado como inativo. Ative para voltar ao dashboard." e, desde a
+  v1.2.0 (volta ao status anterior), "Lançamento restaurado"; "Arquivo exportado", "Modelo CSV baixado".
+- **Toasts de categoria:** "Categoria criada", "Categoria \"X\" criada" (pelo campo do formulário), "Categoria
+  renomeada/inativada/reativada/excluída".
+- **Toasts do Perfil e do acesso:** "Nome salvo", "Foto atualizada", "Foto removida", "Senha alterada", "Seus dados foram
+  baixados", "Sua conta foi excluída.", "Conta criada. Este é o seu mês.", "Senha nova salva. Entre com ela.".
+- **Erros genéricos de cada tela** (quando a API não manda mensagem ou é 5xx, regra de `lib/http`): "Não foi possível …"
+  (salvar, mover para a lixeira, restaurar, mudar Conta no saldo, exportar, baixar o modelo, criar a categoria, enviar e
+  remover a foto, salvar o nome, alterar a senha, baixar seus dados, excluir a conta), "Não foi possível salvar. O que você
+  preencheu continua aqui." e "Confira os campos marcados.".
+- **Frases por status** (`lib/http.MENSAGENS_POR_STATUS`): a do 401 é do DS; as de 400, 404, 409, 422, 503 e sem conexão.
+- **Estados sem prancheta:** "Lançamento não encontrado · Ele pode ter sido excluído ou o endereço está errado."
+  (visualização e Editar, `constants/textos`), vazio de filtro "Nada encontrado com esses filtros"/"Nada encontrado para
+  “…”", erro geral com o botão "Voltar ao início" (fica) e "Não foi possível carregar as categorias.".
 
 ## Design
 
@@ -347,10 +384,11 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 - **RN002**: várias categorias por lançamento; criar pelo próprio campo; categorias inativas não podem ser selecionadas.
 - **RN003/RN004**: o dashboard só reflete lançamentos que contam no saldo (ATIVO); após mudar "Conta no saldo", invalidar o dashboard
   (as mutations de `hooks/use-mutacoes-lancamento.ts` já invalidam lista, dashboard e categorias). `taxaGasto` `null` → "Não disponível para o período".
-- **RN006**: ATIVO/INATIVO alternam livremente; DELETADO só pode ser restaurado (volta INATIVO).
+- **RN006**: ATIVO/INATIVO alternam livremente; DELETADO só sai pelo restaurar (v1.2.0: volta ao status anterior; itens antigos sem
+  esse dado voltam INATIVO).
 - **RN007**: após importar, resumo "X lançamentos importados, Y linhas ignoradas" + linha e motivo de cada falha + categorias criadas.
 - **RN008**: gráficos de 4 meses, top 5 despesas e `pesoMaioresDespesas` vêm prontos da API; o front só renderiza.
-- **RN010 / RNI003**: mostrar a `mensagem` da API (neutra). **Nunca** recomendar investimento.
+- **RN010 / RNI003**: mostrar a `mensagem` do dashboard (neutra). **Nunca** recomendar investimento.
 - **RF005 / RN013**: filtros por descrição, mês, ano, tipo, status e categoria; a exportação usa os filtros ativos.
 - **RN011**: `schemas/auth.schema.ts`: nome ≤ 150, e-mail válido ≤ 100, senha de 6 a 72 com confirmação, aceite da Política obrigatório.
 - **RN012**: antes de enviar o CSV, checar no front se tem até 2 MB (a API também recusa acima de 5.000 linhas).
@@ -358,7 +396,9 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 - **RN015**: foto JPG/PNG/WEBP até 2 MB (validar antes de enviar). E-mail não editável. Trocar a senha devolve token novo (Server Action troca o cookie).
 - **RN016**: excluir conta → diálogo (digitar EXCLUIR + senha, oferecendo antes "Baixar meus dados") → Server Action → apagar o cookie → `/` com toast.
 - **RNF006**: botão que envia dados fica **desabilitado com spinner** até a resposta (`<Button loading={isPending}>`). Lançamentos iguais são válidos.
-- Mensagens claras, em português, sem termos técnicos (RNF007, RNF009, RNF010); nunca a mensagem crua da API.
+- Mensagens claras, em português, sem termos técnicos (RNF007, RNF009, RNF010). **Erros (decisão de 19/11):** o front não deduz a
+  causa pelo texto nem por status genérico. Mensagem da API → como veio; `erros[]` com campo → no campo; sem mensagem → a frase da
+  tela ou do status; sem conexão, 401 e 5xx → frases do front. Tudo em `lib/http.traduzirErro` (mude lá, não nas telas).
 
 ## Contrato da API (espelho do CLAUDE.md do backend)
 
@@ -387,9 +427,13 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
 - `GET /lancamentos?descricao=&mes=&ano=&tipo=&status=&categoriaId=&pagina=&tamanho=` (sem `status` = ATIVO + INATIVO; `status=DELETADO` = Lixeira)
   → `{itens: [<lançamento>], pagina, tamanho, total, totalPaginas}`. `pagina` desde 0 (padrão 0), `tamanho` 1–100 (padrão 12); fora disso → `400`.
   "Mostrar mais" com `useInfiniteQuery`; o contador "Mostrando 12 de 30" vem de `total`. A exportação ignora a paginação.
-- `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, data: "2026-11-05", valor, categoriaIds}`
+- `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, data: "2026-11-05", valor, categoriaIds, status?}`
   (`data` ISO; o front mostra dd/mm/aaaa). Dia que não existe (`2026-02-31`) ou formato errado → `400` no campo `data`; fora de 2000–2100 → `422`.
-- `PATCH /lancamentos/{id}/status {status: "ATIVO"|"INATIVO"}` (`422` se DELETADO) · `DELETE /lancamentos/{id}` → status DELETADO · `POST /lancamentos/{id}/restaurar` → volta INATIVO
+  **v1.2.0:** `status` opcional (`ATIVO`|`INATIVO`): no POST o padrão é ATIVO; no PUT, omitido, mantém; `DELETADO` → `400` no campo
+  `status`. PUT de item na lixeira → `422`. O POST nasce com `dataAtualizacao: null`.
+- `PATCH /lancamentos/{id}/status {status: "ATIVO"|"INATIVO"}` (`422` se DELETADO: não tira da lixeira) · `DELETE /lancamentos/{id}` →
+  status DELETADO, guardando o status anterior · `POST /lancamentos/{id}/restaurar` → volta ao status anterior (sem esse dado, INATIVO);
+  fora da lixeira → `422`
 - `POST /lancamentos/importar` multipart, campo `arquivo` → `{totalLinhas, importados, falhas: [{linha, conteudo, motivo}], categoriasCriadas}`
 - `GET /lancamentos/exportar?formato=csv|xlsx&<filtros>` → arquivo (baixar como blob, nome vindo do `Content-Disposition`)
 - `GET /lancamentos/template-csv` → arquivo
@@ -398,9 +442,10 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
   (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa)
 
 Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
-(`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC, ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
+(`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC (`dataAtualizacao` `null` até a primeira alteração), ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
 `dataExclusao` preenchida ao ir para a Lixeira e `null` ao restaurar).
-Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir `mensagem` em toast e `erros` nos campos (`setError` do RHF).
+Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir com `lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos
+campos (`setError` do RHF), como vieram.
 
 CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
 A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula de data.
@@ -477,25 +522,24 @@ reservado (cores, navegação, casca de visualização) para crescer sem refazer
 Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 
 1. **Navegação (sobras do B2):**
-   - "Nova categoria" na folha Criar leva à tela Categorias; o DS pede abrir o diálogo de categoria ali mesmo (trocar `href` por
-     `onSelect` quando o organismo `categoria-dialog` existir, B4).
-   - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; ligar ao `date-picker` no modo mês quando ele existir.
+   - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; nenhuma tela liga ainda. Ligar ao `date-picker` no modo mês
+     (o `calendar` já tem `modo="mes"`).
    - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
-   - Ao entrar (`loginAction`, B4), limpar o cache do TanStack Query para não mostrar dados da sessão anterior (o "Sair" não limpa:
-     o redirect da action interrompe o código depois dela).
-2. **Mensagens do schema × DS:** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
+2. **Mensagens do schema × DS (decidir):** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
    o DS (MoneyField/DatePicker) pede "Informe um valor maior que zero." e "Informe uma data válida, no formato dd/mm/aaaa.". O limite do
    valor também diverge (schema/CLAUDE.md R$ 999.999.999,99; README do MoneyField R$ 99.999.999.999.999,99). Decidir com a equipe e alinhar.
-   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido.
-3. **Hooks que faltam:** importar CSV, exportar, baixar modelo, perfil (nome, foto, dados) e inativar/excluir categoria. Os services já existem;
-   os hooks entram com as telas (B4) seguindo os de `hooks/use-mutacoes-lancamento.ts`.
-4. **Telas placeholder** (Landing, Login, Cadastro, Dashboard): o B4 troca pelo conteúdo real (organismos, dados, estados e E2E do fluxo).
-   Faltam as rotas de esqueci/redefinir senha, lançamentos, categorias, lixeira, perfil, privacidade, `not-found` e `error`.
-5. **Tradução de erros em `lib/http`:** o DS pede que nenhuma tela mostre a mensagem crua da API (mapear status e `erros[]`). Hoje o
-   `ErroApi` carrega a `mensagem` da API; a tradução entra com as primeiras telas que enviam dados.
-6. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
+   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido. A prancheta `novo-erros-celular`
+   ainda pede "A descrição é obrigatória." e "Informe pelo menos uma categoria."; o formulário usa as do schema até a decisão.
+3. **Mensagens de erro back↔front a definir (líder):** desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
+   (regra em `lib/http.traduzirErro`; sem conexão, 401 e 5xx com frases do front). O líder vai repensar as mensagens entre back e
+   front: mudar só em `lib/http` (e no back). Ficaram no front só os status que o contrato dá a um caso único e que mudam a tela:
+   401 no login (credenciais), 409 no cadastro e na categoria (campo E-mail/Nome; a mensagem da API vai no campo), 422 no
+   redefinir senha (link expirado) e no excluir categoria (em uso), 404 no `GET` por id (não encontrado). Sem `campo` no
+   `erros[]`, a senha atual errada (troca de senha) agora sai em toast, não no campo; com um `erros[]` por campo do back, volta
+   para o campo sozinha.
+4. `doc/IDEIAS_FUTURAS.md` (compartilhado com o back) ainda fala em `lib/http → services → hooks → organismos`; a cadeia agora termina no
    Context da tela. Atualizar nos dois repositórios juntos.
-7. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
+5. **Componentes de exibição e feedback (B2) à espera de outros átomos:**
    - **Desbloqueado no merge do B2:** o átomo `alert-dialog` e o `button` (`perigo`, `padrao` 48px) já existem; falta aplicar abaixo.
    - `confirm-dialog` usa o primitivo `AlertDialog` do Radix direto (o átomo `alert-dialog` ainda não existia); trocar
      pelos componentes dele mantendo a API. O botão destrutivo usa `className` de perigo (`bg-destructive`) e `h-12` até o `button`
@@ -503,4 +547,70 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
-   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.
+   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover (decidir).
+   - `upload-area` ganhou na integração a prop opcional `onBaixarModelo` (botão com o mesmo visual do link `modeloHref`), para o modelo
+     CSV baixar pelo hook com toast: registrar no README do UploadArea.
+6. **Dashboard:**
+   - `maioresDespesas` do contrato não traz a `data`: as pranchetas mostram "1 nov · Aluguel", a tela mostra só as categorias.
+     Acrescentar `data` em `maioresDespesas[]` (back + os dois `CLAUDE.md`) e exibir com `formatarDataCurta`.
+   - O "mês vazio" é deduzido de `receitas = despesas = 0`: um mês só com lançamentos fora do saldo também cai no "Comece pelo seu
+     primeiro lançamento". Resolver com uma contagem de lançamentos do mês no `GET /dashboard` (decisão com o back).
+   - O gráfico de área não abre a dica no mês atual por padrão (a prancheta mostra "Nov" aberto como exemplo); abre com mouse, toque
+     e teclado (setas, `accessibilityLayer` do Recharts).
+7. **Novo/Editar lançamento:**
+   - "Limpar" do celular é um botão fixo sobre a TopBar (a `TopBar` da casca não tem slot de ação). Proposta: prop `acao` na `TopBar`
+     preenchida pela tela.
+   - O campo de categorias abre em popover também no celular; a prancheta `novo-categorias-celular` pede folha de baixo. Proposta: prop
+     `apresentacao` (`popover`/`folha`) no `multi-select`, como no `date-picker`.
+   - Criar categoria pelo campo já usa o `categoria-dialog` (modo "nova", com os textos da prancheta `nova-categoria-inline-celular`);
+     falta o lápis de editar/reativar categoria dentro do campo (o `multi-select` não tem a ação; o diálogo já tem o modo editar).
+   - Editar de item na lixeira usa o `transaction-detail`: a auditoria aparece na `timeline` ("Histórico"), como na visualização
+     (item 8), e não nas duas linhas "Criado em / Movido para a lixeira em" da prancheta `editar-lixeira-computador`.
+   - Sessão vencida: o login mostra o aviso, mas o formulário não guarda rascunho; a frase "Seu rascunho foi guardado" (prancheta e DS)
+     só entra quando houver rascunho.
+8. **Lançamentos, visualização, exportar e Lixeira:**
+   - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
+     desenham uma página. A Lixeira ganhou um "Exportar" (não está na prancheta `lixeira-*`) para cumprir "só exporta a lixeira com o
+     filtro Lixeira"; confirmar com o design (decidir).
+   - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
+   - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
+     Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
+   - Textos sem prancheta: aprovados em 19/11 (seção "Textos fora do DS"); falta registrar no DS. Os toasts de Conta no saldo e
+     lixeira ainda se repetem nos Contexts de Lançamentos, Lixeira, visualização e formulário: juntar em `constants/textos` se mudarem.
+   - **Restaurar volta ao status anterior (v1.2.0), decidir:** a visualização de item na lixeira diz "Não · volta desligado ao
+     restaurar" (`transaction-detail`, prancheta), o que só vale para itens antigos. A resposta da API não traz o status anterior:
+     acrescentar `statusAnterior` no back ou trocar o texto (design).
+9. **Importar e Categorias:**
+   - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
+     o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.
+   - "Excluir categoria" exclui direto (sem ConfirmDialog), como na prancheta `categoria-editar-celular`; decidir se pede confirmação.
+   - Editar uma categoria **inativa** (computador) mostra só Nome e Excluir: não há prancheta de "Reativar" dentro do diálogo (Reativar fica na linha).
+   - Textos dos toasts de categoria ("Categoria criada/renomeada/inativada/reativada/excluída") não estão no DS: registrar no DS.
+   - Importar sem `stepper`: as pranchetas `importar-*` não têm indicador de passos (escolher → importando → resultado na mesma tela).
+   - O DS (ImportResult/UploadArea) cita `ResultadoImportacao`/`ImportarDialog`; no código são `import-result` e a tela `screens/Importar`.
+10. **Perfil:**
+   - `excluir-conta-dialog` compõe o `ConfirmDialog` com os campos nos `children` (não usa `confirmacaoDigitada`), porque a ajuda da
+     prancheta fala também da senha ("…igual a EXCLUIR e a senha estiver preenchida." / "Tudo certo: o botão está liberado."). O
+     `ConfirmDialog` não aceita `aria-describedby` no botão de confirmar nem um aviso dentro da descrição: o aviso "Não dá para desfazer."
+     fica fora do `aria-describedby` do diálogo. Se o DS quiser, acrescentar essas duas props à molécula.
+   - `useMontado` fica em `screens/Perfil/usePerfilAmbiente.ts` (só o Perfil usa).
+   - Sem prancheta de tablet do Perfil: a 834px fica em 1 coluna (as 2 colunas só aparecem com 420px cada, como o `auto-fit` da
+     prancheta do computador).
+   - E2E das Server Actions: o `playwright.config.ts` sobe a API falsa `e2e/api-falsa.mjs` na porta `PORT + 1000` (rotas `/api/auth/*`,
+     troca de senha e excluir conta) e passa `API_URL` para o Next.
+11. **Telas de acesso e públicas:**
+   - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
+   - **AuthTemplate no celular (decidir):** a prancheta `login-celular` não tem card (logo no topo à esquerda, texto alinhado à esquerda,
+     rodapé só com a política); o template aprovado mantém o card central em todas as larguras. Decidir se o template ganha o layout do celular.
+   - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
+   - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
+   - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
+     `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`, `landing-passos`,
+     `landing-dados`, `politica-privacidade`.
+   - Landing: a prévia do Saldo do mês usa o `highlight-card`; a prévia de "Despesas por categoria" continua desenhada na própria
+     `landing-passos` (o `category-bar-chart` tem links, total e a dica de toque, que a prancheta `landing-*` não tem).
+12. **Integração e contrato:**
+   - **Depende do back `feat/status-no-lancamento` (v1.2.0):** `status` no POST/PUT, restaurar ao status anterior e `PATCH /status`
+     com `422` na lixeira. Sem essa versão, o formulário perde o "Conta no saldo" desligado no POST e o Desfazer devolve INATIVO.
+   - **Rodar o roteiro da demo contra a API real** (ambiente integrado em planejamento): os E2E usam a API simulada (`e2e/fixtures/`,
+     `e2e/api-falsa.mjs`), alinhada às mensagens do back em 19/11.

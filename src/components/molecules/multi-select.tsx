@@ -123,7 +123,7 @@ export function MultiSelect<T extends string | number>({
           <Checkbox
             checked={marcado}
             disabled={opcao.inativa}
-            aria-describedby={opcao.inativa ? inativaId : undefined}
+            aria-describedby={opcao.inativa && onEdit ? inativaId : undefined}
             onCheckedChange={(estado) => alternar(opcao, estado === true)}
           />
           <span className="text-corpo truncate">{opcao.label}</span>
@@ -247,9 +247,12 @@ export function MultiSelect<T extends string | number>({
               {inativas.map(item)}
             </ul>
           )}
-          <span id={inativaId} className="sr-only">
-            {`${nomeDoItem.charAt(0).toLocaleUpperCase('pt-BR')}${nomeDoItem.slice(1)} inativa: reative pelo lápis para poder escolher.`}
-          </span>
+          {/* Só existe com o lápis (onEdit): sem ele, não há como reativar por aqui */}
+          {onEdit && (
+            <span id={inativaId} className="sr-only">
+              {`${nomeDoItem.charAt(0).toLocaleUpperCase('pt-BR')}${nomeDoItem.slice(1)} inativa: reative pelo lápis para poder escolher.`}
+            </span>
+          )}
         </PopoverContent>
       </Popover>
       {error && <MensagemErro id={erroId}>{error}</MensagemErro>}

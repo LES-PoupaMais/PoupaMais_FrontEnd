@@ -13,15 +13,21 @@ export function tratarNaoAutenticado(erro: unknown) {
     const voltar = encodeURIComponent(window.location.pathname + window.location.search)
     // Navegação completa de propósito: descarta o cache e o estado da sessão vencida (fora do React, sem useRouter)
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign(`/login?voltar=${voltar}`)
+    window.location.assign(`/login?voltar=${voltar}&sessao=vencida`) // tela Sessão vencida
   }
+}
+
+/** Repete uma vez só falha de rede ou do servidor; 4xx (404, 422…) é resposta definitiva e não se repete */
+export function deveRepetir(falhas: number, erro: unknown): boolean {
+  if (erro instanceof ErroApi && erro.status >= 400 && erro.status < 500) return false
+  return falhas < 1
 }
 
 export function criarQueryClient() {
   return new QueryClient({
     queryCache: new QueryCache({ onError: tratarNaoAutenticado }),
     mutationCache: new MutationCache({ onError: tratarNaoAutenticado }),
-    defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+    defaultOptions: { queries: { staleTime: 30_000, retry: deveRepetir } },
   })
 }
 

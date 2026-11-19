@@ -1,6 +1,7 @@
 import { act, screen, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { Toaster } from '@/components/atoms/sonner'
 import { server } from '@/test/msw/server'
 import { simularLargura } from '@/test/media'
 import { renderComProviders } from '@/test/utils'
@@ -153,6 +154,54 @@ describe('AppShell (Context + View)', () => {
     await usuario.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(barra(container).getByRole('button', { name: 'Criar' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('"Nova categoria" na folha Criar abre o diálogo ali mesmo e cria a categoria', async () => {
+    const enviados: unknown[] = []
+    server.use(
+      http.post('*/api/categorias', async ({ request }) => {
+        const corpo = (await request.json()) as { descricao: string }
+        enviados.push(corpo)
+        return corpo.descricao === 'Mercado'
+          ? HttpResponse.json({ status: 409, mensagem: 'Já existe uma categoria com essa descrição' }, { status: 409 })
+          : corpo.descricao === 'Erro'
+            ? HttpResponse.json({ status: 500, mensagem: 'Falhou no servidor.' }, { status: 500 })
+            : HttpResponse.json({ id: 9, descricao: corpo.descricao, ativa: true }, { status: 201 })
+      }),
+    )
+    const { container, usuario } = renderComProviders(
+      <>
+        <AppShellProvider sidebarRecolhida={false}>
+          <AppShellView>tela</AppShellView>
+        </AppShellProvider>
+        <Toaster />
+      </>,
+    )
+
+    await usuario.click(barra(container).getByRole('button', { name: 'Criar' }))
+    await act(() => new Promise((r) => setTimeout(r, 350))) // trava de 300 ms ao abrir a folha
+    await usuario.click(screen.getByRole('button', { name: /Nova categoria/ }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nova categoria' })
+    expect(navegacao.replace).not.toHaveBeenCalled()
+
+    const nome = within(dialogo).getByLabelText(/Nome/)
+    await usuario.type(nome, 'Mercado')
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
+    expect(await within(dialogo).findByText('Já existe uma categoria com essa descrição')).toBeInTheDocument()
+
+    await usuario.clear(nome)
+    await usuario.type(nome, 'Erro')
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
+    expect(
+      (await screen.findAllByText('Não foi possível concluir a operação. Tente novamente.'))[0],
+    ).toBeInTheDocument()
+
+    await usuario.clear(nome)
+    await usuario.type(nome, 'Pet')
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
+    expect((await screen.findAllByText('Categoria criada'))[0]).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).toBeNull()
+    expect(enviados).toEqual([{ descricao: 'Mercado' }, { descricao: 'Erro' }, { descricao: 'Pet' }])
   })
 
   it('Sair chama a logoutAction', async () => {

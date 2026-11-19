@@ -26,6 +26,8 @@ export type UploadAreaProps = {
   erro?: string | null
   /** Link do modelo ("Baixar modelo CSV"), mostrado no vazio e no erro */
   modeloHref?: string
+  /** No lugar do link: a tela baixa o modelo (ex.: `useBaixarModeloCsv`, com toast e o nome do `Content-Disposition`) */
+  onBaixarModelo?: () => void
   rotuloModelo?: string
   titulo?: string
   ajuda?: string
@@ -59,6 +61,9 @@ function aceita(arquivo: File, accept: string): boolean {
   })
 }
 
+const CLASSE_MODELO =
+  'text-legenda text-primary inline-flex min-h-11 cursor-pointer items-center gap-1 font-bold hover:underline'
+
 export function UploadArea({
   accept = '.csv,text/csv',
   maxBytes = DOIS_MB,
@@ -68,6 +73,7 @@ export function UploadArea({
   onErro,
   erro,
   modeloHref,
+  onBaixarModelo,
   rotuloModelo = 'Baixar modelo CSV',
   titulo = 'Arraste o arquivo CSV para cá',
   ajuda = 'ou escolha no seu aparelho. Até 2 MB, separado por ponto e vírgula, com a data em dd/mm/aaaa.',
@@ -209,15 +215,18 @@ export function UploadArea({
       >
         {erroVisivel ? 'Escolher outro arquivo' : 'Escolher arquivo'}
       </label>
-      {modeloHref && (
-        <a
-          href={modeloHref}
-          download
-          className="text-legenda text-primary inline-flex min-h-11 items-center gap-1 font-bold hover:underline"
-        >
+      {onBaixarModelo ? (
+        <button type="button" data-slot="upload-area-modelo" onClick={onBaixarModelo} className={CLASSE_MODELO}>
           <Download className="size-4" aria-hidden="true" />
           {rotuloModelo}
-        </a>
+        </button>
+      ) : (
+        modeloHref && (
+          <a href={modeloHref} download data-slot="upload-area-modelo" className={CLASSE_MODELO}>
+            <Download className="size-4" aria-hidden="true" />
+            {rotuloModelo}
+          </a>
+        )
       )}
     </div>
   )

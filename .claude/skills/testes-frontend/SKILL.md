@@ -33,7 +33,8 @@ description: 'Use ao escrever, corrigir ou revisar testes do front do PoupaMais:
   - schemas: cada regra da RN001/RN011 e a mensagem exibida;
   - `lib/data`: data que existe, formatos "18/11/2026", "18 nov", "18 de novembro de 2026";
   - lancamento-form: erros por campo, botão desabilitado durante o envio (RNF006), erros `erros[]` da API nos campos;
-  - lixeira: o Desfazer **não** chama a API; o `DELETE` só sai quando o toast fecha;
+  - lixeira: o `DELETE` vai na hora e o Desfazer chama o `POST /restaurar` (erro em cada um: aviso e listas recarregadas);
+  - erros: a `mensagem`/`erros[]` da API aparecem como vieram; 0, 401 e 5xx com as frases do front (`lib/http.traduzirErro`);
   - `AvatarUsuario`: foto quando `possuiFoto`, senão a inicial maiúscula do nome (o Radix só mostra a `<img>` depois do `load`:
     veja o `Image` falso em `src/components/atoms/avatar.test.tsx`).
 - Átomos do shadcn **sem alteração nossa** não precisam de teste (ficam fora da cobertura, lista no `vitest.config.mts`).

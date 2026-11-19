@@ -9,12 +9,13 @@ const ROTAS_SO_DESLOGADO = ['/login', '/cadastro']
 
 export function proxy(request: NextRequest) {
   const logado = request.cookies.has(COOKIE_SESSAO)
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
 
   const privada = ROTAS_PRIVADAS.some((rota) => pathname === rota || pathname.startsWith(`${rota}/`))
   if (privada && !logado) {
     const login = new URL('/login', request.url)
-    login.searchParams.set('voltar', pathname)
+    // Guarda a página inteira (com a query: mês, filtros, ?ver=), não só o caminho
+    login.searchParams.set('voltar', `${pathname}${search}`)
     return NextResponse.redirect(login)
   }
 

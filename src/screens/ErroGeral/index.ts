@@ -1,0 +1,1 @@
+export { ErroGeralView } from './ErroGeralView'

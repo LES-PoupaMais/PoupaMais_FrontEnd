@@ -1,16 +1,20 @@
 import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
+import { caminhoDoBff } from '@/lib/bff-rotas'
 import { COOKIE_SESSAO } from '@/lib/sessao-cookie'
 
 // BFF: o navegador chama /api/... no próprio Next e este handler repassa para ${API_URL}/api/...
 // com o JWT do cookie httpOnly. O token e a URL da API nunca chegam ao navegador.
+// Só repassa as rotas da lista de `lib/bff-rotas` (as que o client usa); o resto responde 404 sem chamar a API.
 
 const API_URL = process.env.API_URL ?? 'http://localhost:8080'
 const CABECALHOS_DA_RESPOSTA = ['content-type', 'content-disposition', 'cache-control']
 
 async function repassar(request: NextRequest, contexto: RouteContext<'/api/[...path]'>): Promise<Response> {
   const { path } = await contexto.params
-  const destino = new URL(`/api/${path.map(encodeURIComponent).join('/')}`, API_URL)
+  const caminho = caminhoDoBff(path)
+  if (caminho === null) return Response.json({ status: 404, mensagem: 'Recurso não encontrado' }, { status: 404 })
+  const destino = new URL(`/api/${caminho}`, API_URL)
   destino.search = request.nextUrl.search
 
   const loja = await cookies()
