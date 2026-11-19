@@ -38,6 +38,7 @@ export function EsqueciSenhaForm({
 
   return (
     <form
+      method="post"
       aria-label="Pedir link para redefinir a senha"
       noValidate
       onSubmit={handleSubmit((dados) => onSubmit(dados))}

@@ -10,6 +10,11 @@ const renderizar = (props: Partial<Parameters<typeof LoginForm>[0]> = {}) => {
 }
 
 describe('LoginForm', () => {
+  it('usa POST, para a senha nunca ir para a URL se o JavaScript não carregar', () => {
+    renderizar()
+    expect(screen.getByRole('form', { name: 'Entrar' })).toHaveAttribute('method', 'post')
+  })
+
   it('valida os campos antes de enviar', async () => {
     const { onSubmit } = renderizar()
 
