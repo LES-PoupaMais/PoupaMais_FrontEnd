@@ -7,6 +7,8 @@ const CI = Boolean(process.env.CI)
 // Porta configurável (PORT): com várias worktrees, cada uma usa a sua e o reuseExistingServer não pega o build de outra.
 const PORTA = Number(process.env.PORT ?? 3000)
 const URL_BASE = `http://localhost:${PORTA}`
+// API falsa (e2e/api-falsa.mjs) para as Server Actions, que chamam a API pelo servidor: porta = PORT + 1000
+const PORTA_API = PORTA + 1000
 
 export default defineConfig({
   testDir: 'e2e',
@@ -27,10 +29,18 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
   ],
-  webServer: {
-    command: `npm run build && npm run start -- --port ${PORTA}`,
-    url: URL_BASE,
-    reuseExistingServer: !CI,
-    timeout: 240_000,
-  },
+  webServer: [
+    {
+      command: `node e2e/api-falsa.mjs ${PORTA_API}`,
+      url: `http://localhost:${PORTA_API}/saude`,
+      reuseExistingServer: !CI,
+    },
+    {
+      command: `npm run build && npm run start -- --port ${PORTA}`,
+      url: URL_BASE,
+      reuseExistingServer: !CI,
+      timeout: 240_000,
+      env: { API_URL: `http://localhost:${PORTA_API}` },
+    },
+  ],
 })
