@@ -79,6 +79,17 @@ describe('MultiSelect', () => {
     expect(screen.getByRole('button', { name: 'Editar categoria Academia (inativa)' })).toBeInTheDocument()
   })
 
+  it('sem o lápis (sem onEdit), não fala em "reative pelo lápis"', async () => {
+    render(<Controlado />)
+
+    await abrir()
+    const academia = screen.getByRole('checkbox', { name: 'Academia' })
+    expect(academia).toBeDisabled()
+    expect(academia).not.toHaveAccessibleDescription()
+    expect(screen.queryByText(/reative pelo lápis/)).toBeNull()
+    expect(screen.queryByRole('button', { name: /Editar categoria/ })).toBeNull()
+  })
+
   it('o lápis chama onEdit sem marcar', async () => {
     const aoEditar = vi.fn()
     const aoMudar = vi.fn()
