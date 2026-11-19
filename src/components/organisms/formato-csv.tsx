@@ -4,11 +4,11 @@ import { cn } from '@/lib/cn'
 
 // Como montar o CSV de importação (pranchetas importar-celular e importar-computador): regras, tabela de colunas, exemplo e,
 // a partir de 768px, o botão "Baixar modelo CSV" no pé do card (no celular o link fica dentro da área de envio).
-// Puro e estático: só o link do modelo chega por props.
+// Puro e estático: só a ação de baixar o modelo chega por props.
 
 export type FormatoCsvProps = {
-  /** "Baixar modelo CSV" (`GET /lancamentos/template-csv`) */
-  modeloHref: string
+  /** "Baixar modelo CSV" (`GET /lancamentos/template-csv`): a tela baixa (`useBaixarModeloCsv`) */
+  onBaixarModelo: () => void
   className?: string
 }
 
@@ -26,7 +26,7 @@ Jantar de aniversário;DESPESA;22/11/2026;268,90;Restaurantes|Lazer`
 
 const CODIGO = 'bg-card text-foreground rounded-sm px-1 py-px font-mono text-xs'
 
-export function FormatoCsv({ modeloHref, className }: FormatoCsvProps) {
+export function FormatoCsv({ onBaixarModelo, className }: FormatoCsvProps) {
   return (
     <section
       data-slot="formato-csv"
@@ -85,11 +85,9 @@ export function FormatoCsv({ modeloHref, className }: FormatoCsvProps) {
         Categorias que ainda não existem são criadas na hora. Linhas com erro, como uma data que não existe
         (31/02/2026), são ignoradas, e você vê o motivo de cada uma.
       </p>
-      <Button asChild variant="contornado" className="mt-auto hidden self-start md:inline-flex">
-        <a href={modeloHref} download>
-          <Download aria-hidden="true" />
-          Baixar modelo CSV
-        </a>
+      <Button variant="contornado" className="mt-auto hidden self-start md:inline-flex" onClick={onBaixarModelo}>
+        <Download aria-hidden="true" />
+        Baixar modelo CSV
       </Button>
     </section>
   )

@@ -18,8 +18,8 @@ export type ImportResultProps = {
   nomeArquivo: string
   /** "Ver lançamentos" */
   hrefLancamentos: string
-  /** "Baixar modelo CSV" (`GET /lancamentos/template-csv`) */
-  modeloHref: string
+  /** "Baixar modelo CSV" (`GET /lancamentos/template-csv`): a tela baixa (`useBaixarModeloCsv`) */
+  onBaixarModelo: () => void
   /** Volta para a escolha do arquivo */
   onImportarOutro: () => void
   className?: string
@@ -38,7 +38,7 @@ export function ImportResult({
   resultado,
   nomeArquivo,
   hrefLancamentos,
-  modeloHref,
+  onBaixarModelo,
   onImportarOutro,
   className,
 }: ImportResultProps) {
@@ -48,11 +48,9 @@ export function ImportResult({
   const titulo = vazio ? 'O arquivo está vazio' : nada ? 'Nada foi importado' : 'Importação concluída'
 
   const baixarModelo = (variante: 'primario' | 'contornado') => (
-    <Button asChild variant={variante}>
-      <a href={modeloHref} download>
-        <Download aria-hidden="true" />
-        Baixar modelo CSV
-      </a>
+    <Button variant={variante} onClick={onBaixarModelo}>
+      <Download aria-hidden="true" />
+      Baixar modelo CSV
     </Button>
   )
 

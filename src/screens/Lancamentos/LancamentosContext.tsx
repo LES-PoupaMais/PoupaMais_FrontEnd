@@ -8,7 +8,7 @@ import { FILTROS_VAZIOS, type FiltrosLista } from '@/components/organisms/filter
 import { ROTAS } from '@/constants/rotas'
 import { useCategorias } from '@/hooks/use-categorias'
 import { useOnline } from '@/hooks/use-online'
-import { useBaixarModeloCsv, useExportarLancamentos } from '@/hooks/use-exportacao'
+import { TOAST_MODELO_CSV, useBaixarModeloCsv, useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { useFilaDaLixeira, useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
@@ -27,7 +27,7 @@ export const TOAST_SALDO = {
 }
 export const TOAST_LIXEIRA = { mensagem: 'Movido para a lixeira', erro: 'Não foi possível mover para a lixeira.' }
 export const TOAST_EXPORTAR = { sucesso: 'Arquivo exportado', erro: 'Não foi possível exportar.' }
-export const TOAST_MODELO = { sucesso: 'Modelo CSV baixado', erro: 'Não foi possível baixar o modelo.' }
+export const TOAST_MODELO = TOAST_MODELO_CSV
 
 type LancamentosContextValue = {
   periodo: MesAno

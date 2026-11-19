@@ -2,7 +2,9 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createContext, useContext, type ReactNode } from 'react'
+import { toast } from 'sonner'
 import { useDashboard } from '@/hooks/use-dashboard'
+import { TOAST_MODELO_CSV, useBaixarModeloCsv } from '@/hooks/use-exportacao'
 import { useOnline } from '@/hooks/use-online'
 import { useUsuario } from '@/hooks/use-usuario'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
@@ -25,6 +27,8 @@ type DashboardContextValue = {
   online: boolean
   /** Primeiro nome para a saudação ("Olá, Leonardo") */
   primeiroNome: string | undefined
+  /** "Baixar modelo CSV" do mês vazio (mesmo download de Lançamentos e Importar) */
+  baixarModelo: () => void
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null)
@@ -37,6 +41,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const consulta = useDashboard(periodo)
   const { data: usuario } = useUsuario()
   const online = useOnline()
+  const modelo = useBaixarModeloCsv()
 
   // replace (não push): trocar de mês não enche o histórico do Voltar; scroll false mantém a posição
   const irParaMes = (novo: MesAno) =>
@@ -54,6 +59,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     vazio: Boolean(dashboard && dashboard.receitas === 0 && dashboard.despesas === 0),
     online,
     primeiroNome: usuario?.nome.trim().split(/\s+/)[0],
+    baixarModelo: () =>
+      modelo.mutate(undefined, {
+        onSuccess: () => toast.success(TOAST_MODELO_CSV.sucesso),
+        onError: () => toast.error(TOAST_MODELO_CSV.erro),
+      }),
   }
   return <DashboardContext.Provider value={valor}>{children}</DashboardContext.Provider>
 }

@@ -10,7 +10,7 @@ import { ImportResult } from '@/components/organisms/import-result'
 import { ROTAS } from '@/constants/rotas'
 import { cn } from '@/lib/cn'
 import { formatarData, paraDataIso } from '@/lib/data'
-import { HREF_MODELO_CSV, useImportarContext } from './ImportarContext'
+import { useImportarContext } from './ImportarContext'
 
 const MOTIVO_ID = 'importar-motivo'
 const AJUDA = 'ou escolha no seu aparelho. Até 2 MB e 5.000 linhas, com a data em dd/mm/aaaa.'
@@ -52,7 +52,7 @@ export function ImportarView() {
           resultado={resultado}
           nomeArquivo={nomeArquivo}
           hrefLancamentos={ROTAS.lancamentos}
-          modeloHref={HREF_MODELO_CSV}
+          onBaixarModelo={ctx.baixarModelo}
           onImportarOutro={ctx.importarOutro}
         />
       </div>
@@ -84,10 +84,13 @@ export function ImportarView() {
             onRemover={ctx.remover}
             onErro={ctx.setErroArquivo}
             erro={ctx.erroArquivo}
-            modeloHref={HREF_MODELO_CSV}
+            onBaixarModelo={ctx.baixarModelo}
             ajuda={AJUDA}
             disabled={ctx.importando}
-            className={cn('md:min-h-70 md:flex-1 md:[&_a[download]]:hidden', ctx.importando && 'opacity-60')}
+            className={cn(
+              'md:min-h-70 md:flex-1 md:[&_[data-slot=upload-area-modelo]]:hidden',
+              ctx.importando && 'opacity-60',
+            )}
           />
           {ctx.importando && ctx.arquivo ? (
             <section
@@ -145,7 +148,7 @@ export function ImportarView() {
             {bloqueado && <OfflineMotivo id={MOTIVO_ID} />}
           </div>
         </section>
-        <FormatoCsv modeloHref={HREF_MODELO_CSV} className={cn(ctx.importando && 'max-md:hidden')} />
+        <FormatoCsv onBaixarModelo={ctx.baixarModelo} className={cn(ctx.importando && 'max-md:hidden')} />
       </div>
     </div>
   )

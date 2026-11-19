@@ -25,8 +25,19 @@ import { esqueletosDoDashboard } from './DashboardSkeleton'
 // medidas reais), vazio (mês sem lançamentos: saldo e tiles zerados no tablet/computador + EmptyState com a próxima ação),
 // erro (ErrorState com "Tentar de novo"), sem conexão (OfflineBanner; os dados já carregados continuam na tela).
 export function DashboardView() {
-  const { periodo, irParaMes, dashboard, carregando, erro, tentarDeNovo, tentando, vazio, online, primeiroNome } =
-    useDashboardContext()
+  const {
+    periodo,
+    irParaMes,
+    dashboard,
+    carregando,
+    erro,
+    tentarDeNovo,
+    tentando,
+    vazio,
+    online,
+    primeiroNome,
+    baixarModelo,
+  } = useDashboardContext()
   const mesAno = formatarMesAno(periodo.mes, periodo.ano)
   const ola = primeiroNome ? `Olá, ${primeiroNome}` : 'Olá'
   const subtitulo = vazio ? `${mesAno} ainda não tem lançamentos.` : 'Este é o resumo do mês.'
@@ -72,7 +83,7 @@ export function DashboardView() {
         <DashboardTemplate
           cabecalho={cabecalho}
           aviso={!online && <OfflineBanner variante="canto" />}
-          estado={<MesVazio dashboard={dashboard} />}
+          estado={<MesVazio dashboard={dashboard} onBaixarModelo={baixarModelo} />}
         />
       )
     }
@@ -155,7 +166,7 @@ function Indicadores({ dashboard }: { dashboard: Dashboard }) {
 }
 
 /** Mês sem lançamentos: no tablet/computador, saldo e tiles zerados acima; em todas as larguras, o primeiro passo */
-function MesVazio({ dashboard }: { dashboard: Dashboard }) {
+function MesVazio({ dashboard, onBaixarModelo }: { dashboard: Dashboard; onBaixarModelo: () => void }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-12">
       <div className="hidden min-w-0 md:block lg:col-span-4">
@@ -191,11 +202,9 @@ function MesVazio({ dashboard }: { dashboard: Dashboard }) {
                 Importar CSV
               </Link>
             </Button>
-            <Button asChild variant="texto">
-              <Link href={`${ROTAS.importar}#modelo-csv`}>
-                <Download aria-hidden="true" />
-                Baixar modelo CSV
-              </Link>
+            <Button variant="texto" onClick={onBaixarModelo}>
+              <Download aria-hidden="true" />
+              Baixar modelo CSV
             </Button>
           </>
         }

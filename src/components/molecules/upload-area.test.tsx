@@ -38,6 +38,15 @@ describe('UploadArea', () => {
     )
   })
 
+  it('com onBaixarModelo, o modelo vira botão e quem baixa é a tela', async () => {
+    const aoBaixar = vi.fn()
+    render(<Controlado modeloHref={undefined} onBaixarModelo={aoBaixar} />)
+
+    expect(screen.queryByRole('link', { name: 'Baixar modelo CSV' })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar modelo CSV' }))
+    expect(aoBaixar).toHaveBeenCalledOnce()
+  })
+
   it('escolhe um CSV válido e mostra nome, tamanho e remover', async () => {
     const aoEscolher = vi.fn()
     render(<Controlado onEscolher={aoEscolher} />)

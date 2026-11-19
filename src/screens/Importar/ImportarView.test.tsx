@@ -41,16 +41,21 @@ const botaoImportar = () => screen.getByRole('button', { name: /Importar lançam
 describe('Importar CSV (Context + View)', () => {
   afterEach(() => vi.restoreAllMocks())
 
-  it('começa sem arquivo: Importar desabilitado com o motivo e o modelo para baixar', () => {
-    renderizar()
+  it('começa sem arquivo: Importar desabilitado com o motivo e o modelo para baixar', async () => {
+    server.use(
+      http.get(
+        '*/api/lancamentos/template-csv',
+        () => new HttpResponse('x', { headers: { 'Content-Type': 'text/csv' } }),
+      ),
+    )
+    const { usuario } = renderizar()
 
     expect(botaoImportar()).toBeDisabled()
     expect(botaoImportar()).toHaveAccessibleDescription('Escolha um arquivo para continuar.')
-    expect(screen.getAllByRole('link', { name: 'Baixar modelo CSV' })[0]).toHaveAttribute(
-      'href',
-      '/api/lancamentos/template-csv',
-    )
     expect(document.getElementById('modelo-csv')).not.toBeNull()
+    // Mesmo download da lista (useBaixarModeloCsv): nome do Content-Disposition e toast
+    await usuario.click(screen.getAllByRole('button', { name: 'Baixar modelo CSV' })[0])
+    expect(await screen.findByText('Modelo CSV baixado')).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Colunas, nesta ordem' })).toBeInTheDocument()
   })
 

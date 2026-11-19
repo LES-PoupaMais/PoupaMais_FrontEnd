@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -73,10 +73,16 @@ describe('Dashboard', () => {
     expect(await screen.findByRole('heading', { name: 'Comece pelo seu primeiro lançamento' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Criar primeiro lançamento' })).toHaveAttribute('href', '/lancamentos/novo')
     expect(screen.getByRole('link', { name: 'Importar CSV' })).toHaveAttribute('href', '/lancamentos/importar')
-    expect(screen.getByRole('link', { name: 'Baixar modelo CSV' })).toHaveAttribute(
-      'href',
-      '/lancamentos/importar#modelo-csv',
+    // Baixa direto (useBaixarModeloCsv), como em Lançamentos e Importar
+    server.use(
+      http.get(
+        '*/api/lancamentos/template-csv',
+        () => new HttpResponse('x', { headers: { 'Content-Type': 'text/csv' } }),
+      ),
     )
+    const criarUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:modelo')
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar modelo CSV' }))
+    await waitFor(() => expect(criarUrl).toHaveBeenCalledOnce())
     expect(screen.getAllByText('Novembro 2026 ainda não tem lançamentos.', { exact: false }).length).toBeGreaterThan(0)
     expect(screen.queryByRole('region', { name: 'Saldo mensal' })).toBeNull()
   })

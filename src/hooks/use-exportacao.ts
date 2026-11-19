@@ -18,6 +18,9 @@ export function useExportarLancamentos() {
   })
 }
 
+/** Toasts do "Baixar modelo CSV" (mesmos textos em Lançamentos, Importar e no vazio do Dashboard) */
+export const TOAST_MODELO_CSV = { sucesso: 'Modelo CSV baixado', erro: 'Não foi possível baixar o modelo.' } as const
+
 /** Modelo `descricao;tipo;data;valor;categorias` para importar */
 export function useBaixarModeloCsv() {
   return useMutation({

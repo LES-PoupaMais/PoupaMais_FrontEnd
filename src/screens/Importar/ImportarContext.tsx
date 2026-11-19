@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
+import { TOAST_MODELO_CSV, useBaixarModeloCsv } from '@/hooks/use-exportacao'
 import { useImportarCsv } from '@/hooks/use-importacao'
 import { useOnline } from '@/hooks/use-online'
 import { ErroApi, MENSAGEM_ERRO_PADRAO } from '@/lib/http'
@@ -9,9 +10,6 @@ import type { ResultadoImportacao } from '@/types/api'
 
 // Importar CSV (RN007/RN012): escolher o arquivo (a UploadArea confere tipo e 2 MB antes de enviar), importar e mostrar
 // o resultado. A mutation invalida lista, dashboard e categorias.
-
-/** Link do modelo: o BFF repassa `GET /lancamentos/template-csv` com o cookie; o navegador baixa com o nome do Content-Disposition */
-export const HREF_MODELO_CSV = '/api/lancamentos/template-csv'
 
 type Importado = { resultado: ResultadoImportacao; nomeArquivo: string; em: Date }
 
@@ -27,6 +25,8 @@ type ImportarContextValue = {
   importado: Importado | null
   importarOutro: () => void
   online: boolean
+  /** "Baixar modelo CSV" (nome do arquivo vem do Content-Disposition) */
+  baixarModelo: () => void
 }
 
 const ImportarContext = createContext<ImportarContextValue | null>(null)
@@ -36,6 +36,12 @@ const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um :
 export function ImportarProvider({ children }: { children: ReactNode }) {
   const importacao = useImportarCsv()
   const online = useOnline()
+  const modelo = useBaixarModeloCsv()
+  const baixarModelo = () =>
+    modelo.mutate(undefined, {
+      onSuccess: () => toast.success(TOAST_MODELO_CSV.sucesso),
+      onError: () => toast.error(TOAST_MODELO_CSV.erro),
+    })
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [erroArquivo, setErroArquivo] = useState<string | null>(null)
   const [importado, setImportado] = useState<Importado | null>(null)
@@ -82,6 +88,7 @@ export function ImportarProvider({ children }: { children: ReactNode }) {
       setErroArquivo(null)
     },
     online,
+    baixarModelo,
   }
 
   return <ImportarContext.Provider value={valor}>{children}</ImportarContext.Provider>
