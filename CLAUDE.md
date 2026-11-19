@@ -195,7 +195,10 @@ Navegador ──► Next (mesma origem)                                   ──
 - **Por quê:** o token não fica em `localStorage` (protegido contra XSS); não há CORS (tudo é mesma origem); a URL da API fica escondida.
 - `src/proxy.ts`: protege `/dashboard`, `/lancamentos/**`, `/categorias` e `/perfil` (guardando o destino em `?voltar=`) e manda quem já
   está logado de `/login`/`/cadastro` para `/dashboard`. Só confere a **presença** do cookie; quem valida o token é a API.
-- BFF: um único handler para GET/POST/PUT/PATCH/DELETE. Repassa query, body (inclusive multipart, com `duplex: 'half'`) e devolve status,
+- BFF: só repassa as rotas da lista de `lib/bff-rotas.ts` (as que os `services/` usam: `lancamentos/*`, `categorias/*`, `dashboard`,
+  `usuarios/me`, `usuarios/me/foto`, `usuarios/me/dados`, `auth/recuperar-senha` e `auth/redefinir-senha`); o resto, inclusive
+  `auth/login`, `auth/cadastro`, `usuarios/me/senha` e `usuarios/me/excluir` (Server Actions), e segmento vazio, `.` ou `..` (mesmo
+  codificado) respondem 404 sem chamar a API. Rota nova no `services/` entra nessa lista. Um único handler para GET/POST/PUT/PATCH/DELETE. Repassa query, body (inclusive multipart, com `duplex: 'half'`) e devolve status,
   corpo e headers (`Content-Type`, `Content-Disposition`). Se a API responder 401, apaga o cookie e devolve 401; o `AppProviders` então
   leva a pessoa para `/login?voltar=<página atual>`. O login volta para lá com `lib/destino.destinoSeguro` (só caminho interno).
 - `src/lib/session.ts` (`import 'server-only'`): `obterToken()`, `gravarSessao(token, expiraEm)`, `encerrarSessao()`; nome do cookie em `lib/sessao-cookie.ts`.
