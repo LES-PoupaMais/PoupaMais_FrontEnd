@@ -29,10 +29,8 @@ export function comFiltros(parametros: URLSearchParams | string, filtros: Filtro
   return novos.toString()
 }
 
-export function lerVer(parametros: LeitorDeParametros): number | undefined {
-  const id = Number(parametros.get('ver'))
-  return Number.isInteger(id) && id > 0 ? id : undefined
-}
+/** `?ver=<id>`: a mesma leitura da Lixeira (lib/parametros-url) */
+export { lerVer } from '@/lib/parametros-url'
 
 /** Filtros da API (lista e exportação) */
 export function paraApi(filtros: FiltrosLista, periodo: MesAno): FiltrosLancamentos {

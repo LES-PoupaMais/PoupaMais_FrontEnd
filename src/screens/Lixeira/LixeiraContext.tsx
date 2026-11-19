@@ -13,6 +13,7 @@ import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { traduzirErro } from '@/lib/http'
 import { partesDaData } from '@/lib/data'
+import { lerVer } from '@/lib/parametros-url'
 import type { FormatoExportacao, Lancamento } from '@/types/api'
 
 // Lixeira (`/lancamentos/lixeira`, status=DELETADO, todos os meses): sem switch e sem Editar; Restaurar volta ao status de
@@ -62,7 +63,7 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const caminho = usePathname()
   const parametros = useSearchParams()
-  const verId = Number(parametros.get('ver')) || undefined
+  const verId = lerVer(parametros) // só id inteiro positivo (?ver=1.5 ou ?ver=-3 não abrem o painel)
   const tabletOuMaior = useMediaQuery(MIDIA.tablet)
   const online = useOnline()
 

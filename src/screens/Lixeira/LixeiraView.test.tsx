@@ -119,6 +119,21 @@ describe('Lixeira', () => {
     expect(rota.replace).toHaveBeenLastCalledWith('/lancamentos/lixeira?ver=9', { scroll: false })
   })
 
+  it.each(['ver=-3', 'ver=1.5', 'ver=abc'])('?%s inválido não abre o painel nem busca o lançamento', async (busca) => {
+    rota.busca = busca
+    const buscados: string[] = []
+    server.use(
+      msw.get('*/api/lancamentos/:id', ({ params }) => {
+        buscados.push(String(params.id))
+        return HttpResponse.json(lixeira[0])
+      }),
+    )
+    renderizar()
+    await screen.findAllByText(/na lixeira/)
+    expect(screen.queryByRole('dialog', { name: 'Lançamento' })).toBeNull()
+    expect(buscados).toEqual([])
+  })
+
   it('painel aberto (?ver=9) e restaurar por ele fecha o painel', async () => {
     rota.busca = 'ver=9'
     server.use(
