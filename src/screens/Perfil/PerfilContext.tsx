@@ -15,6 +15,7 @@ import { useLancamentos } from '@/hooks/use-lancamentos'
 import { useOnline } from '@/hooks/use-online'
 import { useAtualizarNome, useBaixarMeusDados, useRemoverFoto, useTrocarFoto } from '@/hooks/use-perfil'
 import { fotoDoUsuario, useUsuario } from '@/hooks/use-usuario'
+import { salvarArquivo } from '@/lib/baixar-arquivo'
 import { ErroApi, MENSAGEM_SEM_CONEXAO } from '@/lib/http'
 import {
   MENSAGEM_SENHA_ATUAL_INCORRETA,
@@ -23,7 +24,7 @@ import {
   type TrocarSenhaInput,
 } from '@/schemas/perfil.schema'
 import type { Usuario } from '@/types/api'
-import { salvarArquivo, useMontado } from './usePerfilAmbiente'
+import { useMontado } from './usePerfilAmbiente'
 
 // Estado e ações do Perfil (RN015/RN016): nome, foto, senha (Server Action que troca o cookie), tema (next-themes),
 // "Baixar meus dados" (LGPD), excluir conta (Server Action que apaga o cookie → "/" com toast) e "Sair" (celular).

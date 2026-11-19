@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-// Ajudas do ambiente do navegador usadas só pelo Perfil (se outra tela precisar, viram hook global/lib).
+// Ajuda do ambiente do navegador usada só pelo Perfil (se outra tela precisar, vira hook global). O download usa lib/baixar-arquivo.
 
 const nada = () => () => {}
 
@@ -11,17 +11,4 @@ export function useMontado(): boolean {
     () => true,
     () => false,
   )
-}
-
-/** Salva um arquivo baixado (blob) com o nome dado, pelo download do navegador. */
-export function salvarArquivo(blob: Blob, nome: string): void {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = nome
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  // dá tempo de o navegador começar o download antes de liberar a URL
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
