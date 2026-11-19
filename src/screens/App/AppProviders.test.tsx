@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ErroApi } from '@/lib/http'
-import { AppProviders, criarQueryClient, tratarNaoAutenticado } from './AppProviders'
+import { AppProviders, criarQueryClient, deveRepetir, tratarNaoAutenticado } from './AppProviders'
 
 describe('AppProviders', () => {
   afterEach(() => vi.unstubAllGlobals())
@@ -38,5 +38,15 @@ describe('AppProviders', () => {
 
     expect(cliente.getQueryCache().config.onError).toBe(tratarNaoAutenticado)
     expect(cliente.getMutationCache().config.onError).toBe(tratarNaoAutenticado)
+  })
+
+  it('retry: não repete 4xx; repete uma vez rede e 5xx', () => {
+    expect(criarQueryClient().getDefaultOptions().queries?.retry).toBe(deveRepetir)
+    expect(deveRepetir(0, new ErroApi(404, 'x'))).toBe(false)
+    expect(deveRepetir(0, new ErroApi(422, 'x'))).toBe(false)
+    expect(deveRepetir(0, new ErroApi(0, 'x'))).toBe(true)
+    expect(deveRepetir(0, new ErroApi(500, 'x'))).toBe(true)
+    expect(deveRepetir(1, new ErroApi(500, 'x'))).toBe(false)
+    expect(deveRepetir(0, new Error('x'))).toBe(true)
   })
 })
