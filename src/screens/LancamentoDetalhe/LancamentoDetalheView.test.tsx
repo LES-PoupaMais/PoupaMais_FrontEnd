@@ -8,8 +8,8 @@ import { LancamentoDetalheProvider, useLancamentoDetalheContext } from './Lancam
 import { LancamentoDetalheSkeleton } from './LancamentoDetalheSkeleton'
 import { LancamentoDetalheView } from './LancamentoDetalheView'
 
-const rota = vi.hoisted(() => ({ push: vi.fn() }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: rota.push, replace: vi.fn() }) }))
+const rota = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: rota.push, replace: rota.replace }) }))
 beforeAll(() => {
   Element.prototype.setPointerCapture = () => {}
   Element.prototype.hasPointerCapture = () => false
@@ -26,7 +26,10 @@ const renderizar = (id = 3) =>
   )
 
 describe('Visualizar lançamento', () => {
-  beforeEach(() => rota.push.mockClear())
+  beforeEach(() => {
+    rota.push.mockClear()
+    rota.replace.mockClear()
+  })
   afterEach(() => {
     act(() => toast.dismiss())
     vi.restoreAllMocks()
@@ -73,7 +76,8 @@ describe('Visualizar lançamento', () => {
     )
     const { usuario } = renderizar()
     await usuario.click(await screen.findByRole('button', { name: 'Mover para a lixeira' }))
-    expect(rota.push).toHaveBeenCalledWith('/lancamentos?mes=11&ano=2026')
+    expect(rota.replace).toHaveBeenCalledWith('/lancamentos?mes=11&ano=2026')
+    expect(rota.push).not.toHaveBeenCalled()
     await waitFor(() => expect(chamadas).toEqual(['DELETE 3']))
     fireEvent.click(await screen.findByRole('button', { name: 'Desfazer' }))
     await waitFor(() => expect(chamadas).toEqual(['DELETE 3', 'restaurar 3']))

@@ -86,7 +86,8 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
       toast.dismiss(idToast)
       toast.error(traduzirErro(erro, { padrao: 'Não foi possível mover para a lixeira.' }).mensagem)
     })
-    router.push(listaDoMes(lancamento))
+    // replace: o Voltar não leva de novo à visualização de um item que já está na lixeira
+    router.replace(listaDoMes(lancamento))
   }
 
   const restaurarMutation = useRestaurarLancamento()
