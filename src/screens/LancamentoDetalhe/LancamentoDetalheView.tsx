@@ -7,6 +7,7 @@ import { ErrorState } from '@/components/molecules/error-state'
 import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
 import { TransactionDetail, TransactionDetailSkeleton } from '@/components/organisms/transaction-detail'
 import { ROTAS } from '@/constants/rotas'
+import { LANCAMENTO_NAO_ENCONTRADO } from '@/constants/textos'
 import { useLancamentoDetalheContext } from './LancamentoDetalheContext'
 
 const ID_MOTIVO_OFFLINE = 'detalhe-offline-motivo'
@@ -22,8 +23,8 @@ export function LancamentoDetalheView() {
     return (
       <ErrorState
         tipo="nao-encontrado"
-        titulo="Lançamento não encontrado"
-        texto="Ele pode ter sido apagado ou o endereço está errado."
+        titulo={LANCAMENTO_NAO_ENCONTRADO.titulo}
+        texto={LANCAMENTO_NAO_ENCONTRADO.texto}
         href={ROTAS.lancamentos}
         rotuloAcao="Ver lançamentos"
       />

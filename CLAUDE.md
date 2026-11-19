@@ -312,6 +312,27 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 - Lançamento na lixeira não pode ser editado: em `/lancamentos/[id]/editar` mostrar o aviso e Restaurar.
 - A exportação segue o filtro: só exporta itens da lixeira quando o filtro é a Lixeira.
 
+## Textos fora do DS, aprovados em 19/11
+
+Textos escolhidos nas telas, sem prancheta nem frase no Design System. O líder aprovou mantê-los em 19/11/2026: não troque
+sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas ficam em `constants/textos.ts`.
+
+- **Toasts de lançamento:** "Lançamento salvo", "Lançamento fora do saldo. Ele continua na lista.", "Lançamento de volta ao
+  saldo", "Movido para a lixeira" (com Desfazer), "Restaurado como inativo. Ative para voltar ao dashboard." e, desde a
+  v1.2.0 (volta ao status anterior), "Lançamento restaurado"; "Arquivo exportado", "Modelo CSV baixado".
+- **Toasts de categoria:** "Categoria criada", "Categoria \"X\" criada" (pelo campo do formulário), "Categoria
+  renomeada/inativada/reativada/excluída".
+- **Toasts do Perfil e do acesso:** "Nome salvo", "Foto atualizada", "Foto removida", "Senha alterada", "Seus dados foram
+  baixados", "Sua conta foi excluída.", "Conta criada. Este é o seu mês.", "Senha nova salva. Entre com ela.".
+- **Erros genéricos de cada tela** (quando a API não manda mensagem ou é 5xx, regra de `lib/http`): "Não foi possível …"
+  (salvar, mover para a lixeira, restaurar, mudar Conta no saldo, exportar, baixar o modelo, criar a categoria, enviar e
+  remover a foto, salvar o nome, alterar a senha, baixar seus dados, excluir a conta), "Não foi possível salvar. O que você
+  preencheu continua aqui." e "Confira os campos marcados.".
+- **Frases por status** (`lib/http.MENSAGENS_POR_STATUS`): a do 401 é do DS; as de 400, 404, 409, 422, 503 e sem conexão.
+- **Estados sem prancheta:** "Lançamento não encontrado · Ele pode ter sido excluído ou o endereço está errado."
+  (visualização e Editar, `constants/textos`), vazio de filtro "Nada encontrado com esses filtros"/"Nada encontrado para
+  “…”", erro geral com o botão "Voltar ao início" (fica) e "Não foi possível carregar as categorias.".
+
 ## Design
 
 **O Design System manda** (`../Documentação/design/ds/project/README.md`). Resumo do que o código já tem:

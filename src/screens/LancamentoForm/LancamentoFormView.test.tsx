@@ -388,6 +388,8 @@ describe('Editar lançamento', () => {
   it('não encontrado (404 ou endereço sem número)', async () => {
     renderizar({ modo: 'editar', id: 999 })
     expect(await screen.findByText('Lançamento não encontrado')).toBeInTheDocument()
+    // O mesmo texto da visualização (constants/textos)
+    expect(screen.getByText('Ele pode ter sido excluído ou o endereço está errado.')).toBeInTheDocument()
   })
 
   it('id inválido vai direto para não encontrado', () => {

@@ -133,6 +133,7 @@ describe('Visualizar lançamento', () => {
   it('404 e id inválido: "Lançamento não encontrado"', async () => {
     renderizar(999)
     expect(await screen.findByRole('heading', { name: 'Lançamento não encontrado' })).toBeInTheDocument()
+    expect(screen.getByText('Ele pode ter sido excluído ou o endereço está errado.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver lançamentos' })).toHaveAttribute('href', '/lancamentos')
   })
 

@@ -12,6 +12,7 @@ import { LancamentoForm } from '@/components/organisms/lancamento-form'
 import { TransactionDetail } from '@/components/organisms/transaction-detail'
 import { FormPageTemplate } from '@/components/templates/form-page-template'
 import { ROTAS } from '@/constants/rotas'
+import { LANCAMENTO_NAO_ENCONTRADO } from '@/constants/textos'
 import { formatarDataExtenso } from '@/lib/data'
 import { useLancamentoFormContext } from './LancamentoFormContext'
 import { LancamentoFormSkeleton } from './LancamentoFormSkeleton'
@@ -51,8 +52,8 @@ export function LancamentoFormView() {
           <ErrorState
             semCartao
             tipo="nao-encontrado"
-            titulo="Lançamento não encontrado"
-            texto="Ele pode ter sido excluído, ou o endereço está errado."
+            titulo={LANCAMENTO_NAO_ENCONTRADO.titulo}
+            texto={LANCAMENTO_NAO_ENCONTRADO.texto}
             href={ROTAS.lancamentos}
             rotuloAcao="Voltar para Lançamentos"
           />

@@ -12,3 +12,9 @@ export const TOAST_RESTAURADO: Record<Exclude<StatusLancamento, 'DELETADO'>, str
 export function textoRestaurado(status: StatusLancamento): string {
   return status === 'ATIVO' ? TOAST_RESTAURADO.ATIVO : TOAST_RESTAURADO.INATIVO
 }
+
+/** Estado "Lançamento não encontrado" (visualização e Editar): um texto só */
+export const LANCAMENTO_NAO_ENCONTRADO = {
+  titulo: 'Lançamento não encontrado',
+  texto: 'Ele pode ter sido excluído ou o endereço está errado.',
+} as const
