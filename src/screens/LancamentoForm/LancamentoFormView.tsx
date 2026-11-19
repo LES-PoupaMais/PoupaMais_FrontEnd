@@ -7,9 +7,9 @@ import { ActionBanner } from '@/components/molecules/action-banner'
 import { ConfirmDialog } from '@/components/molecules/confirm-dialog'
 import { ErrorState } from '@/components/molecules/error-state'
 import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
 import { LancamentoForm } from '@/components/organisms/lancamento-form'
 import { LancamentoNaLixeira } from '@/components/organisms/lancamento-na-lixeira'
-import { NovaCategoriaDialog } from '@/components/organisms/nova-categoria-dialog'
 import { FormPageTemplate } from '@/components/templates/form-page-template'
 import { ROTAS } from '@/constants/rotas'
 import { formatarDataExtenso } from '@/lib/data'
@@ -197,13 +197,21 @@ export function LancamentoFormView() {
         )}
       </FormPageTemplate>
 
-      <NovaCategoriaDialog
+      <CategoriaDialog
         aberto={ctx.novaCategoria.aberto}
+        onAbertoChange={(abrir) => !abrir && ctx.fecharNovaCategoria()}
         nomeInicial={ctx.novaCategoria.nome}
-        erro={ctx.novaCategoria.erro}
-        enviando={ctx.criandoCategoria}
-        onCancelar={ctx.fecharNovaCategoria}
-        onCriar={ctx.criarCategoria}
+        texto={
+          ctx.novaCategoria.nome.trim()
+            ? `Você digitou "${ctx.novaCategoria.nome.trim()}" na busca. Confira o nome antes de criar.`
+            : undefined
+        }
+        rotuloNome="Nome da categoria"
+        ajuda="Ela já entra escolhida neste lançamento."
+        erroNome={ctx.novaCategoria.erro}
+        salvando={ctx.criandoCategoria}
+        onSalvar={ctx.criarCategoria}
+        semConexao={ctx.semConexao}
       />
 
       <ConfirmDialog
