@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/atoms/button'
 import { FunctionIcon } from '@/components/atoms/function-icon'
 import { cn } from '@/lib/cn'
+import { plural } from '@/lib/format'
 import type { ResultadoImportacao } from '@/types/api'
 
 // Resultado da importação de CSV (DS: ImportResult; pranchetas importar-resultado e importar-invalido). RN007: quantos entraram,
@@ -27,8 +28,6 @@ export type ImportResultProps = {
 
 const CABECALHO = 'descricao;tipo;data;valor;categorias'
 const EXEMPLO = 'Mercado do mês;DESPESA;05/11/2026;1.120,35;Mercado'
-
-const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
 
 function Codigo({ children }: { children: string }) {
   return <code className="text-foreground font-sans font-bold [overflow-wrap:anywhere]">{children}</code>

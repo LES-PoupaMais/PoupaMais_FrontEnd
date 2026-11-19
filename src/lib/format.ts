@@ -112,3 +112,8 @@ export function parseBRL(texto: string): number | null {
   const numero = Number(`${inteiro || '0'}.${decimal || '0'}`)
   return Math.round(numero * 100) / 100
 }
+
+/** "1 lançamento" · "3 lançamentos" (contagens nos textos da interface) */
+export function plural(n: number, um: string, varios: string): string {
+  return `${n} ${n === 1 ? um : varios}`
+}

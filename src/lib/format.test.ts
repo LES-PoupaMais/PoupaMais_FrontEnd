@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  plural,
   formatarNumeroBR,
   parseBRL,
   formatarMesAno,
@@ -97,5 +98,13 @@ describe('parseBRL e formatarNumeroBR (campo de valor)', () => {
   it('formata com milhar e centavos', () => {
     expect(formatarNumeroBR(1234.5)).toBe('1.234,50')
     expect(formatarNumeroBR(180)).toBe('180,00')
+  })
+})
+
+describe('plural', () => {
+  it('usa o singular só para 1', () => {
+    expect(plural(1, 'linha ignorada', 'linhas ignoradas')).toBe('1 linha ignorada')
+    expect(plural(0, 'linha ignorada', 'linhas ignoradas')).toBe('0 linhas ignoradas')
+    expect(plural(3, 'lançamento', 'lançamentos')).toBe('3 lançamentos')
   })
 })

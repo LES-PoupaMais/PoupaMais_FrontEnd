@@ -2,14 +2,11 @@
 
 import Link from 'next/link'
 import { Download, List, ShieldCheck, Tag, Trash2, UserX } from 'lucide-react'
+import { plural } from '@/lib/format'
 import { LinhaDeAcao, ListaDeAcoes, PerfilSecao } from './perfil-secao'
 
 // Seções "Seus lançamentos" (atalhos para a Lixeira e Categorias, com as contagens) e "Privacidade" (LGPD: baixar os dados,
 // excluir a conta e o link da Política) do Perfil. As contagens chegam prontas (undefined = carregando: só o título aparece).
-
-function plural(n: number, um: string, varios: string) {
-  return `${n} ${n === 1 ? um : varios}`
-}
 
 /** "3 lançamentos excluídos para restaurar" · "Nenhum lançamento na lixeira" */
 export function textoDaLixeira(total: number): string {

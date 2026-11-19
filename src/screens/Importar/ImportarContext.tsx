@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { TOAST_MODELO_CSV, useBaixarModeloCsv } from '@/hooks/use-exportacao'
 import { useImportarCsv } from '@/hooks/use-importacao'
 import { useOnline } from '@/hooks/use-online'
+import { plural } from '@/lib/format'
 import { ErroApi, MENSAGEM_ERRO_PADRAO } from '@/lib/http'
 import type { ResultadoImportacao } from '@/types/api'
 
@@ -30,8 +31,6 @@ type ImportarContextValue = {
 }
 
 const ImportarContext = createContext<ImportarContextValue | null>(null)
-
-const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
 
 export function ImportarProvider({ children }: { children: ReactNode }) {
   const importacao = useImportarCsv()
