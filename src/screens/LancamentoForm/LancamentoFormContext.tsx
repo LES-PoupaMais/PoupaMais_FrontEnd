@@ -17,6 +17,7 @@ import {
   useSalvarLancamento,
 } from '@/hooks/use-mutacoes-lancamento'
 import { hojeIso, partesDaData } from '@/lib/data'
+import { erroDoNomeDaCategoria } from '@/lib/erro-categoria'
 import { ErroApi } from '@/lib/http'
 import { comPeriodo } from '@/lib/periodo'
 import type { Categoria, Lancamento, StatusLancamento } from '@/types/api'
@@ -32,7 +33,6 @@ export const MENSAGENS_FORMULARIO = {
   confiraCampos: 'Confira os campos marcados.',
   categoriaInativa: 'Uma das categorias escolhidas está inativa. Escolha outra.',
   categoriaInexistente: 'Uma das categorias escolhidas não existe mais. Escolha outra.',
-  categoriaDuplicada: 'Já existe uma categoria com esse nome',
   categoriaCriada: (nome: string) => `Categoria "${nome}" criada`,
   erroCategoria: 'Não foi possível criar a categoria. Tente de novo.',
   movido: 'Movido para a lixeira',
@@ -235,10 +235,10 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
           toast.success(MENSAGENS_FORMULARIO.categoriaCriada(criada.descricao))
         },
         onError: (erro) => {
-          if (erro instanceof ErroApi && erro.status === 409) {
-            setNovaCategoria((atual) => ({ ...atual, erro: MENSAGENS_FORMULARIO.categoriaDuplicada }))
-          } else if (erro instanceof ErroApi && erro.status === 400 && erro.erros.length > 0) {
-            setNovaCategoria((atual) => ({ ...atual, erro: erro.erros[0].mensagem }))
+          // 409 e 400 vão para o campo Nome, como nos outros diálogos de categoria (lib/erro-categoria)
+          const doCampo = erroDoNomeDaCategoria(erro)
+          if (doCampo) {
+            setNovaCategoria((atual) => ({ ...atual, erro: doCampo }))
           } else if (!(erro instanceof ErroApi && erro.status === 401)) {
             toast.error(MENSAGENS_FORMULARIO.erroCategoria)
           }

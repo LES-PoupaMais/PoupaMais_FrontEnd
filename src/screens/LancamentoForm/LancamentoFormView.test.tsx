@@ -216,7 +216,7 @@ describe('Novo lançamento', () => {
     await usuario.click(screen.getByRole('button', { name: 'Criar "mercado"' }))
     const dialogo = await screen.findByRole('dialog', { name: 'Nova categoria' })
     await usuario.click(within(dialogo).getByRole('button', { name: 'Criar categoria' }))
-    expect(await within(dialogo).findByText('Já existe uma categoria com esse nome')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Já existe uma categoria com esse nome.')).toBeInTheDocument()
 
     const campo = within(dialogo).getByLabelText(/Nome da categoria/)
     await usuario.clear(campo)

@@ -30,7 +30,7 @@ test('roteiro da demo: cria a categoria pelo campo e salva com duas categorias e
   const dialogo = page.getByRole('dialog', { name: 'Nova categoria' })
   await expect(dialogo.getByLabel('Nome da categoria')).toHaveValue('mercado')
   await dialogo.getByRole('button', { name: 'Criar categoria' }).click()
-  await expect(dialogo.getByText('Já existe uma categoria com esse nome')).toBeVisible()
+  await expect(dialogo.getByText('Já existe uma categoria com esse nome.')).toBeVisible()
 
   await dialogo.getByLabel('Nome da categoria').fill('Farmácia')
   await dialogo.getByRole('button', { name: 'Criar categoria' }).click()
