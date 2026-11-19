@@ -1,6 +1,6 @@
 import type { Page, Route } from '@playwright/test'
 
-// API de lançamentos simulada no navegador (lista com filtros e paginação, status, lixeira, restaurar, exportar),
+// API de lançamentos simulada no navegador (lista com filtros e paginação, status, lixeira, restaurar ao status anterior, exportar),
 // com estado em memória: o que uma ação muda aparece na próxima leitura, como na API real.
 export type LancamentoFalso = {
   id: number
@@ -13,6 +13,8 @@ export type LancamentoFalso = {
   dataCadastro: string
   dataAtualizacao: string
   dataExclusao: string | null
+  /** Só na API falsa: o status de antes da lixeira (v1.2.0); não vem na resposta da API real */
+  statusAnterior?: 'ATIVO' | 'INATIVO'
 }
 
 export const categoriasFalsas = [
@@ -65,6 +67,7 @@ export function lancamentosIniciais(): LancamentoFalso[] {
 export type ApiFalsa = {
   lancamentos: LancamentoFalso[]
   excluidos: number[]
+  restaurados: number[]
   statusAlterados: { id: number; status: string }[]
   exportacoes: URLSearchParams[]
 }
@@ -72,7 +75,13 @@ export type ApiFalsa = {
 const json = (rota: Route, corpo: unknown, status = 200) => rota.fulfill({ status, json: corpo })
 
 export async function simularApiDeLancamentos(page: Page): Promise<ApiFalsa> {
-  const api: ApiFalsa = { lancamentos: lancamentosIniciais(), excluidos: [], statusAlterados: [], exportacoes: [] }
+  const api: ApiFalsa = {
+    lancamentos: lancamentosIniciais(),
+    excluidos: [],
+    restaurados: [],
+    statusAlterados: [],
+    exportacoes: [],
+  }
 
   await page.route('**/api/categorias**', (rota) => json(rota, categoriasFalsas))
 
@@ -129,18 +138,27 @@ export async function simularApiDeLancamentos(page: Page): Promise<ApiFalsa> {
     if (!lancamento) return json(rota, { status: 404, mensagem: 'Lançamento não encontrado' }, 404)
 
     if (partes[1] === 'status' && metodo === 'PATCH') {
+      // v1.2.0: PATCH de status num item da lixeira dá 422 (só o /restaurar tira da lixeira)
+      if (lancamento.status === 'DELETADO')
+        return json(rota, { status: 422, mensagem: 'Lançamento excluído não pode mudar de status' }, 422)
       const { status } = pedido.postDataJSON() as { status: LancamentoFalso['status'] }
       api.statusAlterados.push({ id, status })
       lancamento.status = status
       return json(rota, lancamento)
     }
     if (partes[1] === 'restaurar' && metodo === 'POST') {
-      lancamento.status = 'INATIVO'
+      if (lancamento.status !== 'DELETADO')
+        return json(rota, { status: 422, mensagem: 'Só é possível restaurar um lançamento excluído' }, 422)
+      // v1.2.0: volta ao status de antes da lixeira; sem esse dado (itens antigos), INATIVO
+      api.restaurados.push(id)
+      lancamento.status = lancamento.statusAnterior ?? 'INATIVO'
+      delete lancamento.statusAnterior
       lancamento.dataExclusao = null
       return json(rota, lancamento)
     }
     if (metodo === 'DELETE') {
       api.excluidos.push(id)
+      if (lancamento.status !== 'DELETADO') lancamento.statusAnterior = lancamento.status
       lancamento.status = 'DELETADO'
       lancamento.dataExclusao = new Date().toISOString()
       return rota.fulfill({ status: 204 })

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createContext, useContext, useState, type MouseEvent, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { ROTAS } from '@/constants/rotas'
+import { textoRestaurado } from '@/constants/textos'
 import { useOnline } from '@/hooks/use-online'
 import { useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
@@ -13,10 +14,10 @@ import { useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { partesDaData } from '@/lib/data'
 import type { FormatoExportacao, Lancamento } from '@/types/api'
 
-// Lixeira (`/lancamentos/lixeira`, status=DELETADO, todos os meses): sem switch e sem Editar; Restaurar volta como inativo
-// com o toast "Restaurado como inativo. Ative para voltar ao dashboard.". Visualização no painel `?ver=<id>` a partir de 768px.
+// Lixeira (`/lancamentos/lixeira`, status=DELETADO, todos os meses): sem switch e sem Editar; Restaurar volta ao status de
+// antes da lixeira (v1.2.0), com o toast de `constants/textos` (TOAST_RESTAURADO). Visualização no painel `?ver=<id>` a
+// partir de 768px.
 
-export const TOAST_RESTAURADO = 'Restaurado como inativo. Ative para voltar ao dashboard.'
 export const TOAST_RESTAURAR_ERRO = 'Não foi possível restaurar.'
 const FILTRO_LIXEIRA = { status: 'DELETADO' } as const
 
@@ -81,9 +82,9 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
   const restaurar = (lancamento: Lancamento) => {
     setOcupados((atual) => new Set(atual).add(lancamento.id))
     restaurarMutation.mutate(lancamento.id, {
-      onSuccess: () => {
+      onSuccess: (restaurado) => {
         if (verId === lancamento.id) fecharDetalhe()
-        toast(TOAST_RESTAURADO, {
+        toast(textoRestaurado(restaurado.status), {
           icon: <RotateCcw className="size-5" aria-hidden="true" />,
           action: { label: 'Ver', onClick: () => router.push(listaDoMes(lancamento)) },
         })

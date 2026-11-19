@@ -26,7 +26,7 @@ export function useAlterarStatusLancamento() {
   })
 }
 
-/** Só chame quando o toast "Movido para a lixeira · Desfazer" fechar sem Desfazer (ou ao sair da página) */
+/** DELETE na hora (status DELETADO, guardando o status anterior). Com Desfazer: `useMoverParaLixeiraComDesfazer` */
 export function useMoverParaLixeira() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -35,7 +35,7 @@ export function useMoverParaLixeira() {
   })
 }
 
-/** Restaura como INATIVO */
+/** Restaura ao status de antes da lixeira (v1.2.0; itens antigos sem esse dado voltam INATIVO) */
 export function useRestaurarLancamento() {
   const queryClient = useQueryClient()
   return useMutation({

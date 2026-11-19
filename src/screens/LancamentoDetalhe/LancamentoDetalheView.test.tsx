@@ -1,6 +1,6 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { http as msw, HttpResponse } from 'msw/http'
-import { Toaster } from 'sonner'
+import { toast, Toaster } from 'sonner'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { lancamentosDemo, server } from '@/test/msw/server-e-dados'
 import { renderComProviders } from '@/test/utils'
@@ -27,7 +27,10 @@ const renderizar = (id = 3) =>
 
 describe('Visualizar lançamento', () => {
   beforeEach(() => rota.push.mockClear())
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => {
+    act(() => toast.dismiss())
+    vi.restoreAllMocks()
+  })
 
   it('mostra o lançamento com o título h1, Editar e o voltar para o mês', async () => {
     renderizar()
@@ -56,11 +59,46 @@ describe('Visualizar lançamento', () => {
     expect(await screen.findByText('Não foi possível mudar Conta no saldo.')).toBeInTheDocument()
   })
 
-  it('mover para a lixeira volta para a lista do mês com o toast Desfazer', async () => {
+  it('mover para a lixeira: DELETE na hora, volta para a lista do mês e o Desfazer restaura', async () => {
+    const chamadas: string[] = []
+    server.use(
+      msw.delete('*/api/lancamentos/:id', ({ params }) => {
+        chamadas.push(`DELETE ${params.id}`)
+        return new HttpResponse(null, { status: 204 })
+      }),
+      msw.post('*/api/lancamentos/:id/restaurar', ({ params }) => {
+        chamadas.push(`restaurar ${params.id}`)
+        return HttpResponse.json(lancamentosDemo[2])
+      }),
+    )
     const { usuario } = renderizar()
     await usuario.click(await screen.findByRole('button', { name: 'Mover para a lixeira' }))
     expect(rota.push).toHaveBeenCalledWith('/lancamentos?mes=11&ano=2026')
+    await waitFor(() => expect(chamadas).toEqual(['DELETE 3']))
     fireEvent.click(await screen.findByRole('button', { name: 'Desfazer' }))
+    await waitFor(() => expect(chamadas).toEqual(['DELETE 3', 'restaurar 3']))
+  })
+
+  it('mover para a lixeira com erro: aviso', async () => {
+    server.use(
+      msw.delete('*/api/lancamentos/:id', () => HttpResponse.json({ status: 500, mensagem: 'x' }, { status: 500 })),
+    )
+    const { usuario } = renderizar()
+    await usuario.click(await screen.findByRole('button', { name: 'Mover para a lixeira' }))
+    expect(await screen.findByText('Não foi possível mover para a lixeira.')).toBeInTheDocument()
+  })
+
+  it('Desfazer com erro no restaurar: aviso', async () => {
+    server.use(
+      msw.delete('*/api/lancamentos/:id', () => new HttpResponse(null, { status: 204 })),
+      msw.post('*/api/lancamentos/:id/restaurar', () =>
+        HttpResponse.json({ status: 500, mensagem: 'x' }, { status: 500 }),
+      ),
+    )
+    const { usuario } = renderizar()
+    await usuario.click(await screen.findByRole('button', { name: 'Mover para a lixeira' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Desfazer' }))
+    expect(await screen.findByText('Não foi possível restaurar.')).toBeInTheDocument()
   })
 
   it('na lixeira: aviso, voltar para a Lixeira e Restaurar com toast', async () => {

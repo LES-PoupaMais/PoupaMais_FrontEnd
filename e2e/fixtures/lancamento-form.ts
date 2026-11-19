@@ -87,7 +87,7 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
       status: corpo.status ?? 'ATIVO',
       categorias: corpo.categoriaIds.map((id) => categorias.find((c) => c.id === id)),
       dataCadastro: '2026-11-18T12:00:00Z',
-      dataAtualizacao: '2026-11-18T12:00:00Z',
+      dataAtualizacao: null, // v1.2.0: nasce sem alteração
       dataExclusao: null,
     }
     lancamentos.set(novo.id, novo)
@@ -100,11 +100,30 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     if (!atual) return rota.fulfill({ status: 404, json: { status: 404, mensagem: 'Não encontrado' } })
     if (req.method() === 'GET') return rota.fulfill({ json: atual })
     const corpo = registrar(rota) as Record<string, unknown> | null
+    // Regras da API v1.2.0 para o item da lixeira
+    if (atual.status === 'DELETADO' && (acao === '/status' || req.method() === 'PUT'))
+      return rota.fulfill({ status: 422, json: { status: 422, mensagem: 'Lançamento excluído' } })
+    if (acao === '/restaurar' && atual.status !== 'DELETADO')
+      return rota.fulfill({
+        status: 422,
+        json: { status: 422, mensagem: 'Só é possível restaurar um lançamento excluído' },
+      })
+    if (corpo?.status === 'DELETADO')
+      return rota.fulfill({
+        status: 400,
+        json: {
+          status: 400,
+          mensagem: 'Dados inválidos',
+          erros: [{ campo: 'status', mensagem: 'Informe o status ATIVO ou INATIVO' }],
+        },
+      })
     let novo = atual
     if (acao === '/status') novo = { ...atual, status: corpo?.status }
-    else if (acao === '/restaurar') novo = { ...atual, status: 'INATIVO', dataExclusao: null }
+    else if (acao === '/restaurar')
+      // v1.2.0: volta ao status de antes da lixeira (sem esse dado, INATIVO)
+      novo = { ...atual, status: atual.statusAnterior ?? 'INATIVO', statusAnterior: undefined, dataExclusao: null }
     else if (req.method() === 'PUT') novo = { ...atual, ...corpo, status: corpo?.status ?? atual.status }
-    else if (req.method() === 'DELETE') novo = { ...atual, status: 'DELETADO' }
+    else if (req.method() === 'DELETE') novo = { ...atual, status: 'DELETADO', statusAnterior: atual.status }
     lancamentos.set(Number(id), novo)
     return rota.fulfill({ json: novo })
   })

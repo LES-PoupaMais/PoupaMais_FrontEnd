@@ -10,7 +10,7 @@ import { useCategorias } from '@/hooks/use-categorias'
 import { useOnline } from '@/hooks/use-online'
 import { TOAST_MODELO_CSV, useBaixarModeloCsv, useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
-import { useFilaDaLixeira, useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
+import { useMoverParaLixeiraComDesfazer } from '@/hooks/use-lixeira'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useAlterarStatusLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
@@ -25,7 +25,11 @@ export const TOAST_SALDO = {
   desligado: 'Lançamento fora do saldo. Ele continua na lista.',
   erro: 'Não foi possível mudar Conta no saldo.',
 }
-export const TOAST_LIXEIRA = { mensagem: 'Movido para a lixeira', erro: 'Não foi possível mover para a lixeira.' }
+export const TOAST_LIXEIRA = {
+  mensagem: 'Movido para a lixeira',
+  erro: 'Não foi possível mover para a lixeira.',
+  erroDesfazer: 'Não foi possível restaurar.',
+}
 export const TOAST_EXPORTAR = { sucesso: 'Arquivo exportado', erro: 'Não foi possível exportar.' }
 export const TOAST_MODELO = TOAST_MODELO_CSV
 
@@ -38,7 +42,7 @@ type LancamentosContextValue = {
   irParaLixeira: () => void
 
   lancamentos: Lancamento[]
-  /** `total` da API menos o que está esperando o toast da lixeira; `null` enquanto carrega */
+  /** `total` da API; `null` enquanto carrega */
   total: number | null
   carregando: boolean
   erro: boolean
@@ -101,7 +105,6 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
   // ---------- dados ----------
   const consulta = useLancamentos(paraApi(filtros, periodo))
   const { data: categorias = [] } = useCategorias()
-  const fila = useFilaDaLixeira()
   const [statusOtimista, setStatusOtimista] = useState<ReadonlyMap<number, Lancamento['status']>>(new Map())
 
   const aplicarOtimista = useCallback(
@@ -112,12 +115,8 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
     [statusOtimista],
   )
   const itens = consulta.data?.itens
-  const lancamentos = useMemo(
-    () => (itens ?? []).filter((l) => !fila.has(l.id)).map(aplicarOtimista),
-    [itens, fila, aplicarOtimista],
-  )
-  const escondidos = (itens ?? []).length - lancamentos.length
-  const total = consulta.data ? Math.max(0, consulta.data.total - escondidos) : null
+  const lancamentos = useMemo(() => (itens ?? []).map(aplicarOtimista), [itens, aplicarOtimista])
+  const total = consulta.data ? consulta.data.total : null
 
   // ---------- Conta no saldo ----------
   const alterarStatus = useAlterarStatusLancamento()
@@ -140,7 +139,7 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
   }
 
   // ---------- lixeira com Desfazer ----------
-  const { adiar, desfazer, confirmar } = useMoverParaLixeiraAdiado()
+  const moverComDesfazer = useMoverParaLixeiraComDesfazer()
   const fecharDetalhe = () => {
     const novos = new URLSearchParams(busca)
     novos.delete('ver')
@@ -148,11 +147,12 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
   }
   const moverParaLixeira = (lancamento: Lancamento) => {
     if (verId === lancamento.id) fecharDetalhe()
-    adiar(lancamento.id)
-    mostrarToastDesfazer({
-      mensagem: TOAST_LIXEIRA.mensagem,
-      onDesfazer: () => desfazer(lancamento.id),
-      onFechar: () => void confirmar(lancamento.id).catch(() => toast.error(TOAST_LIXEIRA.erro)),
+    // O DELETE vai na hora (a linha some) e o Desfazer do toast restaura ao status de antes (hooks/use-lixeira)
+    const movido = moverComDesfazer(lancamento.id, { onErroAoDesfazer: () => toast.error(TOAST_LIXEIRA.erroDesfazer) })
+    const idToast = mostrarToastDesfazer({ mensagem: TOAST_LIXEIRA.mensagem, onDesfazer: () => void movido.desfazer() })
+    movido.envio.catch(() => {
+      toast.dismiss(idToast)
+      toast.error(TOAST_LIXEIRA.erro)
     })
   }
 

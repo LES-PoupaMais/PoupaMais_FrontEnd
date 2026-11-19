@@ -157,17 +157,69 @@ describe('Lançamentos', () => {
     expect(await screen.findByText('Não foi possível mudar Conta no saldo.')).toBeInTheDocument()
   })
 
-  it('mover para a lixeira: a linha some, o toast tem Desfazer e o DELETE não vai', async () => {
-    const excluir = vi.fn()
-    server.use(msw.delete('*/api/lancamentos/:id', () => (excluir(), new HttpResponse(null, { status: 204 }))))
+  it('mover para a lixeira: o DELETE vai na hora, a linha some e o Desfazer restaura', async () => {
+    const chamadas: string[] = []
+    let naLixeira = false
+    server.use(
+      msw.get('*/api/lancamentos', () =>
+        HttpResponse.json(
+          paginar(lancamentosDemo.filter((l) => l.status !== 'DELETADO' && (!naLixeira || l.id !== 2))),
+        ),
+      ),
+      msw.delete('*/api/lancamentos/:id', ({ params }) => {
+        chamadas.push(`DELETE ${params.id}`)
+        naLixeira = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+      msw.post('*/api/lancamentos/:id/restaurar', ({ params }) => {
+        chamadas.push(`restaurar ${params.id}`)
+        naLixeira = false
+        return HttpResponse.json({ ...lancamentosDemo.find((l) => l.id === 2), status: 'ATIVO' })
+      }),
+    )
     const { usuario } = renderizar()
     await usuario.click(await screen.findByRole('button', { name: 'Mover Salário para a lixeira' }))
     expect(screen.queryByRole('switch', { name: 'Conta no saldo: Salário' })).not.toBeInTheDocument()
     expect(barra().getByRole('status')).toHaveTextContent('4 lançamentos')
     expect(await screen.findByText('Movido para a lixeira')).toBeInTheDocument()
+    // Mesmo toast de antes: contador de 5 s
+    expect(screen.getByText('5 s')).toBeInTheDocument()
+    await waitFor(() => expect(chamadas).toEqual(['DELETE 2']))
+
     await usuario.click(screen.getByRole('button', { name: 'Desfazer' }))
+    await waitFor(() => expect(chamadas).toEqual(['DELETE 2', 'restaurar 2']))
     expect(await screen.findByRole('switch', { name: 'Conta no saldo: Salário' })).toBeInTheDocument()
-    expect(excluir).not.toHaveBeenCalled()
+  })
+
+  it('mover para a lixeira com erro no DELETE: aviso e a linha volta', async () => {
+    server.use(
+      msw.delete('*/api/lancamentos/:id', () => HttpResponse.json({ status: 500, mensagem: 'x' }, { status: 500 })),
+    )
+    const { usuario } = renderizar()
+    await usuario.click(await screen.findByRole('button', { name: 'Mover Salário para a lixeira' }))
+    expect(await screen.findByText('Não foi possível mover para a lixeira.')).toBeInTheDocument()
+    expect(await screen.findByRole('switch', { name: 'Conta no saldo: Salário' })).toBeInTheDocument()
+  })
+
+  it('Desfazer com erro no restaurar: aviso e a lista é recarregada', async () => {
+    let leituras = 0
+    server.use(
+      msw.get('*/api/lancamentos', () => {
+        leituras += 1
+        return HttpResponse.json(paginar(lancamentosDemo.filter((l) => l.status !== 'DELETADO')))
+      }),
+      msw.delete('*/api/lancamentos/:id', () => new HttpResponse(null, { status: 204 })),
+      msw.post('*/api/lancamentos/:id/restaurar', () =>
+        HttpResponse.json({ status: 500, mensagem: 'x' }, { status: 500 }),
+      ),
+    )
+    const { usuario } = renderizar()
+    await usuario.click(await screen.findByRole('button', { name: 'Mover Salário para a lixeira' }))
+    await waitFor(() => expect(leituras).toBeGreaterThanOrEqual(2)) // recarregou depois do DELETE
+    const antes = leituras
+    await usuario.click(await screen.findByRole('button', { name: 'Desfazer' }))
+    expect(await screen.findByText('Não foi possível restaurar.')).toBeInTheDocument()
+    await waitFor(() => expect(leituras).toBeGreaterThan(antes))
   })
 
   it('computador: tocar na linha abre o painel (?ver=) em vez de navegar', async () => {

@@ -396,7 +396,13 @@ describe('Editar lançamento', () => {
     expect(await screen.findByDisplayValue('Mercado do mês')).toBeInTheDocument()
   })
 
-  it('Mover para a lixeira: toast com Desfazer; o DELETE só sai quando o toast fecha', async () => {
+  it('Mover para a lixeira: DELETE na hora, toast com Desfazer, e o Desfazer restaura', async () => {
+    server.use(
+      http.post('*/api/lancamentos/:id/restaurar', async ({ request, params }) => {
+        enviados.push({ metodo: request.method, caminho: new URL(request.url).pathname, corpo: null })
+        return HttpResponse.json(lancamentoSalvo({}, Number(params.id)))
+      }),
+    )
     const { usuario } = renderizar({ modo: 'editar', id: 3 })
     await screen.findByDisplayValue('Mercado do mês')
 
@@ -406,19 +412,15 @@ describe('Editar lançamento', () => {
     // Mesmo toast da lista (UndoToast): contador e barra de tempo
     expect(screen.getByText('5 s')).toBeInTheDocument()
     expect(rota.replace).toHaveBeenCalledWith('/lancamentos?mes=11&ano=2026')
-    expect(enviados).toHaveLength(0)
-
-    // Desfazer: nada é enviado
-    await usuario.click(screen.getByRole('button', { name: 'Desfazer' }))
-    act(() => toast.dismiss())
-    await new Promise((r) => setTimeout(r, 50))
-    expect(enviados).toHaveLength(0)
-
-    // Sem Desfazer: ao fechar, envia
-    await usuario.click(screen.getAllByRole('button', { name: 'Mover para a lixeira' })[0])
-    await screen.findByText('Movido para a lixeira')
-    act(() => toast.dismiss())
     await waitFor(() => expect(enviados).toEqual([{ metodo: 'DELETE', caminho: '/api/lancamentos/3', corpo: null }]))
+
+    await usuario.click(screen.getByRole('button', { name: 'Desfazer' }))
+    await waitFor(() =>
+      expect(enviados.map((e) => `${e.metodo} ${e.caminho}`)).toEqual([
+        'DELETE /api/lancamentos/3',
+        'POST /api/lancamentos/3/restaurar',
+      ]),
+    )
   })
 
   it('na lixeira: mostra o aviso e Restaurar', async () => {

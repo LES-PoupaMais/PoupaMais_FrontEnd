@@ -6,8 +6,9 @@ import { toast } from 'sonner'
 import { mostrarToastDesfazer } from '@/components/molecules/undo-toast'
 import type { ErroDeCampo, LancamentoFormDados, LancamentoFormValores } from '@/components/organisms/lancamento-form'
 import { ROTAS } from '@/constants/rotas'
+import { textoRestaurado } from '@/constants/textos'
 import { useCategorias, useSalvarCategoria } from '@/hooks/use-categorias'
-import { useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
+import { useMoverParaLixeiraComDesfazer } from '@/hooks/use-lixeira'
 import { useLancamento } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useOnline } from '@/hooks/use-online'
@@ -33,7 +34,6 @@ export const MENSAGENS_FORMULARIO = {
   erroCategoria: 'Não foi possível criar a categoria. Tente de novo.',
   movido: 'Movido para a lixeira',
   erroMover: 'Não foi possível mover para a lixeira. Tente de novo.',
-  restaurado: 'Restaurado como inativo. Ative para voltar ao dashboard.',
   erroRestaurar: 'Não foi possível restaurar. Tente de novo.',
 } as const
 
@@ -120,7 +120,7 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
   const consultaCategorias = useCategorias()
   const salvarLancamento = useSalvarLancamento()
   const salvarCategoria = useSalvarCategoria()
-  const { adiar, desfazer, confirmar } = useMoverParaLixeiraAdiado()
+  const moverComDesfazer = useMoverParaLixeiraComDesfazer()
   const restaurarLancamento = useRestaurarLancamento()
 
   const [versaoDoFormulario, setVersao] = useState(0)
@@ -264,12 +264,17 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
 
   const moverParaLixeira = () => {
     if (!idValido) return
-    // Mesma fila da lista (hooks/use-lixeira-adiada): a linha some na hora e o DELETE só sai quando o toast fecha sem Desfazer
-    adiar(idValido)
-    mostrarToastDesfazer({
+    // Como na lista (hooks/use-lixeira): o DELETE vai na hora e o Desfazer do toast restaura
+    const movido = moverComDesfazer(idValido, {
+      onErroAoDesfazer: () => toast.error(MENSAGENS_FORMULARIO.erroRestaurar),
+    })
+    const idToast = mostrarToastDesfazer({
       mensagem: MENSAGENS_FORMULARIO.movido,
-      onDesfazer: () => desfazer(idValido),
-      onFechar: () => void confirmar(idValido).catch(() => toast.error(MENSAGENS_FORMULARIO.erroMover)),
+      onDesfazer: () => void movido.desfazer(),
+    })
+    movido.envio.catch(() => {
+      toast.dismiss(idToast)
+      toast.error(MENSAGENS_FORMULARIO.erroMover)
     })
     sair(hrefLista)
   }
@@ -277,7 +282,7 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
   const restaurar = () => {
     if (!idValido) return
     restaurarLancamento.mutate(idValido, {
-      onSuccess: () => toast.success(MENSAGENS_FORMULARIO.restaurado),
+      onSuccess: (restaurado) => toast.success(textoRestaurado(restaurado.status)),
       onError: (erro) => {
         if (!(erro instanceof ErroApi && erro.status === 401)) toast.error(MENSAGENS_FORMULARIO.erroRestaurar)
       },

@@ -59,7 +59,8 @@ export type Lancamento = {
   status: StatusLancamento
   categorias: CategoriaResumo[]
   dataCadastro: InstanteIso
-  dataAtualizacao: InstanteIso
+  /** `null` até a primeira alteração (v1.2.0: o POST nasce com `null`) */
+  dataAtualizacao: InstanteIso | null
   /** Preenchida ao ir para a lixeira; `null` ao restaurar */
   dataExclusao: InstanteIso | null
 }

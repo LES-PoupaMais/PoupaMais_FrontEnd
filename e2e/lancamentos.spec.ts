@@ -42,7 +42,7 @@ test.describe('Lançamentos', () => {
     await expect(barra.getByRole('status')).toHaveText('15 lançamentos')
   })
 
-  test('mover para a lixeira: Desfazer não exclui; sem Desfazer o DELETE vai depois do toast', async ({ page }) => {
+  test('mover para a lixeira: o DELETE vai na hora; o Desfazer restaura ao status de antes', async ({ page }) => {
     const api = await simularApiDeLancamentos(page)
     await page.setViewportSize(COMPUTADOR)
     await page.goto('/lancamentos?mes=11&ano=2026')
@@ -51,16 +51,21 @@ test.describe('Lançamentos', () => {
     await tabela(page).getByRole('button', { name: 'Mover Feira 1 para a lixeira' }).click()
     await expect(tabela(page).getByRole('link', { name: 'Ver Feira 1', exact: true })).toBeHidden()
     await expect(barra.getByRole('status')).toHaveText('14 lançamentos')
+    await expect.poll(() => api.excluidos).toEqual([100])
     await page.getByRole('button', { name: 'Desfazer' }).click()
+    await expect.poll(() => api.restaurados).toEqual([100])
     await expect(tabela(page).getByRole('link', { name: 'Ver Feira 1', exact: true })).toBeVisible()
+    // Voltou ATIVO (era ATIVO antes da lixeira): continua contando no saldo
+    await expect(tabela(page).getByRole('switch', { name: 'Conta no saldo: Feira 1', exact: true })).toBeChecked()
+    await expect(barra.getByRole('status')).toHaveText('15 lançamentos')
 
     await tabela(page).getByRole('button', { name: 'Mover Feira 2 para a lixeira' }).click()
     await expect(page.getByText('Movido para a lixeira').last()).toBeVisible()
-    expect(api.excluidos).toEqual([])
+    await expect.poll(() => api.excluidos).toEqual([100, 101])
     await page.mouse.move(0, 0)
-    await expect.poll(() => api.excluidos, { timeout: 10_000 }).toEqual([101])
-    await expect(page.getByText('Movido para a lixeira')).toHaveCount(0)
+    await expect(page.getByText('Movido para a lixeira')).toHaveCount(0, { timeout: 10_000 })
     await expect(tabela(page).getByRole('link', { name: 'Ver Feira 2', exact: true })).toBeHidden()
+    expect(api.restaurados).toEqual([100])
   })
 
   test('computador: a linha abre o painel; Mostrar mais carrega o resto', async ({ page }) => {

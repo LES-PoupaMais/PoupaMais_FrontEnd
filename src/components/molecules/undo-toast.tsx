@@ -8,7 +8,7 @@ import { cn } from '@/lib/cn'
 
 // Toast do Design System com ação Desfazer e tempo visível (caso "Lixeira": "Movido para a lixeira · Desfazer", 5 s).
 // O contador "5 s" e a barra fina embaixo mostram o tempo; o tempo para enquanto o mouse está em cima ou o foco está dentro.
-// Quando o tempo acaba sem Desfazer, chama `onExpirar` (ex.: enviar o DELETE). `role="status"` + `aria-live="polite"`.
+// Quando o tempo acaba sem Desfazer, chama `onExpirar`. `role="status"` + `aria-live="polite"`.
 
 export const DURACAO_TOAST_MS = 5000
 const PASSO_MS = 100
@@ -97,7 +97,7 @@ export function UndoToast({
 export type MostrarToastDesfazerOpcoes = Omit<UndoToastProps, 'onDesfazer' | 'onExpirar' | 'className'> & {
   onDesfazer: () => void
   /** O toast fechou sem Desfazer (tempo acabou ou a pessoa dispensou) */
-  onFechar: () => void
+  onFechar?: () => void
 }
 
 /** Abre o UndoToast no Toaster global (sonner). Ele continua aberto ao trocar de tela. Devolve o id do toast. */
@@ -107,7 +107,7 @@ export function mostrarToastDesfazer({ onDesfazer, onFechar, ...props }: Mostrar
     if (resolvido) return
     resolvido = true
     if (desfeito) onDesfazer()
-    else onFechar()
+    else onFechar?.()
   }
   return toast.custom(
     (id) => (

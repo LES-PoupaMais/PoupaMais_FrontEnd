@@ -6,17 +6,18 @@ import { createContext, useContext, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { mostrarToastDesfazer } from '@/components/molecules/undo-toast'
 import { ROTAS } from '@/constants/rotas'
+import { textoRestaurado } from '@/constants/textos'
 import { useOnline } from '@/hooks/use-online'
 import { useLancamento } from '@/hooks/use-lancamentos'
-import { useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
+import { useMoverParaLixeiraComDesfazer } from '@/hooks/use-lixeira'
 import { useAlterarStatusLancamento, useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { ErroApi } from '@/lib/http'
 import { partesDaData } from '@/lib/data'
 import type { Lancamento } from '@/types/api'
 
 // Visualizar lançamento em tela cheia (`/lancamentos/[id]`, o destino do toque na linha no celular; também abre direto por
-// link no computador). Editar leva ao formulário; Mover para a lixeira volta para a lista do mês com o toast Desfazer;
-// na lixeira, Restaurar.
+// link no computador). Editar leva ao formulário; Mover para a lixeira envia o DELETE e volta para a lista do mês com o
+// toast Desfazer (que restaura); na lixeira, Restaurar.
 
 type LancamentoDetalheContextValue = {
   lancamento: Lancamento | undefined
@@ -53,7 +54,8 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
 
   const alterarStatus = useAlterarStatusLancamento()
   const alternarSaldo = (contaNoSaldo: boolean) => {
-    if (!lancamento) return
+    // Na lixeira o PATCH de status dá 422 (v1.2.0): só o /restaurar tira da lixeira
+    if (!lancamento || lancamento.status === 'DELETADO') return
     const status = contaNoSaldo ? 'ATIVO' : 'INATIVO'
     setStatusOtimista(status)
     alterarStatus.mutate(
@@ -69,15 +71,19 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
     )
   }
 
-  const { adiar, desfazer, confirmar } = useMoverParaLixeiraAdiado()
+  const moverComDesfazer = useMoverParaLixeiraComDesfazer()
   const moverParaLixeira = () => {
     if (!lancamento) return
-    const { id: idLancamento } = lancamento
-    adiar(idLancamento)
-    mostrarToastDesfazer({
+    const movido = moverComDesfazer(lancamento.id, {
+      onErroAoDesfazer: () => toast.error('Não foi possível restaurar.'),
+    })
+    const idToast = mostrarToastDesfazer({
       mensagem: 'Movido para a lixeira',
-      onDesfazer: () => desfazer(idLancamento),
-      onFechar: () => void confirmar(idLancamento).catch(() => toast.error('Não foi possível mover para a lixeira.')),
+      onDesfazer: () => void movido.desfazer(),
+    })
+    movido.envio.catch(() => {
+      toast.dismiss(idToast)
+      toast.error('Não foi possível mover para a lixeira.')
     })
     router.push(listaDoMes(lancamento))
   }
@@ -86,8 +92,8 @@ export function LancamentoDetalheProvider({ id, children }: { id: number; childr
   const restaurar = () => {
     if (!lancamento) return
     restaurarMutation.mutate(lancamento.id, {
-      onSuccess: () =>
-        toast('Restaurado como inativo. Ative para voltar ao dashboard.', {
+      onSuccess: (restaurado) =>
+        toast(textoRestaurado(restaurado.status), {
           icon: <RotateCcw className="size-5" aria-hidden="true" />,
         }),
       onError: () => toast.error('Não foi possível restaurar.'),
