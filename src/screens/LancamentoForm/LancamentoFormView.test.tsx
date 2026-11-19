@@ -411,6 +411,9 @@ describe('Editar lançamento', () => {
 
     expect(await screen.findByText(/Este lançamento está na lixeira/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Lixeira' })).toHaveAttribute('href', '/lancamentos/lixeira')
+    // Mesma visualização da Lixeira (TransactionDetail): selo, "Conta no saldo" sem switch e "Ver a lixeira"
+    expect(screen.getByText('Não · volta desligado ao restaurar')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver a lixeira' })).toHaveAttribute('href', '/lancamentos/lixeira')
     await usuario.click(screen.getByRole('button', { name: 'Restaurar' }))
 
     expect(await screen.findByText('Restaurado como inativo. Ative para voltar ao dashboard.')).toBeInTheDocument()

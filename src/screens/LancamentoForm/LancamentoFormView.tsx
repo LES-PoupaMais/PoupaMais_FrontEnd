@@ -9,7 +9,7 @@ import { ErrorState } from '@/components/molecules/error-state'
 import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
 import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
 import { LancamentoForm } from '@/components/organisms/lancamento-form'
-import { LancamentoNaLixeira } from '@/components/organisms/lancamento-na-lixeira'
+import { TransactionDetail } from '@/components/organisms/transaction-detail'
 import { FormPageTemplate } from '@/components/templates/form-page-template'
 import { ROTAS } from '@/constants/rotas'
 import { formatarDataExtenso } from '@/lib/data'
@@ -73,11 +73,15 @@ export function LancamentoFormView() {
         descricao={descricao || undefined}
         voltar={<Voltar href={ROTAS.lixeira} destino="Lixeira" />}
       >
-        <LancamentoNaLixeira
+        <TransactionDetail
           lancamento={lancamento}
           restaurando={ctx.restaurando}
           onRestaurar={ctx.restaurar}
-          hrefLixeira={ROTAS.lixeira}
+          acaoExtra={
+            <Button variant="texto" asChild>
+              <Link href={ROTAS.lixeira}>Ver a lixeira</Link>
+            </Button>
+          }
         />
       </FormPageTemplate>
     )
