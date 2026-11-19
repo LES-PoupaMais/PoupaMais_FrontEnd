@@ -3,15 +3,16 @@
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { toast } from 'sonner'
+import { mostrarToastDesfazer } from '@/components/molecules/undo-toast'
 import type { ErroDeCampo, LancamentoFormDados, LancamentoFormValores } from '@/components/organisms/lancamento-form'
 import { ROTAS } from '@/constants/rotas'
 import { useCategorias, useSalvarCategoria } from '@/hooks/use-categorias'
+import { useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
 import { useLancamento } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useOnline } from '@/hooks/use-online'
 import {
   useAlterarStatusLancamento,
-  useMoverParaLixeira,
   useRestaurarLancamento,
   useSalvarLancamento,
 } from '@/hooks/use-mutacoes-lancamento'
@@ -124,7 +125,7 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
   const salvarLancamento = useSalvarLancamento()
   const alterarStatus = useAlterarStatusLancamento()
   const salvarCategoria = useSalvarCategoria()
-  const mover = useMoverParaLixeira()
+  const { adiar, desfazer, confirmar } = useMoverParaLixeiraAdiado()
   const restaurarLancamento = useRestaurarLancamento()
 
   const [versaoDoFormulario, setVersao] = useState(0)
@@ -269,22 +270,12 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
 
   const moverParaLixeira = () => {
     if (!idValido) return
-    let resolvido = false
-    const enviar = () => {
-      if (resolvido) return
-      resolvido = true
-      mover.mutate(idValido, { onError: () => toast.error(MENSAGENS_FORMULARIO.erroMover) })
-    }
-    // O DELETE só sai quando o toast fecha sem Desfazer
-    toast(MENSAGENS_FORMULARIO.movido, {
-      action: {
-        label: 'Desfazer',
-        onClick: () => {
-          resolvido = true
-        },
-      },
-      onAutoClose: enviar,
-      onDismiss: enviar,
+    // Mesma fila da lista (hooks/use-lixeira-adiada): a linha some na hora e o DELETE só sai quando o toast fecha sem Desfazer
+    adiar(idValido)
+    mostrarToastDesfazer({
+      mensagem: MENSAGENS_FORMULARIO.movido,
+      onDesfazer: () => desfazer(idValido),
+      onFechar: () => void confirmar(idValido).catch(() => toast.error(MENSAGENS_FORMULARIO.erroMover)),
     })
     sair(hrefLista)
   }

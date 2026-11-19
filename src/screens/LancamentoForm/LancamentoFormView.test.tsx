@@ -380,6 +380,8 @@ describe('Editar lançamento', () => {
     const [botaoCelular] = screen.getAllByRole('button', { name: 'Mover para a lixeira' })
     await usuario.click(botaoCelular)
     expect(await screen.findByText('Movido para a lixeira')).toBeInTheDocument()
+    // Mesmo toast da lista (UndoToast): contador e barra de tempo
+    expect(screen.getByText('5 s')).toBeInTheDocument()
     expect(rota.replace).toHaveBeenCalledWith('/lancamentos?mes=11&ano=2026')
     expect(enviados).toHaveLength(0)
 
