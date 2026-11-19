@@ -117,3 +117,7 @@ export type Dashboard = {
 
 /** Mês do filtro (Dashboard e Lançamentos), sempre na URL: `?mes=11&ano=2026` */
 export type MesAno = { mes: number; ano: number }
+
+// ---------- recuperação de senha (RN014), via BFF ----------
+export type RecuperarSenhaRequest = { email: string }
+export type RedefinirSenhaRequest = { token: string; novaSenha: string }

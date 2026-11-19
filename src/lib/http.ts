@@ -115,3 +115,63 @@ export const http = {
   delete: <T>(caminho: string, opcoes?: OpcoesRequisicao) => requisitar<T>('DELETE', caminho, opcoes),
   baixar,
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Tradução de erros para a tela (DS, Voz e texto): nenhuma tela mostra a mensagem crua da API. O status HTTP e o
+// `erros[]` viram mensagens do Design System. Use em toasts, avisos (ActionBanner) e nos campos (setError do RHF).
+// Aditivo: o ErroApi continua igual; quem já usa `erro.message` segue funcionando, mas telas novas usam `traduzirErro`.
+
+/** Mensagem padrão de cada status (pode ser trocada por tela em `opcoes.porStatus`). */
+export const MENSAGENS_POR_STATUS: Readonly<Record<number, string>> = {
+  0: MENSAGEM_SEM_CONEXAO,
+  400: 'Confira os campos destacados e tente de novo.',
+  401: 'Sua sessão venceu. Entre de novo para continuar.',
+  403: 'Você não tem acesso a este conteúdo.',
+  404: 'Não encontramos o que você procurou. Pode ter sido removido.',
+  409: 'Isso já está cadastrado.',
+  413: 'O arquivo é grande demais.',
+  422: 'Não foi possível concluir. Confira os dados e tente de novo.',
+  429: 'Muitas tentativas seguidas. Espere um pouco e tente de novo.',
+  503: 'O servidor está indisponível no momento. Tente de novo em instantes.',
+}
+
+/** Mensagem de um campo vindo do `erros[]` quando a tela não tem uma própria para ele. */
+export const MENSAGEM_CAMPO_PADRAO = 'Confira este campo.'
+
+export type OpcoesTraducao = {
+  /** Mensagens próprias da tela por status (ex.: `{ 409: 'Já existe uma conta com esse e-mail.' }`) */
+  porStatus?: Readonly<Record<number, string>>
+  /** Mensagens próprias por campo do `erros[]` (ex.: `{ email: 'Informe um e-mail válido.' }`) */
+  porCampo?: Readonly<Record<string, string>>
+}
+
+export type ErroTraduzido = {
+  status: number
+  /** Frase para o toast ou o aviso, já no tom do DS */
+  mensagem: string
+  /** Campo → mensagem, para `setError` (vazio quando a API não mandou `erros[]`) */
+  campos: Record<string, string>
+}
+
+/** Formato mínimo aceito: `ErroApi` (BFF) ou o resultado de uma Server Action (`{ status, erros }`). */
+type ErroComStatus = { status: number; erros?: readonly ErroCampo[] }
+
+function temStatus(erro: unknown): erro is ErroComStatus {
+  return typeof erro === 'object' && erro !== null && typeof (erro as ErroComStatus).status === 'number'
+}
+
+/**
+ * Traduz qualquer erro para mensagens do DS. Aceita `ErroApi`, `{ status, erros }` (Server Action) ou qualquer outra
+ * coisa (cai na mensagem padrão). Nunca devolve a `mensagem` da API.
+ */
+export function traduzirErro(erro: unknown, opcoes: OpcoesTraducao = {}): ErroTraduzido {
+  if (!temStatus(erro)) return { status: -1, mensagem: MENSAGEM_ERRO_PADRAO, campos: {} }
+
+  const { status } = erro
+  const campos: Record<string, string> = {}
+  for (const { campo } of erro.erros ?? []) {
+    if (campo) campos[campo] = opcoes.porCampo?.[campo] ?? MENSAGEM_CAMPO_PADRAO
+  }
+  const mensagem = opcoes.porStatus?.[status] ?? MENSAGENS_POR_STATUS[status] ?? MENSAGEM_ERRO_PADRAO
+  return { status, mensagem, campos }
+}
