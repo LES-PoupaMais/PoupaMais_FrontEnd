@@ -38,9 +38,12 @@ export function DashboardView() {
     primeiroNome,
     baixarModelo,
   } = useDashboardContext()
-  const mesAno = formatarMesAno(periodo.mes, periodo.ano)
   const ola = primeiroNome ? `Olá, ${primeiroNome}` : 'Olá'
-  const subtitulo = vazio ? `${mesAno} ainda não tem lançamentos.` : 'Este é o resumo do mês.'
+  // A frase do mês vazio usa o mês do próprio dado (nunca o da URL, que pode estar à frente durante a troca)
+  const subtitulo =
+    vazio && dashboard
+      ? `${formatarMesAno(dashboard.mes, dashboard.ano)} ainda não tem lançamentos.`
+      : 'Este é o resumo do mês.'
 
   const cabecalho = (
     <>
@@ -125,7 +128,7 @@ export function DashboardView() {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:gap-0">
+    <div className="flex flex-col gap-4 md:gap-0" aria-busy={carregando || undefined}>
       {/* celular: título e mês ficam na TopBar; aqui só a saudação */}
       <div className="flex flex-col gap-0.5 md:hidden">
         <p className="text-titulo-2">{ola}</p>

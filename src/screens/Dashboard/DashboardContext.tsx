@@ -17,7 +17,7 @@ type DashboardContextValue = {
   periodo: MesAno
   irParaMes: (periodo: MesAno) => void
   dashboard: Dashboard | undefined
-  /** Primeira carga (sem dado nenhum na tela) */
+  /** Primeira carga ou troca de mês: o que está em `dashboard` ainda é o mês anterior (keepPreviousData) */
   carregando: boolean
   /** Falhou e não há dado para mostrar */
   erro: boolean
@@ -48,12 +48,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const irParaMes = (novo: MesAno) =>
     router.replace(`${caminho}?${comPeriodo(parametros.toString(), novo)}`, { scroll: false })
 
-  const dashboard = consulta.data
+  // keepPreviousData: ao trocar de mês o dado do mês anterior fica como placeholder até o novo chegar. Ele não vale
+  // para o mês da URL: a tela mostra o carregando (e aria-busy) em vez dos números velhos.
+  const trocandoMes = consulta.isPlaceholderData
+  const dashboard = trocandoMes ? undefined : consulta.data
   const valor: DashboardContextValue = {
     periodo,
     irParaMes,
     dashboard,
-    carregando: consulta.isPending,
+    carregando: consulta.isPending || trocandoMes,
     erro: consulta.isError && !dashboard,
     tentarDeNovo: () => void consulta.refetch(),
     tentando: consulta.isFetching,

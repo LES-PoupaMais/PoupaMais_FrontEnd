@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
@@ -125,6 +126,40 @@ describe('Dashboard', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Próximo mês' }))
     expect(rota.replace).toHaveBeenLastCalledWith('/dashboard?mes=2&ano=2026&origem=x', { scroll: false })
+  })
+
+  it('trocar de mês: carregando e aria-busy até o mês novo chegar (não mostra os números do mês anterior)', async () => {
+    let liberar: () => void = () => {}
+    const segurar = new Promise<void>((r) => {
+      liberar = r
+    })
+    server.use(
+      http.get('*/api/dashboard', async ({ request }) => {
+        const params = new URL(request.url).searchParams
+        const mes = Number(params.get('mes'))
+        if (mes === 10) await segurar
+        return HttpResponse.json(mes === 10 ? { ...vazio, mes: 10, ano: 2026 } : { ...dashboardDemo, mes, ano: 2026 })
+      }),
+    )
+    const { rerender, queryClient } = renderizar()
+    expect(await screen.findByRole('article', { name: 'Saldo do mês de novembro de 2026' })).toBeInTheDocument()
+
+    rota.busca = 'mes=10&ano=2026'
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <DashboardProvider>
+          <DashboardView />
+        </DashboardProvider>
+      </QueryClientProvider>,
+    )
+    expect(await screen.findByRole('status')).toHaveTextContent('Carregando o resumo do mês…')
+    expect(screen.queryByRole('article', { name: 'Saldo do mês de novembro de 2026' })).toBeNull()
+    expect(document.querySelector('[aria-busy="true"]')).not.toBeNull()
+
+    liberar()
+    // Mês vazio: a frase usa o mês do dado que chegou
+    expect(await screen.findAllByText('Outubro 2026 ainda não tem lançamentos.', { exact: false })).not.toHaveLength(0)
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
   it('o esqueleto ocupa a grade e o Context exige o Provider', () => {
