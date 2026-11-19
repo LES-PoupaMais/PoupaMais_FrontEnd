@@ -22,8 +22,7 @@ export default defineConfig({
         'src/**/*.d.ts',
         'src/proxy.ts', // coberto pelo E2E (e2e/protecao.spec.ts)
         // Átomos gerados pelo shadcn SEM lógica nossa (só estilo sobre o Radix): testados pelo próprio shadcn/Radix.
-        // Átomo alterado pelo PoupaMais (button, avatar, input, checkbox, dialog, calendar…) SAI desta lista e ganha teste.
-        'src/components/atoms/badge.tsx',
+        // Átomo alterado pelo PoupaMais (button, avatar, input, checkbox, dialog, calendar, badge, tooltip…) SAI desta lista e ganha teste.
         'src/components/atoms/card.tsx',
         'src/components/atoms/chart.tsx',
         'src/components/atoms/command.tsx',
@@ -31,10 +30,8 @@ export default defineConfig({
         'src/components/atoms/field.tsx',
         'src/components/atoms/input-group.tsx',
         'src/components/atoms/separator.tsx',
-        'src/components/atoms/skeleton.tsx',
         'src/components/atoms/sonner.tsx',
         'src/components/atoms/table.tsx',
-        'src/components/atoms/tooltip.tsx',
       ],
       // Pisos de cobertura: o PR reprova abaixo deles. Subir junto quando a cobertura subir.
       thresholds: {

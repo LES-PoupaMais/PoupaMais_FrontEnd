@@ -63,6 +63,19 @@ export function formatarMesAno(mes: number, ano: number): string {
   return `${nomeDoMes(mes)} ${ano}`
 }
 
+const porcentagem = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+
+/** Taxa e participação: 60.6 → "60,6%", 52 → "52%", 112 → "112%" (até uma casa, sem arredondar a faixa: ela vem da API) */
+export function formatarPorcentagem(valor: number): string {
+  if (!Number.isFinite(valor)) throw new RangeError(`Porcentagem inválida: ${valor}`)
+  return `${porcentagem.format(valor)}%`
+}
+
+/** Soma valores monetários em centavos (sem erro de ponto flutuante): ['186.40', 127.8] → 314.2 */
+export function somarValores(valores: readonly ValorMonetario[]): number {
+  return valores.reduce<number>((total, valor) => total + Math.round(paraNumero(valor) * 100), 0) / 100
+}
+
 const numeroBR = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 /** 1234.5 → "1.234,50" (o campo de valor mostra assim ao sair; o "R$" fica no prefixo do campo) */
