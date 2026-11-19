@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createContext, useContext, useState, type MouseEvent, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { ROTAS } from '@/constants/rotas'
-import { useConexao } from '@/hooks/use-conexao'
+import { useOnline } from '@/hooks/use-online'
 import { useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
@@ -62,7 +62,7 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
   const parametros = useSearchParams()
   const verId = Number(parametros.get('ver')) || undefined
   const tabletOuMaior = useMediaQuery(MIDIA.tablet)
-  const online = useConexao()
+  const online = useOnline()
 
   const consulta = useLancamentos(FILTRO_LIXEIRA)
   const itens = consulta.data?.itens ?? []

@@ -7,7 +7,7 @@ import { mostrarToastDesfazer } from '@/components/molecules/undo-toast'
 import { FILTROS_VAZIOS, type FiltrosLista } from '@/components/organisms/filter-bar'
 import { ROTAS } from '@/constants/rotas'
 import { useCategorias } from '@/hooks/use-categorias'
-import { useConexao } from '@/hooks/use-conexao'
+import { useOnline } from '@/hooks/use-online'
 import { useBaixarModeloCsv, useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { useFilaDaLixeira, useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
@@ -84,7 +84,7 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
   const filtros = useMemo(() => lerFiltros(new URLSearchParams(busca)), [busca])
   const verId = lerVer(parametros)
   const tabletOuMaior = useMediaQuery(MIDIA.tablet)
-  const online = useConexao()
+  const online = useOnline()
 
   const irPara = useCallback(
     (query: string) => router.replace(query ? `${caminho}?${query}` : caminho, { scroll: false }),

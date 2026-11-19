@@ -8,6 +8,7 @@ import { ROTAS } from '@/constants/rotas'
 import { useCategorias, useSalvarCategoria } from '@/hooks/use-categorias'
 import { useLancamento } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
+import { useOnline } from '@/hooks/use-online'
 import {
   useAlterarStatusLancamento,
   useMoverParaLixeira,
@@ -19,7 +20,6 @@ import { ErroApi } from '@/lib/http'
 import { comPeriodo } from '@/lib/periodo'
 import type { Categoria, Lancamento, StatusLancamento } from '@/types/api'
 import { useAvisoAoSair, type PedidoDeSaida } from './useAvisoAoSair'
-import { useSemConexao } from './useSemConexao'
 
 // Novo e Editar lançamento (pranchetas novo-*, editar-*, nova-categoria-inline-celular, novo-categorias-celular).
 // Dados (lançamento e categorias), envio (POST/PUT + "Conta no saldo" pelo PATCH de status), criar categoria pelo campo,
@@ -116,7 +116,7 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
   // Hoje só no navegador (no servidor não há "hoje" de quem vê): até lá, a View mostra o esqueleto
   const hoje = useSyncExternalStore(nada, hojeIso, () => null)
   const tablet = useMediaQuery(MIDIA.tablet)
-  const semConexao = useSemConexao()
+  const semConexao = !useOnline()
 
   const idValido = modo === 'editar' && id !== null ? id : undefined
   const consulta = useLancamento(idValido)

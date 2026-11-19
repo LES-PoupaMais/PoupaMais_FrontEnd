@@ -6,7 +6,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { mostrarToastDesfazer } from '@/components/molecules/undo-toast'
 import { ROTAS } from '@/constants/rotas'
-import { useConexao } from '@/hooks/use-conexao'
+import { useOnline } from '@/hooks/use-online'
 import { useLancamento } from '@/hooks/use-lancamentos'
 import { useMoverParaLixeiraAdiado } from '@/hooks/use-lixeira-adiada'
 import { useAlterarStatusLancamento, useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
@@ -45,7 +45,7 @@ function listaDoMes(lancamento: Lancamento | undefined) {
 
 export function LancamentoDetalheProvider({ id, children }: { id: number; children: ReactNode }) {
   const router = useRouter()
-  const online = useConexao()
+  const online = useOnline()
   const consulta = useLancamento(Number.isInteger(id) && id > 0 ? id : undefined)
   const [statusOtimista, setStatusOtimista] = useState<Lancamento['status'] | null>(null)
   const bruto = consulta.data
