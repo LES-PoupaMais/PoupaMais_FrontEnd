@@ -2,33 +2,41 @@
 
 import Link from 'next/link'
 import { buttonVariants } from '@/components/atoms/button'
+import { LandingBeneficios } from '@/components/organisms/landing-beneficios'
+import { LandingDados } from '@/components/organisms/landing-dados'
+import { LandingHero } from '@/components/organisms/landing-hero'
+import { LandingPassos } from '@/components/organisms/landing-passos'
 import { PublicTemplate } from '@/components/templates/public-template'
-import { ROTAS } from '@/constants/rotas'
+import { cn } from '@/lib/cn'
 import { useLandingContext } from './LandingContext'
 
-// PLACEHOLDER (B1): mínimo para a rota funcionar no padrão novo. O visual final (hero, seções) vem com os
-// organismos do B2/B4, seguindo landing-celular.dc.html e landing-computador.dc.html.
+// Topo: "Entrar" em texto no celular e contornado no computador, com "Privacidade" a partir de 768px (pranchetas).
 export function LandingView() {
-  const { destaques } = useLandingContext()
+  const { hrefCadastro, hrefLogin, hrefPrivacidade } = useLandingContext()
   return (
-    <PublicTemplate>
-      <section className="flex flex-col items-center gap-6 py-16 text-center">
-        <p className="text-rotulo-secao text-receita uppercase">Gestão financeira pessoal e familiar</p>
-        <h1 className="text-display max-w-3xl">
-          Veja para onde vai o seu dinheiro <span className="text-receita">em cada mês.</span>
-        </h1>
-        <Link href={ROTAS.cadastro} className={buttonVariants({ size: 'xl' })}>
-          Começar gratuitamente
-        </Link>
-      </section>
-      <ul className="grid gap-4 pb-16 md:grid-cols-3">
-        {destaques.map((destaque) => (
-          <li key={destaque.titulo} className="bg-card border-border rounded-card shadow-card border p-6">
-            <h2 className="text-titulo-3">{destaque.titulo}</h2>
-            <p className="text-corpo text-muted-foreground mt-2">{destaque.texto}</p>
-          </li>
-        ))}
-      </ul>
+    <PublicTemplate
+      variante="site"
+      acoes={
+        <>
+          <Link href={hrefPrivacidade} className={cn(buttonVariants({ variant: 'texto' }), 'hidden md:inline-flex')}>
+            Privacidade
+          </Link>
+          <Link
+            href={hrefLogin}
+            className={cn(
+              buttonVariants({ variant: 'texto' }),
+              'lg:border-input lg:text-foreground lg:hover:bg-secondary lg:px-6',
+            )}
+          >
+            Entrar
+          </Link>
+        </>
+      }
+    >
+      <LandingHero hrefCadastro={hrefCadastro} hrefLogin={hrefLogin} />
+      <LandingBeneficios />
+      <LandingPassos />
+      <LandingDados hrefPrivacidade={hrefPrivacidade} hrefCadastro={hrefCadastro} />
     </PublicTemplate>
   )
 }

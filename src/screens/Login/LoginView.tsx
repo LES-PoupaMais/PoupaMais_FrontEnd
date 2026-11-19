@@ -1,29 +1,40 @@
 'use client'
 
 import Link from 'next/link'
+import { ActionBanner } from '@/components/molecules/action-banner'
+import { OfflineBanner } from '@/components/molecules/offline-banner'
+import { LoginForm } from '@/components/organisms/login-form'
 import { AuthTemplate } from '@/components/templates/auth-template'
 import { ROTAS } from '@/constants/rotas'
 import { useLoginContext } from './LoginContext'
 
-// PLACEHOLDER (B1): o formulário (organismo login-form) entra no B4.
+// Pranchetas login-celular/-computador/-erro/-escuro e sessao-vencida-celular.
 export function LoginView() {
-  const { voltarPara } = useLoginContext()
+  const { sessaoVencida, destinoDescrito, hrefEsqueci, enviando, erro, online, entrar } = useLoginContext()
+  const aviso = (sessaoVencida || !online) && (
+    <>
+      {sessaoVencida && <ActionBanner variante="atencao" texto="Sua sessão venceu. Entre de novo para continuar." />}
+      {!online && <OfflineBanner variante="canto" />}
+    </>
+  )
+
   return (
     <AuthTemplate
-      titulo="Bem-vindo de volta"
-      subtitulo="Entre na sua conta para continuar."
+      titulo={sessaoVencida ? 'Entre de novo' : 'Bem-vindo de volta'}
+      subtitulo={
+        sessaoVencida ? `Depois de entrar, você volta para ${destinoDescrito}.` : 'Entre na sua conta para continuar.'
+      }
+      aviso={aviso}
       rodape={
         <>
           Não tem conta?{' '}
-          <Link href={ROTAS.cadastro} className="text-primary font-bold">
+          <Link href={ROTAS.cadastro} className="text-corpo-forte text-primary">
             Criar conta
           </Link>
         </>
       }
     >
-      <p className="text-legenda text-muted-foreground text-center" data-voltar-para={voltarPara}>
-        O formulário de login entra na próxima etapa.
-      </p>
+      <LoginForm onSubmit={entrar} enviando={enviando} erro={erro} semConexao={!online} hrefEsqueci={hrefEsqueci} />
     </AuthTemplate>
   )
 }

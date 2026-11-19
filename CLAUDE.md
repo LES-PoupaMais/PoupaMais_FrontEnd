@@ -226,7 +226,7 @@ Navegador ──► Next (mesma origem)                                   ──
 | --- | --- | --- | --- |
 | **Átomos** | `components/atoms` | shadcn/ui + átomos próprios no mesmo estilo. Sem domínio | **button** ✓, **input** ✓, **textarea** ✓, **label** ✓, **checkbox** ✓, **switch** ✓, **select** ✓, **badge** ✓, **avatar** ✓, **tooltip** ✓, **skeleton** ✓, separator, **dialog/alert-dialog** ✓, **popover** ✓, **drawer** ✓, **sheet** ✓ (véu com `overlayClassName`), sonner, chart; próprios: **logo** ✓, **money-text** ✓, **calendar** ✓, **function-icon** ✓, **progress** ✓ |
 | **Moléculas** | `components/molecules` | Combinação de átomos, genérica | **form-field** ✓, **password-field** ✓, **money-field** ✓, **date-picker** ✓ (dias/meses/anos), **month-navigator** ✓, **segmented-control** ✓, **chip/filter-chip** ✓, **multi-select** ✓, **stat-card** ✓, **spend-rate** ✓, **labeled-progress** ✓, **empty-state** ✓, **error-state** ✓, **offline-banner** ✓, **action-banner** ✓, **confirm-dialog** ✓, **upload-area** ✓, **stepper** ✓, **timeline** ✓, **sub-row-list** ✓, **section-header** ✓ |
-| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, login-form, cadastro-form |
+| **Organismos** | `components/organisms` | Seções completas, podem conhecer o domínio, **sem dados próprios** | **sidebar** ✓, **bottom-nav** ✓, **top-bar** ✓, **create-sheet** ✓, highlight-card, income-expense-chart, balance-chart, category-bar-chart, transaction-row, transaction-table, transaction-detail, filter-bar, lancamento-form, categoria-dialog, import-result, excluir-conta-dialog, **login-form** ✓, **cadastro-form** ✓ |
 | **Templates** | `components/templates` | Só layout e slots | **app-shell-template** ✓, **auth-template** ✓, **public-template** ✓, **dashboard-template** ✓, **form-page-template** ✓ |
 
 ✓ = já existe. Cada componente nasce com teste e segue a preview do Design System (`../Documentação/design/ds/project/components/<Nome>/`):
@@ -504,3 +504,23 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
    - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover.
+8. **Telas de acesso e públicas (B4, branch `feat/tela-auth`):**
+   - **Feito:** pendência 1 (último item: o `LoginContext` e o `CadastroContext` chamam `queryClient.clear()` ao entrar) e pendência 5
+     (tradução de erros). Rotas novas: `esqueci-senha`, `redefinir-senha?token=`, `privacidade`, `not-found`, `error` e `(app)/error`.
+     Componentes novos (fora da tabela): molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
+     `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`, `landing-passos`,
+     `landing-dados`, `politica-privacidade`.
+   - **Como traduzir erros (todas as telas):** `traduzirErro(erro, { porStatus?, porCampo? })` de `lib/http` aceita `ErroApi` (BFF), o
+     resultado de uma Server Action (`{ status, erros }`) ou qualquer valor, e devolve `{ status, mensagem, campos }` com frases do DS
+     (`MENSAGENS_POR_STATUS`; campo sem mensagem própria → "Confira este campo."). Use `mensagem` no toast/aviso e `campos` no `setError`.
+     Nunca mostre `erro.message` do `ErroApi` (continua existindo, sem mudança, para quem já usa).
+   - **Server Actions → API:** `lib/api-servidor.ts` (`server-only`, `chamarApiDoServidor`) devolve `{ ok, status, dados | erros }`
+     serializável; use nas actions do Perfil (troca de senha, excluir conta) em vez de outro `fetch`.
+   - **Sessão vencida:** o `AppProviders` agora manda para `/login?voltar=…&sessao=vencida`; o login mostra o aviso e "Entre de novo".
+     O rascunho guardado (texto da prancheta e do DS) depende da tela de formulário: quando existir, acrescentar "Seu rascunho foi guardado".
+   - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
+   - **AuthTemplate no celular:** a prancheta `login-celular` não tem card (logo no topo à esquerda, texto alinhado à esquerda, rodapé só
+     com a política); o template aprovado mantém o card central em todas as larguras. Decidir se o template ganha o layout do celular.
+   - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
+   - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
+
