@@ -167,7 +167,7 @@ export function LoginView() {
         </>
       }
     >
-      {erro && <ActionBanner variante="erro">{erro}</ActionBanner>}
+      {erro && <ActionBanner variante="erro" texto={erro} />}
       <LoginForm enviando={enviando} onSubmit={entrar} />
     </AuthTemplate>
   )
