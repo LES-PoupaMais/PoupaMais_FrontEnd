@@ -5,8 +5,10 @@ import { toast } from 'sonner'
 import { TOAST_MODELO_CSV, useBaixarModeloCsv } from '@/hooks/use-exportacao'
 import { useImportarCsv } from '@/hooks/use-importacao'
 import { useOnline } from '@/hooks/use-online'
+import { salvarArquivo } from '@/lib/baixar-arquivo'
 import { plural } from '@/lib/format'
 import { traduzirErro } from '@/lib/http'
+import { montarCsvLinhasIgnoradas, nomeArquivoLinhasIgnoradas } from '@/lib/linhas-ignoradas'
 import type { ResultadoImportacao } from '@/types/api'
 
 // Importar CSV (RN007/RN012): escolher o arquivo (a UploadArea confere tipo e 2 MB antes de enviar), importar e mostrar
@@ -28,7 +30,12 @@ type ImportarContextValue = {
   online: boolean
   /** "Baixar modelo CSV" (nome do arquivo vem do Content-Disposition) */
   baixarModelo: () => void
+  /** "Baixar linhas ignoradas (.csv)": monta no navegador o arquivo com as linhas originais das falhas (sem chamar a API) */
+  baixarLinhasIgnoradas: () => void
 }
+
+/** Toast do "Baixar linhas ignoradas (.csv)" (texto fora do DS) */
+export const TOAST_LINHAS_IGNORADAS = 'Linhas ignoradas baixadas'
 
 const ImportarContext = createContext<ImportarContextValue | null>(null)
 
@@ -70,6 +77,13 @@ export function ImportarProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const baixarLinhasIgnoradas = () => {
+    if (!importado) return
+    const conteudo = montarCsvLinhasIgnoradas(importado.resultado.falhas)
+    salvarArquivo(new Blob([conteudo], { type: 'text/csv;charset=utf-8' }), nomeArquivoLinhasIgnoradas())
+    toast.success(TOAST_LINHAS_IGNORADAS)
+  }
+
   const valor: ImportarContextValue = {
     arquivo,
     escolher: (novo) => {
@@ -91,6 +105,7 @@ export function ImportarProvider({ children }: { children: ReactNode }) {
     },
     online,
     baixarModelo,
+    baixarLinhasIgnoradas,
   }
 
   return <ImportarContext.Provider value={valor}>{children}</ImportarContext.Provider>

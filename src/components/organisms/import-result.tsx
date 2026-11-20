@@ -21,6 +21,8 @@ export type ImportResultProps = {
   hrefLancamentos: string
   /** "Baixar modelo CSV" (`GET /lancamentos/template-csv`): a tela baixa (`useBaixarModeloCsv`) */
   onBaixarModelo: () => void
+  /** "Baixar linhas ignoradas (.csv)" (só com falhas): a tela monta o arquivo com as linhas originais e baixa */
+  onBaixarLinhasIgnoradas: () => void
   /** Volta para a escolha do arquivo */
   onImportarOutro: () => void
   className?: string
@@ -38,6 +40,7 @@ export function ImportResult({
   nomeArquivo,
   hrefLancamentos,
   onBaixarModelo,
+  onBaixarLinhasIgnoradas,
   onImportarOutro,
   className,
 }: ImportResultProps) {
@@ -138,17 +141,25 @@ export function ImportResult({
         </div>
       )}
 
-      {falhas.length > 0 &&
-        (nada ? (
-          <p className="text-corpo text-muted-foreground">
-            Nenhum lançamento foi salvo. Baixe o modelo, confira o cabeçalho <Codigo>{CABECALHO}</Codigo> e tente de
-            novo.
-          </p>
-        ) : (
-          <p className="text-legenda text-muted-foreground">
-            As linhas ignoradas não foram salvas. Corrija no arquivo e importe só essas linhas de novo.
-          </p>
-        ))}
+      {falhas.length > 0 && (
+        <div className="flex flex-col items-start gap-3">
+          {nada ? (
+            <p className="text-corpo text-muted-foreground">
+              Nenhum lançamento foi salvo. Baixe o modelo, confira o cabeçalho <Codigo>{CABECALHO}</Codigo> e tente de
+              novo.
+            </p>
+          ) : (
+            <p className="text-legenda text-muted-foreground">
+              As linhas ignoradas não foram salvas. Corrija no arquivo e importe só essas linhas de novo.
+            </p>
+          )}
+          {/* Fora do DS (aprovação pendente): as linhas originais com o cabeçalho do modelo, para corrigir e reenviar */}
+          <Button variant="contornado" onClick={onBaixarLinhasIgnoradas}>
+            <Download aria-hidden="true" />
+            Baixar linhas ignoradas (.csv)
+          </Button>
+        </div>
+      )}
 
       {categoriasCriadas.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">

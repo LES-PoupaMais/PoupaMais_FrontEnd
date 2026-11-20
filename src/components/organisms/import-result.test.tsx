@@ -22,21 +22,23 @@ const comFalhas: ResultadoImportacao = {
 function renderizar(resultado: ResultadoImportacao) {
   const onImportarOutro = vi.fn()
   const onBaixarModelo = vi.fn()
+  const onBaixarLinhasIgnoradas = vi.fn()
   render(
     <ImportResult
       resultado={resultado}
       nomeArquivo="lancamentos-novembro.csv"
       hrefLancamentos="/lancamentos"
       onBaixarModelo={onBaixarModelo}
+      onBaixarLinhasIgnoradas={onBaixarLinhasIgnoradas}
       onImportarOutro={onImportarOutro}
     />,
   )
-  return { onImportarOutro, onBaixarModelo, usuario: userEvent.setup() }
+  return { onImportarOutro, onBaixarModelo, onBaixarLinhasIgnoradas, usuario: userEvent.setup() }
 }
 
 describe('ImportResult', () => {
   it('com linhas ignoradas: resumo, tabela com linha e motivo, categorias criadas e ações', async () => {
-    const { onImportarOutro, onBaixarModelo, usuario } = renderizar(comFalhas)
+    const { onImportarOutro, onBaixarModelo, onBaixarLinhasIgnoradas, usuario } = renderizar(comFalhas)
 
     expect(screen.getByRole('heading', { name: 'Importação concluída' })).toBeInTheDocument()
     expect(screen.getByText('lancamentos-novembro.csv · 45 linhas lidas')).toBeInTheDocument()
@@ -54,12 +56,14 @@ describe('ImportResult', () => {
     expect(screen.getByRole('link', { name: 'Ver lançamentos' })).toHaveAttribute('href', '/lancamentos')
     await usuario.click(screen.getByRole('button', { name: 'Baixar modelo CSV' }))
     expect(onBaixarModelo).toHaveBeenCalledOnce()
+    await usuario.click(screen.getByRole('button', { name: 'Baixar linhas ignoradas (.csv)' }))
+    expect(onBaixarLinhasIgnoradas).toHaveBeenCalledOnce()
     await usuario.click(screen.getByRole('button', { name: 'Importar outro arquivo' }))
     expect(onImportarOutro).toHaveBeenCalledOnce()
   })
 
-  it('só linhas inválidas: "Nada foi importado", modelo em destaque e escolher outro', () => {
-    renderizar({
+  it('só linhas inválidas: "Nada foi importado", modelo em destaque e escolher outro', async () => {
+    const { onBaixarLinhasIgnoradas, usuario } = renderizar({
       ...comFalhas,
       totalLinhas: 1,
       importados: 0,
@@ -75,6 +79,8 @@ describe('ImportResult', () => {
     expect(screen.queryByRole('link', { name: 'Ver lançamentos' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Escolher outro arquivo' })).toBeInTheDocument()
     expect(screen.queryByText('Categorias criadas')).toBeNull()
+    await usuario.click(screen.getByRole('button', { name: 'Baixar linhas ignoradas (.csv)' }))
+    expect(onBaixarLinhasIgnoradas).toHaveBeenCalledOnce()
   })
 
   it('arquivo vazio: explica o cabeçalho com um exemplo', () => {
@@ -84,6 +90,7 @@ describe('ImportResult', () => {
     expect(screen.getByRole('status')).toHaveTextContent('descricao;tipo;data;valor;categorias')
     expect(screen.queryByRole('table')).toBeNull()
     expect(screen.getByRole('button', { name: 'Baixar modelo CSV' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Baixar linhas ignoradas/ })).toBeNull()
   })
 
   it('tudo certo: só o resumo verde e Ver lançamentos', () => {
@@ -94,5 +101,6 @@ describe('ImportResult', () => {
     expect(screen.queryByRole('table')).toBeNull()
     expect(screen.getByRole('link', { name: 'Ver lançamentos' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Baixar modelo CSV' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Baixar linhas ignoradas/ })).toBeNull()
   })
 })
