@@ -47,11 +47,26 @@ npm run dev                   # http://localhost:3000
 ```bash
 npm test                 # unitários e de componente (Vitest + Testing Library + MSW)
 npm run test:coverage    # o mesmo, com piso de cobertura
-npm run test:e2e         # end-to-end com Playwright (Chromium e Firefox)
+npm run test:e2e         # end-to-end com Playwright (Chromium e Firefox), com a API simulada
+npm run test:e2e:api-real  # end-to-end contra a API real (Chromium), pela pilha E2E do PoupaMais_Development
 ```
 
 Antes do primeiro E2E: `npx playwright install --with-deps chromium firefox`.
-Os testes E2E simulam a API no navegador, então não precisam do backend rodando.
+O `test:e2e` simula a API no navegador (e uma API falsa para as Server Actions), então não precisa do backend rodando.
+
+### E2E contra a API real (`e2e/api-real/`)
+
+Roda o roteiro da demo de ponta a ponta com o Spring, o Postgres e o Mailpit de verdade:
+
+```bash
+cd ../PoupaMais_Development && E2E_FRONT_PORT=3130 npm run e2e:up   # API 8580, Mailpit 8525, banco 5435 (127.0.0.1)
+cd ../PoupaMais_FrontEnd && npm run test:e2e:api-real              # build de produção do Next em PORT=3130 (padrão)
+cd ../PoupaMais_Development && npm run e2e:down                    # o banco (tmpfs) some junto
+```
+
+Cada teste cria um usuário novo (e-mail único) e monta os dados pela API (`e2e/api-real/apoio/`), então não depende de ordem
+nem de banco limpo. O "esqueci a senha" lê o link do e-mail pela API HTTP do Mailpit. Se a pilha não estiver de pé, a suíte
+para logo com a instrução para subir. Firefox também: `npx playwright test -c playwright.api-real.config.ts --project=firefox`.
 
 ## Pipeline (CI)
 
@@ -71,7 +86,8 @@ PR só é integrado (na `development` ou na `main`) com o CI verde.
 | `lint` / `format` / `format:check`      | ESLint e Prettier                             |
 | `typecheck`                             | Checagem de tipos                             |
 | `test` / `test:watch` / `test:coverage` | Vitest                                        |
-| `test:e2e`                              | Playwright                                    |
+| `test:e2e`                              | Playwright (API simulada)                     |
+| `test:e2e:api-real`                     | Playwright contra a API real (pilha E2E)      |
 
 ## Fluxo de branches (Gitflow)
 

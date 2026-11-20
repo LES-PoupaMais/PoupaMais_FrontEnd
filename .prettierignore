@@ -2,6 +2,7 @@
 node_modules
 coverage
 playwright-report
+playwright-report-api-real
 test-results
 package-lock.json
 public

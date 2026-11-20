@@ -55,6 +55,10 @@ description: 'Use ao escrever, corrigir ou revisar testes do front do PoupaMais:
 - Nesta máquina (sem sudo): `export LD_LIBRARY_PATH=$HOME/.local/playwright-libs/root/usr/lib/x86_64-linux-gnu` antes do `npm run test:e2e`.
 - Seletores por papel e texto (`getByRole`, `getByLabel`); nada de seletor CSS frágil.
 - Para depurar: `npx playwright test --ui` ou o plugin `playwright` do Claude Code para navegar na app.
+- **Contra a API real** (`e2e/api-real/`, `npm run test:e2e:api-real`): sobe antes a pilha E2E
+  (`cd ../PoupaMais_Development && E2E_FRONT_PORT=3130 npm run e2e:up`; depois `npm run e2e:down`). Use o `test` de
+  `e2e/api-real/apoio/teste.ts` (fixtures `usuario`/`logado`: usuário novo por teste) e monte os dados por `apoio/api.ts`,
+  nunca por `page.route`. E-mails pelo Mailpit (`apoio/mailpit.ts`). Detalhes no `CLAUDE.md`, seção Testes.
 
 ## Cobertura
 
