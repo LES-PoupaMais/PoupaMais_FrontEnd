@@ -19,7 +19,13 @@ export type Pagina<T> = {
 
 // ---------- erro padrão ----------
 export type ErroCampoApi = { campo: string; mensagem: string }
-export type RespostaErro = { status: number; mensagem: string; erros?: ErroCampoApi[] }
+export type RespostaErro = {
+  status: number
+  mensagem: string
+  erros?: ErroCampoApi[]
+  /** Código estável do erro (back, desde 20/11). O front não decide nada por ele: mostra a `mensagem` ou a genérica. */
+  codigo?: string
+}
 
 // ---------- auth e usuário ----------
 export type LoginRequest = { email: string; senha: string }

@@ -453,7 +453,7 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
 Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
 (`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC (`dataAtualizacao` `null` até a primeira alteração), ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
 `dataExclusao` preenchida ao ir para a Lixeira e `null` ao restaurar).
-Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir com `lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos
+Erro: `{status, mensagem, erros?: [{campo, mensagem}], codigo?}` (`codigo` estável desde 20/11; o front não usa). Exibir com `lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos
 campos (`setError` do RHF), como vieram.
 
 CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
@@ -554,7 +554,9 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, ficam
    "Informe a data." e "A data deve estar entre 2000 e 2100." Falta o README do MoneyField (DS) trocar o limite de
    R$ 99.999.999.999.999,99 para R$ 999.999.999,99.
-3. **Mensagens de erro back↔front a definir (líder):** desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
+3. **Mensagens de erro back↔front: decidido em 20/11.** O back passa a mandar um `codigo` estável em todo erro; o front
+   **continua mostrando só a `mensagem` da API ou a genérica** e não decide nada pelo `codigo` (`RespostaErro` em `types/api` só
+   ganhou `codigo?` opcional). Contexto: desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
    (regra em `lib/http.traduzirErro`; sem conexão, 401 e 5xx com frases do front). O líder vai repensar as mensagens entre back e
    front: mudar só em `lib/http` (e no back). Ficaram no front só os status que o contrato dá a um caso único e que mudam a tela:
    401 no login (credenciais), 409 no cadastro e na categoria (campo E-mail/Nome; a mensagem da API vai no campo), 422 no
@@ -576,7 +578,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      CSV baixar pelo hook com toast: registrar no README do UploadArea.
 6. **Dashboard:**
    - `maioresDespesas` do contrato não traz a `data`: as pranchetas mostram "1 nov · Aluguel", a tela mostra só as categorias.
-     Acrescentar `data` em `maioresDespesas[]` (back + os dois `CLAUDE.md`) e exibir com `formatarDataCurta`.
+     **Decidido em 20/11:** o back vai acrescentar `data` em `maioresDespesas[]`; quando chegar, atualizar os dois `CLAUDE.md` e
+     exibir com `formatarDataCurta` (ainda não feito).
    - O "mês vazio" é deduzido de `receitas = despesas = 0`: um mês só com lançamentos fora do saldo também cai no "Comece pelo seu
      primeiro lançamento". Resolver com uma contagem de lançamentos do mês no `GET /dashboard` (decisão com o back).
    - O gráfico de área não abre a dica no mês atual por padrão (a prancheta mostra "Nov" aberto como exemplo); abre com mouse, toque
