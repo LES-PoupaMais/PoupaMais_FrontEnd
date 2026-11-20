@@ -1,13 +1,12 @@
 'use client'
 
-import { ChevronDown, Download, List, Trash2 } from 'lucide-react'
+import { ChevronDown, List, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/atoms/button'
 import { ActionBanner } from '@/components/molecules/action-banner'
 import { EmptyState } from '@/components/molecules/empty-state'
 import { ErrorState } from '@/components/molecules/error-state'
 import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
-import { ExportDialog } from '@/components/organisms/export-dialog'
 import {
   TransactionDetail,
   TransactionDetailPanel,
@@ -28,19 +27,6 @@ export function LixeiraView() {
   const motivo = online ? undefined : ID_MOTIVO_OFFLINE
   const vazia = !ctx.carregando && !ctx.erro && lancamentos.length === 0
 
-  const botaoExportar = (
-    <Button
-      variant="contornado"
-      size="pequeno"
-      aria-haspopup="dialog"
-      disabled={vazia || ctx.carregando}
-      onClick={() => ctx.setExportarAberto(true)}
-    >
-      <Download aria-hidden="true" />
-      Exportar
-    </Button>
-  )
-
   return (
     <div className="flex flex-col gap-5">
       {!online && <OfflineBanner variante="canto" />}
@@ -51,7 +37,6 @@ export function LixeiraView() {
             Lançamentos excluídos de todos os meses. Eles não entram no saldo.
           </p>
         </div>
-        {botaoExportar}
       </header>
 
       {conteudo()}
@@ -70,20 +55,6 @@ export function LixeiraView() {
           <TransactionDetailSkeleton />
         )}
       </TransactionDetailPanel>
-
-      <ExportDialog
-        aberto={ctx.exportarAberto}
-        onAbertoChange={ctx.setExportarAberto}
-        formato={ctx.formato}
-        onFormatoChange={ctx.setFormato}
-        filtrosAtivos="Lixeira · todos os meses"
-        total={total}
-        origem="Lixeira · todos os meses"
-        lixeira
-        onBaixar={ctx.baixar}
-        baixando={ctx.baixando}
-        motivoDesabilitado={online ? undefined : 'exportar-offline-motivo'}
-      />
     </div>
   )
 
@@ -130,17 +101,6 @@ export function LixeiraView() {
               </h2>
               <span className="text-legenda text-muted-foreground">Todos os meses</span>
             </div>
-            <span className="md:hidden">
-              <Button
-                variant="texto"
-                size="icone"
-                aria-label="Exportar a lixeira"
-                aria-haspopup="dialog"
-                onClick={() => ctx.setExportarAberto(true)}
-              >
-                <Download aria-hidden="true" />
-              </Button>
-            </span>
           </div>
           <TransactionRowList>
             {lancamentos.map((lancamento) => (

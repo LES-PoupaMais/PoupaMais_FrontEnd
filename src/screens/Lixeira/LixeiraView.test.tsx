@@ -152,21 +152,10 @@ describe('Lixeira', () => {
     await waitFor(() => expect(rota.replace).toHaveBeenLastCalledWith('/lancamentos/lixeira', { scroll: false }))
   })
 
-  it('exportar a lixeira manda status=DELETADO sem mês', async () => {
-    let busca = new URLSearchParams()
-    server.use(
-      msw.get('*/api/lancamentos/exportar', ({ request }) => {
-        busca = new URL(request.url).searchParams
-        return new HttpResponse('x', { headers: { 'Content-Type': 'text/csv' } })
-      }),
-    )
-    const { usuario } = renderizar()
+  it('não tem Exportar (a prancheta da Lixeira não tem)', async () => {
+    renderizar()
     await screen.findByRole('heading', { name: '2 lançamentos na lixeira' })
-    await usuario.click(screen.getByRole('button', { name: 'Exportar' }))
-    expect(screen.getByText('Só os lançamentos da lixeira, de todos os meses.')).toBeInTheDocument()
-    await usuario.click(screen.getByRole('button', { name: 'Baixar arquivo' }))
-    expect(await screen.findByText('Arquivo exportado')).toBeInTheDocument()
-    expect(Object.fromEntries(busca)).toEqual({ formato: 'csv', status: 'DELETADO' })
+    expect(screen.queryByRole('button', { name: /Exportar/ })).not.toBeInTheDocument()
   })
 
   it('sem internet e o esqueleto; o Context exige o Provider', async () => {

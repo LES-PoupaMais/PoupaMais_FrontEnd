@@ -322,7 +322,7 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
   `POST /restaurar`: o `PATCH /status` de item na lixeira dá `422`) e o toast pelo status devolvido (`constants/textos`):
   "Restaurado como inativo. Ative para voltar ao dashboard." (INATIVO) ou "Lançamento restaurado" (ATIVO).
 - Lançamento na lixeira não pode ser editado: em `/lancamentos/[id]/editar` mostrar o aviso e Restaurar.
-- A exportação segue o filtro: só exporta itens da lixeira quando o filtro é a Lixeira.
+- A exportação segue o filtro e não leva os itens da lixeira; a Lixeira não tem Exportar (decisão de 20/11).
 
 ## Textos fora do DS, aprovados em 19/11
 
@@ -591,8 +591,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      só entra quando houver rascunho.
 8. **Lançamentos, visualização, exportar e Lixeira:**
    - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
-     desenham uma página. A Lixeira ganhou um "Exportar" (não está na prancheta `lixeira-*`) para cumprir "só exporta a lixeira com o
-     filtro Lixeira"; confirmar com o design (decidir).
+     desenham uma página. **Decidido e feito em 20/11:** a Lixeira não tem "Exportar" (não está na prancheta `lixeira-*`); Exportar
+     fica só em Lançamentos. A prop `lixeira` do `export-dialog` ficou sem uso.
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
    - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
