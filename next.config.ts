@@ -9,6 +9,13 @@ const origensDevPermitidas = (process.env.ORIGENS_DEV_PERMITIDAS ?? '')
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: origensDevPermitidas,
+  // Só no `next dev`: o Next 16 registra cada chamada de Server Function com os ARGUMENTOS
+  // (`└─ ƒ loginAction({"email":…,"senha":"…"})`), o que deixava senhas de login, cadastro, troca de senha e exclusão de
+  // conta em texto no terminal. Desligamos só esse registro; o de requisições (`POST /login 200 in …`), o de `fetch` e os
+  // erros continuam. Documentação: node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/logging.md
+  logging: {
+    serverFunctions: false,
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

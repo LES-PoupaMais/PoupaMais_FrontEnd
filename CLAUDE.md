@@ -205,6 +205,10 @@ Navegador ──► Next (mesma origem)                                   ──
   corpo e headers (`Content-Type`, `Content-Disposition`). Se a API responder 401, apaga o cookie e devolve 401; o `AppProviders` então
   leva a pessoa para `/login?voltar=<página atual>`. O login volta para lá com `lib/destino.destinoSeguro` (só caminho interno).
 - `src/lib/session.ts` (`import 'server-only'`): `obterToken()`, `gravarSessao(token, expiraEm)`, `encerrarSessao()`; nome do cookie em `lib/sessao-cookie.ts`.
+- **Senhas fora do terminal (20/11):** o `next dev` do Next 16 registrava cada Server Action com os argumentos
+  (`└─ ƒ loginAction({"email":…,"senha":"…"})`), deixando em texto as senhas do login, cadastro, troca de senha e exclusão de
+  conta. O `next.config.ts` desliga só isso com `logging.serverFunctions: false` (o log `POST /login 200 in …` e os erros
+  continuam); `src/test/next-config.test.ts` garante. Não volte a ligar, e não ponha `console.log` com os dados de uma Action.
 - **`cacheComponents` (Next 16) está ligado:** páginas e layouts viram estáticos por padrão. Quem lê `cookies()`, `headers()`,
   `searchParams` ou usa `useSearchParams` fica dentro de um `<Suspense>`; se não, o build falha. Guias locais:
   `node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md` e `authentication-with-cache-components.md`.
