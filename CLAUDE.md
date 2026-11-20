@@ -308,7 +308,8 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
   (`422` no `DELETE`): a `mensagem` da API aparece no aviso de atenção do diálogo, com "Inativar categoria".
 - No formulário de lançamento, o campo de categorias (multi-select) permite **criar uma nova no próprio campo**; a criada já entra selecionada.
   Categorias inativas não são selecionáveis.
-- `409` = "Já existe uma categoria com esse nome" (sem diferenciar maiúsculas/minúsculas), mostrado no diálogo.
+- `409` = "Já existe uma categoria com essa descrição" (a `mensagem` da API, sem diferenciar maiúsculas/minúsculas), mostrado no
+  campo do diálogo.
 - Depois de criar ou editar: invalidar `categorias`, `lancamentos` e `dashboard` (`useSalvarCategoria` já faz).
 
 ### Conta no saldo e Lixeira (RN004 / RN006 / UC010)
@@ -643,6 +644,5 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - **Pilha E2E (PoupaMais_Development):** o `E2E_FRONT_PORT` padrão é 3200 e a suíte usa 3130; o link do e-mail de senha aponta
      para o `FRONT_URL` (a suíte só usa o caminho, então passa com qualquer porta). Proposta: padrão 3130 lá, ou documentar
      `E2E_FRONT_PORT=3130 npm run e2e:up`, e tirar o "preparada, ainda sem uso" do README de lá.
-   - **Texto do 409 da categoria:** a seção Categorias diz "Já existe uma categoria com esse nome"; a API manda "Já existe uma
-     categoria com essa descrição" e o front mostra a da API (regra de 19/11). Só alinhar o texto deste arquivo, ou a frase no back
-     (decisão do líder, junto do item 3).
+   - **Texto do 409 da categoria: decidido e feito em 20/11.** A seção Categorias agora usa a frase da API ("Já existe uma categoria
+     com essa descrição"), que o front já mostra.
