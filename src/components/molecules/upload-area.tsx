@@ -35,7 +35,13 @@ export type UploadAreaProps = {
   nomeDoTipo?: string
   /** Enquanto importa: nada pode ser trocado */
   disabled?: boolean
+  /** Classes dos dois estados (área de soltar e card do arquivo escolhido) */
   className?: string
+  /**
+   * Classes só da área de soltar (vazia, arrastando ou com erro), como a altura que acompanha a coluna vizinha. O card do arquivo
+   * escolhido não as recebe: fica com a altura do conteúdo.
+   */
+  areaClassName?: string
 }
 
 const formatoDecimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
@@ -80,6 +86,7 @@ export function UploadArea({
   nomeDoTipo = 'CSV',
   disabled = false,
   className,
+  areaClassName,
 }: UploadAreaProps) {
   const base = useId()
   const inputId = `${base}-arquivo`
@@ -181,6 +188,7 @@ export function UploadArea({
         arrastando && 'border-primary bg-accent border-solid',
         erroVisivel && 'border-destructive bg-erro-fundo',
         disabled && 'opacity-45',
+        areaClassName,
         className,
       )}
     >

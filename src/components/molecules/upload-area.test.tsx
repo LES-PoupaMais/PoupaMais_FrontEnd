@@ -60,6 +60,21 @@ describe('UploadArea', () => {
     expect(screen.getByText('Arraste o arquivo CSV para cá')).toBeInTheDocument()
   })
 
+  it('areaClassName vai só na área de soltar; o card do arquivo escolhido fica com a altura do conteúdo', async () => {
+    const { container } = render(<Controlado areaClassName="md:min-h-70 md:flex-1" className="opacity-60" />)
+    const area = () => container.querySelector('[data-slot="upload-area"]')
+
+    expect(area()).toHaveAttribute('data-estado', 'vazio')
+    expect(area()).toHaveClass('md:min-h-70', 'md:flex-1', 'opacity-60')
+
+    await userEvent.upload(campoArquivo(), csv())
+
+    expect(area()).toHaveAttribute('data-estado', 'escolhido')
+    expect(area()).toHaveClass('opacity-60')
+    expect(area()).not.toHaveClass('md:min-h-70')
+    expect(area()).not.toHaveClass('md:flex-1')
+  })
+
   it('recusa outro tipo com a mensagem do DS', async () => {
     const aoErro = vi.fn()
     const aoEscolher = vi.fn()

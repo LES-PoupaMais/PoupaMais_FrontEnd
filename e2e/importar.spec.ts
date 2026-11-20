@@ -86,4 +86,34 @@ test.describe('importar CSV', () => {
     await expect(page.getByRole('heading', { name: 'Formato do arquivo' })).toBeVisible()
     await expect(page.locator('#modelo-csv')).toBeVisible()
   })
+
+  for (const largura of [390, 1440]) {
+    test(`arquivo escolhido fica compacto, com o aviso e o botão logo abaixo (${largura}px)`, async ({ page }) => {
+      await page.setViewportSize({ width: largura, height: 900 })
+      await page.goto('/lancamentos/importar')
+      const area = page.locator('[data-slot="upload-area"]')
+      await expect(area).toHaveAttribute('data-estado', 'vazio')
+      // a área de soltar vazia continua acompanhando a coluna "Formato do arquivo" no computador (min-h-70 = 280px)
+      if (largura >= 768) expect((await area.boundingBox())!.height).toBeGreaterThanOrEqual(280)
+
+      await page.getByLabel('Escolher arquivo').setInputFiles({
+        name: 'lancamentos-novembro.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from(CSV),
+      })
+      await expect(area).toHaveAttribute('data-estado', 'escolhido')
+
+      // nome comprido não alarga a coluna: sem rolagem para o lado
+      const larguraDaPagina = await page.evaluate(() => document.documentElement.scrollWidth)
+      expect(larguraDaPagina).toBeLessThanOrEqual(largura)
+      const card = (await area.boundingBox())!
+      expect(card.height).toBeLessThanOrEqual(120)
+      const aviso = (await page.getByText('Até 2 MB e 5.000 linhas por arquivo.').boundingBox())!
+      expect(aviso.y - (card.y + card.height)).toBeLessThanOrEqual(32)
+      if (largura >= 768) {
+        const botao = (await page.getByRole('button', { name: 'Importar lançamentos' }).boundingBox())!
+        expect(botao.y - (aviso.y + aviso.height)).toBeLessThanOrEqual(48)
+      }
+    })
+  }
 })
