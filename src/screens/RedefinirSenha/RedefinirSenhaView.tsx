@@ -17,7 +17,6 @@ export function RedefinirSenhaView() {
         titulo="Este link expirou"
         subtitulo="Por segurança, o link para redefinir a senha vale por 30 minutos e só pode ser usado uma vez. Peça outro para continuar."
         icone={{ Icone: TimerOff, tom: 'erro' }}
-        cartaoNoCelular
       >
         <LinkExpirado hrefPedirOutro={hrefPedirOutro} hrefLogin={hrefLogin} />
       </AuthTemplate>

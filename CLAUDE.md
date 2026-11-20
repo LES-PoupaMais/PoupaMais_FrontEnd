@@ -660,13 +660,14 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      troca de senha e excluir conta) e passa `API_URL` para o Next.
 11. **Telas de acesso e públicas:**
    - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
-   - **AuthTemplate no celular: revisto e feito em 20/11 (revisão visual).** Abaixo de 768px não há cartão (logo pequeno no topo
-     à esquerda, título e campos à esquerda, rodapé só com a política), como nas pranchetas `-celular`; o link expirado mantém o
-     cartão (`cartaoNoCelular`). O esqueci tem "‹ Entrar" no topo (`acaoCelular`) e o cadastro, a partir de 1024px, o topo com
-     "Já tenho conta" (`acaoComputador`) e o subtítulo "Só nome, e-mail e senha." (`subtituloComLateral`).
+   - **AuthTemplate no celular: decidido em 20/11, fica como está.** A prancheta `login-celular` não tem card (logo no topo à
+     esquerda, texto alinhado à esquerda, rodapé só com a política); o template aprovado mantém o card central em todas as larguras
+     (e o esqueci sem o "‹ Entrar" do topo). Só o cadastro do computador ganhou, a partir de 1024px, o topo da prancheta com
+     "Já tenho conta" (`acaoComputador`), o card sem logo com o título à esquerda e o subtítulo "Só nome, e-mail e senha."
+     (`subtituloComLateral`), na revisão visual de 20/11.
    - **Links de texto sublinhados (20/11, WCAG 1.4.1):** links dentro de frase e links soltos das telas públicas e de acesso
      ("Esqueci minha senha", "Criar conta", "Entrar", "Ler a Política de privacidade", rodapé do acesso) levam `underline`.
-     Botões e links de navegação ("‹ Entrar", "Voltar para o início", links do rodapé do site e do topo) ficam sem, como nas pranchetas.
+     Botões e links de navegação ("Voltar para o início", links do rodapé do site e do topo) ficam sem, como nas pranchetas.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
    - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,

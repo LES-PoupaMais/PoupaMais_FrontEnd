@@ -117,16 +117,6 @@ test.describe('recuperação de senha', () => {
     await expect(page.getByText('Se houver uma conta com esse e-mail, enviamos um link')).toBeVisible()
   })
 
-  test('esqueci no celular: sem cartão e com "‹ Entrar" no topo', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto('/esqueci-senha')
-
-    await page.getByRole('banner').getByRole('link', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/login$/)
-    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Página inicial' })).toBeHidden()
-    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Política de privacidade' })).toBeVisible()
-  })
-
   test('redefinir: salva a nova senha e leva ao login', async ({ page }) => {
     await page.goto('/redefinir-senha?token=token-bom')
 

@@ -16,26 +16,18 @@ describe('AuthTemplate', () => {
     expect(screen.getByText('Entre na sua conta para continuar.')).toBeInTheDocument()
     expect(screen.getByText('formulário')).toBeInTheDocument()
     expect(screen.getByText('Não tem conta?')).toBeInTheDocument()
-    // Dois logos: o pequeno do topo (celular) e o grande do cartão (tablet e computador); o CSS mostra só um
-    const logos = screen.getAllByRole('link', { name: 'PoupaMais, ir para a página inicial' })
-    expect(logos).toHaveLength(2)
-    logos.forEach((logo) => expect(logo).toHaveAttribute('href', '/'))
+    expect(screen.getByRole('link', { name: 'PoupaMais, ir para a página inicial' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Política de privacidade' })).toHaveAttribute('href', '/privacidade')
     expect(screen.getByRole('link', { name: 'Política de privacidade' })).toHaveClass('underline')
   })
 
-  it('ações do topo: a do celular sempre; a do computador só com o texto lateral', () => {
+  it('cadastro do computador: topo com a ação e o subtítulo próprio, só com o texto lateral', () => {
     const { rerender } = render(
-      <AuthTemplate
-        titulo="Esqueci minha senha"
-        acaoCelular={<a href="/login">Entrar</a>}
-        acaoComputador={<a href="/login">Já tenho conta</a>}
-      >
+      <AuthTemplate titulo="Esqueci minha senha" acaoComputador={<a href="/login">Já tenho conta</a>}>
         formulário
       </AuthTemplate>,
     )
 
-    expect(screen.getByRole('link', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Já tenho conta' })).not.toBeInTheDocument()
 
     rerender(
@@ -63,23 +55,6 @@ describe('AuthTemplate', () => {
     )
 
     expect(screen.queryByText('Só nome, e-mail e senha.')).not.toBeInTheDocument()
-  })
-
-  it('cartão também no celular (link expirado)', () => {
-    const { container } = render(
-      <AuthTemplate titulo="Este link expirou" cartaoNoCelular>
-        ações
-      </AuthTemplate>,
-    )
-
-    expect(container.querySelector('[data-slot="auth-cartao"]')).toHaveClass('bg-card')
-  })
-
-  it('sem subtítulo nem rodapé, mostra só o essencial', () => {
-    render(<AuthTemplate titulo="Criar conta">formulário</AuthTemplate>)
-
-    expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeInTheDocument()
-    expect(screen.queryByText('Não tem conta?')).not.toBeInTheDocument()
   })
 
   it('props opcionais: aviso acima do título, ícone decorativo e texto lateral do computador', () => {
