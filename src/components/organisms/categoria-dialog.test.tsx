@@ -28,16 +28,16 @@ describe('CategoriaDialog', () => {
   })
 
   it('mostra o erro da API no campo até a pessoa mudar o nome', async () => {
-    const { usuario } = renderizar({ nomeInicial: 'Mercado', erroNome: 'Já existe uma categoria com esse nome.' })
+    const { usuario } = renderizar({ nomeInicial: 'Mercado', erroNome: 'Já existe uma categoria com essa descrição.' })
     // antes de enviar, o erro não aparece
-    expect(screen.queryByText('Já existe uma categoria com esse nome.')).toBeNull()
+    expect(screen.queryByText('Já existe uma categoria com essa descrição.')).toBeNull()
 
     await usuario.click(screen.getByRole('button', { name: 'Criar categoria' }))
-    expect(screen.getByText('Já existe uma categoria com esse nome.')).toBeInTheDocument()
+    expect(screen.getByText('Já existe uma categoria com essa descrição.')).toBeInTheDocument()
     expect(screen.getByLabelText(/Nome/)).toHaveAttribute('aria-invalid', 'true')
 
     await usuario.type(screen.getByLabelText(/Nome/), 's')
-    expect(screen.queryByText('Já existe uma categoria com esse nome.')).toBeNull()
+    expect(screen.queryByText('Já existe uma categoria com essa descrição.')).toBeNull()
   })
 
   it('editar: começa com o nome, inativa e exclui', async () => {

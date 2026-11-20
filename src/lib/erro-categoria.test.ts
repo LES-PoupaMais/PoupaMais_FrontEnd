@@ -8,6 +8,7 @@ describe('erros de categoria', () => {
       'Já existe uma categoria com essa descrição',
     )
     expect(erroDoNomeDaCategoria(new ErroApi(409, 'x'))).toBe(MENSAGEM_CATEGORIA_DUPLICADA)
+    expect(MENSAGEM_CATEGORIA_DUPLICADA).toBe('Já existe uma categoria com essa descrição.')
   })
 
   it('400 usa o primeiro erros[] como veio; o resto vai para o toast', () => {

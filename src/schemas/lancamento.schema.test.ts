@@ -40,6 +40,10 @@ describe('lancamentoSchema (RN001)', () => {
     expect(erros({ ...valido, data }).data).toBe(mensagem)
   })
 
+  it('fora da faixa usa a mesma frase do DatePicker', () => {
+    expect(M.dataFaixa).toBe('Informe uma data entre 01/01/2000 e 31/12/2100.')
+  })
+
   it.each(['2000-01-01', '2100-12-31', '2024-02-29'])('aceita a data %s', (data) => {
     expect(erros({ ...valido, data })).toEqual({})
   })

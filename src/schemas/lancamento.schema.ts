@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ANO_MAXIMO, ANO_MINIMO, ehDataIsoValida, partesDaData } from '@/lib/data'
+import { ANO_MAXIMO, ANO_MINIMO, ehDataIsoValida, mensagemDataForaDaFaixa, partesDaData } from '@/lib/data'
 
 // RN001 (revista em 18/11/2026): descrição obrigatória (até 100), tipo, DATA (dia que exista, de 01/01/2000 a 31/12/2100),
 // valor maior que zero (até R$ 999.999.999,99) e pelo menos uma categoria. A data trafega como "AAAA-MM-DD"
@@ -8,14 +8,15 @@ export const VALOR_MAXIMO = 999_999_999.99
 export const DESCRICAO_MAXIMO = 100
 
 // Mensagens do Design System e da prancheta novo-erros-celular (decisão de 20/11): Input, SegmentedControl, DatePicker,
-// MoneyField (com o limite de R$ 999.999.999,99) e MultiSelect. Sem frase no DS: data vazia e fora da faixa.
+// MoneyField (com o limite de R$ 999.999.999,99) e MultiSelect. Sem frase no DS: data vazia.
 export const MENSAGENS_LANCAMENTO = {
   descricaoObrigatoria: 'A descrição é obrigatória.',
   descricaoLonga: `A descrição deve ter no máximo ${DESCRICAO_MAXIMO} caracteres.`,
   tipo: 'Escolha Receita ou Despesa.',
   dataObrigatoria: 'Informe a data.',
   dataInvalida: 'Informe uma data válida, no formato dd/mm/aaaa.',
-  dataFaixa: `A data deve estar entre ${ANO_MINIMO} e ${ANO_MAXIMO}.`,
+  // fora da faixa: a mesma frase do DatePicker (lib/data)
+  dataFaixa: mensagemDataForaDaFaixa(),
   // MoneyField: vazio e zero têm a mesma frase
   valorObrigatorio: 'Informe um valor maior que zero.',
   valorPositivo: 'Informe um valor maior que zero.',

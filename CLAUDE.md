@@ -577,8 +577,9 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 2. **Mensagens do schema × DS: decidido e feito em 20/11.** `schemas/lancamento.schema.ts` usa as frases do DS e da prancheta
    `novo-erros-celular` ("A descrição é obrigatória.", "A descrição deve ter no máximo 100 caracteres.", "Escolha Receita ou Despesa.",
    "Informe uma data válida, no formato dd/mm/aaaa.", "Informe um valor maior que zero." para vazio e zero, "O valor máximo é
-   R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, ficam
-   "Informe a data." e "A data deve estar entre 2000 e 2100." Falta o README do MoneyField (DS) trocar o limite de
+   R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, fica
+   "Informe a data."; a data fora da faixa usa a frase do DatePicker, "Informe uma data entre 01/01/2000 e 31/12/2100." (feito em
+   20/11, uma função só: `lib/data.mensagemDataForaDaFaixa`). Falta o README do MoneyField (DS) trocar o limite de
    R$ 99.999.999.999.999,99 para R$ 999.999.999,99.
 3. **Mensagens de erro back↔front: decidido em 20/11.** O back passa a mandar um `codigo` estável em todo erro; o front
    **continua mostrando só a `mensagem` da API ou a genérica** e não decide nada pelo `codigo` (`RespostaErro` em `types/api` só
@@ -622,7 +623,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 8. **Lançamentos, visualização, exportar e Lixeira:**
    - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
      desenham uma página. **Decidido e feito em 20/11:** a Lixeira não tem "Exportar" (não está na prancheta `lixeira-*`); Exportar
-     fica só em Lançamentos. A prop `lixeira` do `export-dialog` ficou sem uso.
+     fica só em Lançamentos. Exportar a lixeira não está no escopo: a prop `lixeira` do `export-dialog` saiu (feito em 20/11, com
+     os testes dela) e a dica ficou só "A lixeira fica de fora."
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
    - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
@@ -671,4 +673,5 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      para o `FRONT_URL` (a suíte só usa o caminho, então passa com qualquer porta). Proposta: padrão 3130 lá, ou documentar
      `E2E_FRONT_PORT=3130 npm run e2e:up`, e tirar o "preparada, ainda sem uso" do README de lá.
    - **Texto do 409 da categoria: decidido e feito em 20/11.** A seção Categorias agora usa a frase da API ("Já existe uma categoria
-     com essa descrição"), que o front já mostra.
+     com essa descrição"), que o front já mostra; a frase de reserva do `lib/erro-categoria` (409 sem mensagem da API) passou de
+     "Já existe uma categoria com esse nome." para "Já existe uma categoria com essa descrição." (feito em 20/11).

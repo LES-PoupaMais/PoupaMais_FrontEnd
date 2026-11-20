@@ -28,6 +28,14 @@ export function ehDataIsoValida(iso: string): boolean {
   return partes(iso) !== null
 }
 
+/**
+ * Mensagem de data fora da faixa, uma frase só para o DatePicker e o schema do lançamento:
+ * "Informe uma data entre 01/01/2000 e 31/12/2100." (com outros limites, as datas deles)
+ */
+export function mensagemDataForaDaFaixa(minIso = `${ANO_MINIMO}-01-01`, maxIso = `${ANO_MAXIMO}-12-31`): string {
+  return `Informe uma data entre ${formatarData(minIso)} e ${formatarData(maxIso)}.`
+}
+
 /** "2026-11-18" → { dia: 18, mes: 11, ano: 2026 }. Erro se a data não existe. */
 export function partesDaData(iso: string): PartesData {
   const resultado = partes(iso)
