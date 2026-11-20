@@ -101,8 +101,8 @@ export const dashboardDemo: Dashboard = {
     { categoriaId: 2, descricao: 'Mercado', valor: 1480.35 },
   ],
   maioresDespesas: [
-    { id: 1, descricao: 'Aluguel do apartamento', valor: 2200, categorias: ['Aluguel'] },
-    { id: 3, descricao: 'Mercado do mês', valor: 1120.35, categorias: ['Mercado'] },
+    { id: 1, descricao: 'Aluguel do apartamento', data: '2026-11-01', valor: 2200, categorias: ['Aluguel'] },
+    { id: 3, descricao: 'Mercado do mês', data: '2026-11-05', valor: 1120.35, categorias: ['Mercado'] },
   ],
   pesoMaioresDespesas: { valor: 4893.95, percentual: 64.73 },
 }

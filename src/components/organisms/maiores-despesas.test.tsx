@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { MaioresDespesas, hrefDespesasDoMes } from './maiores-despesas'
 
 const itens = [
-  { id: 1, descricao: 'Aluguel do apartamento', valor: 2200, categorias: ['Aluguel'] },
-  { id: 3, descricao: 'Mercado do mês', valor: 1120.35, categorias: ['Mercado', 'Contas de casa'] },
+  { id: 1, descricao: 'Aluguel do apartamento', data: '2026-11-01', valor: 2200, categorias: ['Aluguel'] },
+  { id: 3, descricao: 'Mercado do mês', data: '2026-11-05', valor: 1120.35, categorias: ['Mercado', 'Contas de casa'] },
 ]
 
 describe('MaioresDespesas', () => {
@@ -24,6 +24,11 @@ describe('MaioresDespesas', () => {
     expect(within(lista).getByRole('link', { name: 'Ver Mercado do mês' })).toHaveAttribute('href', '/lancamentos/3')
     expect(lista).toHaveTextContent('Despesa, − R$ 1.120,35')
     expect(lista).toHaveTextContent('Contas de casa')
+    // data no formato curto do DS ("1 nov"), antes das categorias
+    const [aluguel, mercado] = within(lista).getAllByRole('listitem')
+    expect(aluguel.querySelector('time')).toHaveAttribute('datetime', '2026-11-01')
+    expect(aluguel).toHaveTextContent('1 nov· Aluguel')
+    expect(mercado).toHaveTextContent('5 nov· Mercado· Contas de casa')
     expect(within(secao).getByRole('link', { name: 'Ver todas as maiores despesas' })).toHaveAttribute(
       'href',
       '/lancamentos?mes=11&ano=2026&tipo=DESPESA',

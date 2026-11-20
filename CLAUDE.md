@@ -447,8 +447,9 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
 - `GET /lancamentos/exportar?formato=csv|xlsx&<filtros>` → arquivo (baixar como blob, nome vindo do `Content-Disposition`)
 - `GET /lancamentos/template-csv` → arquivo
 - `GET /dashboard?mes=&ano=` →
-  `{mes, ano, receitas, despesas, saldo, taxaGasto|null, classificacaoTaxa: "DENTRO_DO_LIMITE"|"ATENCAO"|"ACIMA_DO_LIMITE"|null, mensagem, ultimosMeses: [{mes, ano, receitas, despesas, saldo}] (4), despesasPorCategoria: [{categoriaId, descricao, valor}], maioresDespesas: [{id, descricao, valor, categorias: string[]}], pesoMaioresDespesas: {valor, percentual|null}}`
-  (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa)
+  `{mes, ano, receitas, despesas, saldo, taxaGasto|null, classificacaoTaxa: "DENTRO_DO_LIMITE"|"ATENCAO"|"ACIMA_DO_LIMITE"|null, mensagem, ultimosMeses: [{mes, ano, receitas, despesas, saldo}] (4), despesasPorCategoria: [{categoriaId, descricao, valor}], maioresDespesas: [{id, descricao, data, valor, categorias: string[]}], pesoMaioresDespesas: {valor, percentual|null}}`
+  (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa).
+  **v1.2.0:** `data` (`"2026-08-05"`) em cada item de `maioresDespesas`, mostrada como "1 nov" (`formatarDataCurta`) antes das categorias.
 
 Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
 (`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC (`dataAtualizacao` `null` até a primeira alteração), ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
@@ -577,9 +578,6 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - `upload-area` ganhou na integração a prop opcional `onBaixarModelo` (botão com o mesmo visual do link `modeloHref`), para o modelo
      CSV baixar pelo hook com toast: registrar no README do UploadArea.
 6. **Dashboard:**
-   - `maioresDespesas` do contrato não traz a `data`: as pranchetas mostram "1 nov · Aluguel", a tela mostra só as categorias.
-     **Decidido em 20/11:** o back vai acrescentar `data` em `maioresDespesas[]`; quando chegar, atualizar os dois `CLAUDE.md` e
-     exibir com `formatarDataCurta` (ainda não feito).
    - O "mês vazio" é deduzido de `receitas = despesas = 0`: um mês só com lançamentos fora do saldo também cai no "Comece pelo seu
      primeiro lançamento". Resolver com uma contagem de lançamentos do mês no `GET /dashboard` (decisão com o back).
    - O gráfico de área não abre a dica no mês atual por padrão (a prancheta mostra "Nov" aberto como exemplo); abre com mouse, toque

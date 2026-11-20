@@ -26,7 +26,10 @@ test.describe('dashboard', () => {
     await expect(resumo).toContainText('Dentro do limite')
     await expect(page.getByRole('region', { name: 'Receitas × Despesas' })).toContainText('Ago a Nov/2026')
     await expect(page.getByRole('region', { name: 'Saldo mensal' })).toContainText('+4.920,00')
-    await expect(page.getByRole('region', { name: 'Maiores despesas' })).toContainText('64,7% das despesas do mês')
+    const maiores = page.getByRole('region', { name: 'Maiores despesas' })
+    await expect(maiores).toContainText('64,7% das despesas do mês')
+    // data de cada item (v1.2.0) no formato curto do DS, antes das categorias: "1 nov · Aluguel"
+    await expect(maiores.getByRole('listitem').first()).toContainText('1 nov· Aluguel')
   })
 
   test('trocar de mês atualiza a URL e os números', async ({ page }) => {

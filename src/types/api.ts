@@ -104,7 +104,14 @@ export type FormatoExportacao = 'csv' | 'xlsx'
 // ---------- dashboard ----------
 export type ResumoMes = { mes: number; ano: number; receitas: number; despesas: number; saldo: number }
 export type DespesaPorCategoria = { categoriaId: number; descricao: string; valor: number }
-export type MaiorDespesa = { id: number; descricao: string; valor: number; categorias: string[] }
+export type MaiorDespesa = {
+  id: number
+  descricao: string
+  /** "AAAA-MM-DD" (v1.2.0) */
+  data: string
+  valor: number
+  categorias: string[]
+}
 
 export type Dashboard = {
   mes: number

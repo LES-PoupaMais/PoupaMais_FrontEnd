@@ -27,12 +27,19 @@ const CATEGORIAS = [
 ]
 
 const MAIORES = [
-  { id: 1, descricao: 'Aluguel do apartamento', valor: 2200, categorias: ['Aluguel'] },
-  { id: 3, descricao: 'Mercado do mês', valor: 1120.35, categorias: ['Mercado'] },
-  { id: 6, descricao: 'Plano de saúde', valor: 640.25, categorias: ['Saúde'] },
-  { id: 7, descricao: 'Mensalidade da faculdade', valor: 520, categorias: ['Educação'] },
-  { id: 9, descricao: 'Conta de luz', valor: 412.35, categorias: ['Contas de casa'] },
+  { id: 1, descricao: 'Aluguel do apartamento', dia: 1, valor: 2200, categorias: ['Aluguel'] },
+  { id: 3, descricao: 'Mercado do mês', dia: 5, valor: 1120.35, categorias: ['Mercado'] },
+  { id: 6, descricao: 'Plano de saúde', dia: 5, valor: 640.25, categorias: ['Saúde'] },
+  { id: 7, descricao: 'Mensalidade da faculdade', dia: 10, valor: 520, categorias: ['Educação'] },
+  { id: 9, descricao: 'Conta de luz', dia: 12, valor: 412.35, categorias: ['Contas de casa'] },
 ]
+
+/** `data` (v1.2.0) no mês pedido: "AAAA-MM-DD" */
+const maioresDoMes = (mes: number, ano: number) =>
+  MAIORES.map(({ dia, ...item }) => ({
+    ...item,
+    data: `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`,
+  }))
 
 /** Resposta de GET /dashboard para o mês (4 meses até ele; meses sem dados = vazio) */
 export function dashboardDoMes(mes: number, ano: number) {
@@ -61,7 +68,7 @@ export function dashboardDoMes(mes: number, ano: number) {
         : `Suas despesas passaram as receitas em R$ ${valorSaldo} neste mês.`,
     ultimosMeses,
     despesasPorCategoria: vazio ? [] : CATEGORIAS,
-    maioresDespesas: vazio ? [] : MAIORES,
+    maioresDespesas: vazio ? [] : maioresDoMes(mes, ano),
     pesoMaioresDespesas: vazio ? { valor: 0, percentual: null } : { valor: 4892.95, percentual: 64.72 },
   }
 }
