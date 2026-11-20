@@ -567,7 +567,7 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
-   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover (decidir).
+   - ~~`action-banner` com a variante `sucesso`~~: **decidido e feito em 20/11**, removida (nenhuma tela usava; o DS tem info, atenção e erro).
    - `upload-area` ganhou na integração a prop opcional `onBaixarModelo` (botão com o mesmo visual do link `modeloHref`), para o modelo
      CSV baixar pelo hook com toast: registrar no README do UploadArea.
 6. **Dashboard:**
