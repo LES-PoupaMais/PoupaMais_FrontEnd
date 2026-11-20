@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Metade dos núcleos: com a máquina ocupada (outros testes, build, Docker), usar todos os núcleos fazia testes
+    // de tela passarem do timeout de 5 s sem bug nenhum. Sobrescreva na linha de comando com --maxWorkers=<n>.
+    maxWorkers: '50%',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
