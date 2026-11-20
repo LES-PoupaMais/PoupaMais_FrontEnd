@@ -468,19 +468,20 @@ resumo:
 
 | Status | Códigos |
 | --- | --- |
-| 400 | `VALIDACAO` (com `erros[]`), `CORPO_INVALIDO`, `FORMATO_EXPORTACAO_INVALIDO`, `REQUISICAO_INVALIDA` |
+| 400 | `VALIDACAO` (com `erros[]`), `CORPO_INVALIDO`, `FORMATO_EXPORTACAO_INVALIDO`, `REQUISICAO_INVALIDA`, `PARAMETRO_INVALIDO`, `PARAMETRO_AUSENTE` |
 | 401 | `NAO_AUTENTICADO` (sem token, expirado, sessão derrubada), `CREDENCIAIS_INVALIDAS` (login) |
 | 403 | `ACESSO_NEGADO` (reservado) |
 | 404 | `NAO_ENCONTRADO` (rota), `CATEGORIA_NAO_ENCONTRADA`, `LANCAMENTO_NAO_ENCONTRADO`, `FOTO_NAO_ENCONTRADA` |
 | 405 | `METODO_NAO_PERMITIDO` |
+| 406 | `TIPO_RESPOSTA_NAO_ACEITO` |
 | 409 | `EMAIL_JA_CADASTRADO`, `CATEGORIA_DUPLICADA` |
 | 415 | `TIPO_CONTEUDO_NAO_SUPORTADO` (antes da v1.2.0 saía 500) |
 | 422 | arquivos: `ARQUIVO_GRANDE_DEMAIS` (413 se o servidor recusar antes), `ARQUIVO_VAZIO`, `ARQUIVO_INVALIDO`, `CABECALHO_INVALIDO`, `ARQUIVO_LINHAS_DEMAIS`, `SEM_DADOS_EXPORTACAO`; conta: `ACEITE_TERMOS_OBRIGATORIO`, `DADOS_CONTA_INVALIDOS`, `SENHA_ATUAL_INCORRETA`, `SENHA_IGUAL_A_ATUAL`, `SENHA_INCORRETA`, `TOKEN_INVALIDO`, `FOTO_TIPO_INVALIDO`; categorias: `CATEGORIA_INVALIDA`, `CATEGORIA_INATIVA`, `CATEGORIA_VINCULADA`; lançamentos: `LANCAMENTO_INVALIDO`, `LANCAMENTO_NA_LIXEIRA`, `LANCAMENTO_JA_EXCLUIDO`, `LANCAMENTO_NAO_EXCLUIDO`, `STATUS_INVALIDO`, `TRANSICAO_STATUS_INVALIDA` |
 | 500 | `ERRO_INTERNO` (sem detalhes) |
 
-Rota inexistente (com token) → `404` "Recurso não encontrado"; método não suportado → `405`. Fora do padrão (pendência do back): a
-recusa de CORS do Spring (`403` texto puro, o navegador não chama a API direto) e `@PathVariable` não numérico, parâmetro obrigatório
-ausente e `406`, que caem no `500 ERRO_INTERNO`.
+Rota inexistente (com token) → `404` "Recurso não encontrado"; método não suportado → `405`. Parâmetro de rota/query/header com tipo errado → `400 PARAMETRO_INVALIDO`; parâmetro, part ou header obrigatório ausente →
+`400 PARAMETRO_AUSENTE` (os dois sem `erros[]`); `Accept` sem formato que a rota produz → `406 TIPO_RESPOSTA_NAO_ACEITO` (back #32, 20/11).
+Fica fora do padrão, por decisão de 20/11: a recusa de CORS do Spring (`403` texto puro; o navegador não chama a API direto).
 
 CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
 A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula de data.
@@ -543,7 +544,8 @@ Arquivo: `.github/workflows/ci.yml`. Roda em push na `development` e na `main` e
 | `qualidade` (Lint, tipos, testes e build) | `npm ci` · `lint` · `format:check` · `typecheck` · `test:coverage` · `build` · publica `coverage/` | erro de lint/arquitetura, formatação, tipo, teste, cobertura abaixo do piso ou build quebrado |
 | `e2e` (Testes end-to-end), depois de `qualidade` | `npm ci` · `npx playwright install --with-deps chromium firefox` · `npm run test:e2e` · publica `playwright-report/` se falhar | qualquer fluxo E2E quebrado |
 
-- Rodar o mesmo localmente: skill `pipeline-local`. Localmente o Playwright usa 3 workers (com mais, o Firefox estoura o tempo no WSL).
+- Rodar o mesmo localmente: skill `pipeline-local`. O Vitest usa metade dos núcleos (`maxWorkers: '50%'` no `vitest.config.mts`;
+  com todos, testes de tela passavam do timeout de 5 s com a máquina ocupada). Localmente o Playwright usa 3 workers (com mais, o Firefox estoura o tempo no WSL).
   Com várias worktrees ao mesmo tempo, use uma porta por worktree (`PORT=3101 npm run test:e2e`): o `reuseExistingServer` reaproveita
   qualquer servidor que já esteja na porta e testaria o build de outra pasta.
 - **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. Sem deploy: a entrega roda localmente.
@@ -669,9 +671,7 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - ~~Depende do back v1.2.0~~: integrado na development do back em 20/11 (PR #31 de lá); contrato espelhado na seção "Contrato da API".
    - **Roteiro da demo contra a API real:** feito em 20/11 (`npm run test:e2e:api-real`, seção Testes). Falta decidir se entra no
      CI (precisa subir a pilha E2E do PoupaMais_Development no runner: Docker + build do back).
-   - **Pilha E2E (PoupaMais_Development):** o `E2E_FRONT_PORT` padrão é 3200 e a suíte usa 3130; o link do e-mail de senha aponta
-     para o `FRONT_URL` (a suíte só usa o caminho, então passa com qualquer porta). Proposta: padrão 3130 lá, ou documentar
-     `E2E_FRONT_PORT=3130 npm run e2e:up`, e tirar o "preparada, ainda sem uso" do README de lá.
+   - **Pilha E2E (PoupaMais_Development):** feito em 20/11 (PR #4 de lá): `E2E_FRONT_PORT` padrão 3130, igual à suíte, e README atualizado.
    - **Texto do 409 da categoria: decidido e feito em 20/11.** A seção Categorias agora usa a frase da API ("Já existe uma categoria
      com essa descrição"), que o front já mostra; a frase de reserva do `lib/erro-categoria` (409 sem mensagem da API) passou de
      "Já existe uma categoria com esse nome." para "Já existe uma categoria com essa descrição." (feito em 20/11).
