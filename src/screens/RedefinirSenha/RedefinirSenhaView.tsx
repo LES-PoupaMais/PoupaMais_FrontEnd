@@ -1,6 +1,6 @@
 'use client'
 
-import { LockKeyhole, Unlink } from 'lucide-react'
+import { LockKeyhole, TimerOff } from 'lucide-react'
 import { OfflineBanner } from '@/components/molecules/offline-banner'
 import { LinkExpirado } from '@/components/organisms/link-expirado'
 import { RedefinirSenhaForm } from '@/components/organisms/redefinir-senha-form'
@@ -16,7 +16,8 @@ export function RedefinirSenhaView() {
       <AuthTemplate
         titulo="Este link expirou"
         subtitulo="Por segurança, o link para redefinir a senha vale por 30 minutos e só pode ser usado uma vez. Peça outro para continuar."
-        icone={{ Icone: Unlink, tom: 'erro' }}
+        icone={{ Icone: TimerOff, tom: 'erro' }}
+        cartaoNoCelular
       >
         <LinkExpirado hrefPedirOutro={hrefPedirOutro} hrefLogin={hrefLogin} />
       </AuthTemplate>

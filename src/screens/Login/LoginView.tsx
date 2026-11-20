@@ -28,7 +28,7 @@ export function LoginView() {
       rodape={
         <>
           Não tem conta?{' '}
-          <Link href={ROTAS.cadastro} className="text-corpo-forte text-primary">
+          <Link href={ROTAS.cadastro} className="text-corpo-forte text-primary hover:text-primaria-hover underline">
             Criar conta
           </Link>
         </>

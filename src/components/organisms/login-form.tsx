@@ -57,7 +57,7 @@ export function LoginForm({
       />
       <Link
         href={hrefEsqueci}
-        className="text-corpo-forte text-primary -mt-2 inline-flex min-h-11 items-center self-end"
+        className="text-corpo-forte text-primary hover:text-primaria-hover -mt-2 inline-flex min-h-11 items-center self-end underline"
       >
         Esqueci minha senha
       </Link>
