@@ -136,4 +136,18 @@ test.describe('perfil', () => {
       page.locator('[data-slot="app-shell-bottom-nav"]').getByRole('link', { name: 'Perfil' }),
     ).toHaveAttribute('aria-current', 'page')
   })
+
+  test('no celular, o tema cabe inteiro no card e a página hidrata sem erro', async ({ page }) => {
+    const erros: string[] = []
+    page.on('pageerror', (erro) => erros.push(erro.message))
+    await page.route('**/api/usuarios/me', (rota) => rota.fulfill({ json: { ...usuarioDemo, nome: 'Leonardo Silva' } }))
+    await page.setViewportSize({ width: 360, height: 780 })
+    await page.goto('/perfil')
+
+    const grupo = page.getByRole('radiogroup', { name: 'Tema' })
+    await expect(grupo.getByRole('radio', { name: 'Escuro' })).toBeVisible()
+    const cabe = await grupo.evaluate((el) => el.scrollWidth <= el.clientWidth)
+    expect(cabe).toBe(true)
+    expect(erros).toEqual([])
+  })
 })
