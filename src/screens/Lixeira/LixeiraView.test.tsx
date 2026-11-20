@@ -62,7 +62,12 @@ describe('Lixeira', () => {
     renderizar()
     expect(screen.getByLabelText('Carregando a lixeira')).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: '2 lançamentos na lixeira' })).toBeInTheDocument()
-    expect(screen.getByText('Itens restaurados voltam fora do saldo.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Ao restaurar, o lançamento volta como estava antes de ir para a lixeira.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Restaurar devolve o lançamento para a lista, como estava antes de ir para a lixeira\./),
+    ).toBeInTheDocument()
     expect(screen.getByText('3 set 2026')).toBeInTheDocument()
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'Lixeira' })).toBeInTheDocument()

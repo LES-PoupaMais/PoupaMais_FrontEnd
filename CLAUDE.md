@@ -597,9 +597,11 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
    - Textos sem prancheta: aprovados em 19/11 (seção "Textos fora do DS"); falta registrar no DS. Os toasts de Conta no saldo e
      lixeira ainda se repetem nos Contexts de Lançamentos, Lixeira, visualização e formulário: juntar em `constants/textos` se mudarem.
-   - **Restaurar volta ao status anterior (v1.2.0), decidir:** a visualização de item na lixeira diz "Não · volta desligado ao
-     restaurar" (`transaction-detail`, prancheta), o que só vale para itens antigos. A resposta da API não traz o status anterior:
-     acrescentar `statusAnterior` no back ou trocar o texto (design).
+   - **Restaurar volta ao status anterior (v1.2.0): decidido e feito em 20/11.** Os textos ficaram neutros, sem prometer status:
+     na visualização de item na lixeira (`transaction-detail`) "Não · ao restaurar, volta como estava antes"; na Lixeira, o aviso
+     "Ao restaurar, o lançamento volta como estava antes de ir para a lixeira." e a dica da tabela "…Restaurar devolve o lançamento
+     para a lista, como estava antes de ir para a lixeira.". As pranchetas `lixeira-*`, `editar-lixeira-computador` e o README do
+     TransactionDetail (DS) ainda dizem "volta desligado"/"voltam fora do saldo": atualizar no DS.
 9. **Importar e Categorias:**
    - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
      o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.

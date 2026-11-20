@@ -119,7 +119,7 @@ export function TransactionDetail({
         </Item>
         <Item rotulo="Conta no saldo" idRotulo={idSaldo}>
           {naLixeira ? (
-            'Não · volta desligado ao restaurar'
+            'Não · ao restaurar, volta como estava antes'
           ) : (
             <span className="inline-flex items-center gap-2">
               <Switch

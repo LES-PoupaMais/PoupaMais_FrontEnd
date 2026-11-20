@@ -119,7 +119,7 @@ export function LixeiraView() {
 
     return (
       <>
-        <ActionBanner texto="Itens restaurados voltam fora do saldo." />
+        <ActionBanner texto="Ao restaurar, o lançamento volta como estava antes de ir para a lixeira." />
         {!online && <OfflineMotivo id={ID_MOTIVO_OFFLINE} />}
 
         <section aria-labelledby="lixeira-contador" className="flex flex-col gap-3 lg:hidden">
@@ -184,7 +184,7 @@ export function LixeiraView() {
                 </>
               ) : undefined
             }
-            dica="Clique numa linha para ver o lançamento. Restaurar devolve o lançamento para a lista, fora do saldo. Para ele voltar ao dashboard, ligue Conta no saldo."
+            dica="Clique numa linha para ver o lançamento. Restaurar devolve o lançamento para a lista, como estava antes de ir para a lixeira."
           />
         </div>
       </>
