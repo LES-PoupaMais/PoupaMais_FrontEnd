@@ -1,13 +1,13 @@
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { queryKeys } from '@/constants/query-keys'
+import { invalidarApos } from '@/lib/invalidacoes'
 import type { Lancamento, Pagina } from '@/types/api'
-import { invalidarDadosFinanceiros } from './invalidacao'
 import { useMoverParaLixeira, useRestaurarLancamento } from './use-mutacoes-lancamento'
 
 // "Mover para a lixeira" com Desfazer (decisão do líder, 19/11): o DELETE vai NA HORA e o Desfazer do toast chama o
 // restaurar, que devolve o lançamento ao status de antes da lixeira (contrato v1.2.0). A linha some na hora (o item sai
-// das listas em cache) e, depois, lista, dashboard e lixeira são recarregados (invalidarDadosFinanceiros).
+// das listas em cache) e, depois, lista, dashboard e lixeira são recarregados (lib/invalidacoes).
 
 export type CallbacksDaLixeira = {
   /** O DELETE falhou: a linha volta (as listas recarregam) */
@@ -51,7 +51,7 @@ export function useMoverParaLixeiraComDesfazer() {
       )
 
       const envio = excluir(id).catch((erro: unknown) => {
-        void invalidarDadosFinanceiros(queryClient)
+        void invalidarApos(queryClient, 'lancamentoNaLixeira')
         onErroAoMover?.(erro)
         throw erro
       })
@@ -65,7 +65,7 @@ export function useMoverParaLixeiraComDesfazer() {
             try {
               await restaurar(id)
             } catch (erro) {
-              void invalidarDadosFinanceiros(queryClient)
+              void invalidarApos(queryClient, 'lancamentoRestaurado')
               onErroAoDesfazer?.(erro)
             }
           },

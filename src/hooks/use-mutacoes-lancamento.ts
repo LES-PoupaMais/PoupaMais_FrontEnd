@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { invalidarApos } from '@/lib/invalidacoes'
 import { lancamentosService } from '@/services/lancamentos.service'
 import type { LancamentoRequest, StatusLancamento } from '@/types/api'
-import { invalidarDadosFinanceiros } from './invalidacao'
 
-// Mutations de lançamento. Todas invalidam lista + detalhe + dashboard + contagem por categoria.
+// Mutations de lançamento. Todas invalidam lista + detalhe + lixeira + dashboard + contagem por categoria (lib/invalidacoes).
 // Toasts e navegação ficam no Context da tela (onSuccess/onError do `mutate`), não aqui.
 
 /** Cria (sem `id`) ou edita (com `id`) */
@@ -12,7 +12,7 @@ export function useSalvarLancamento() {
   return useMutation({
     mutationFn: ({ id, ...dados }: LancamentoRequest & { id?: number }) =>
       id === undefined ? lancamentosService.criar(dados) : lancamentosService.atualizar(id, dados),
-    onSuccess: () => invalidarDadosFinanceiros(queryClient),
+    onSuccess: () => invalidarApos(queryClient, 'lancamentoSalvo'),
   })
 }
 
@@ -22,7 +22,7 @@ export function useAlterarStatusLancamento() {
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: Exclude<StatusLancamento, 'DELETADO'> }) =>
       lancamentosService.alterarStatus(id, status),
-    onSuccess: () => invalidarDadosFinanceiros(queryClient),
+    onSuccess: () => invalidarApos(queryClient, 'saldoAlterado'),
   })
 }
 
@@ -31,7 +31,7 @@ export function useMoverParaLixeira() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => lancamentosService.moverParaLixeira(id),
-    onSuccess: () => invalidarDadosFinanceiros(queryClient),
+    onSuccess: () => invalidarApos(queryClient, 'lancamentoNaLixeira'),
   })
 }
 
@@ -40,6 +40,6 @@ export function useRestaurarLancamento() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => lancamentosService.restaurar(id),
-    onSuccess: () => invalidarDadosFinanceiros(queryClient),
+    onSuccess: () => invalidarApos(queryClient, 'lancamentoRestaurado'),
   })
 }

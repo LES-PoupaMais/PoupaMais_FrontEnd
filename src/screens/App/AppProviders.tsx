@@ -23,11 +23,18 @@ export function deveRepetir(falhas: number, erro: unknown): boolean {
   return falhas < 1
 }
 
+/**
+ * Cache das consultas: o dado vale por 5 min (voltar a uma tela ou repetir um filtro não busca de novo; o foco na janela
+ * só recarrega o que já venceu) e some da memória 10 min depois de ninguém usar. Depois de uma mutação, as consultas
+ * afetadas recarregam pelo mapa de `lib/invalidacoes`. Risco aceito: mudança feita em outro aparelho aparece em até 5 min.
+ */
+export const CACHE = { staleTime: 5 * 60_000, gcTime: 10 * 60_000 } as const
+
 export function criarQueryClient() {
   return new QueryClient({
     queryCache: new QueryCache({ onError: tratarNaoAutenticado }),
     mutationCache: new MutationCache({ onError: tratarNaoAutenticado }),
-    defaultOptions: { queries: { staleTime: 30_000, retry: deveRepetir } },
+    defaultOptions: { queries: { staleTime: CACHE.staleTime, gcTime: CACHE.gcTime, retry: deveRepetir } },
   })
 }
 

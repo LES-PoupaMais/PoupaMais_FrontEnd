@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/query-keys'
+import { invalidarApos } from '@/lib/invalidacoes'
 import { categoriasService } from '@/services/categorias.service'
 import type { CategoriaRequest, FiltrosCategorias } from '@/types/api'
 
@@ -14,11 +15,6 @@ export function useSalvarCategoria() {
   return useMutation({
     mutationFn: ({ id, ...dados }: CategoriaRequest & { id?: number }) =>
       id === undefined ? categoriasService.criar(dados) : categoriasService.atualizar(id, dados),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.categorias.todas }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.lancamentos.todos }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.todos }),
-      ]),
+    onSuccess: () => invalidarApos(queryClient, 'categoriaAlterada'),
   })
 }
