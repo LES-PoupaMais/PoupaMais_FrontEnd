@@ -1,7 +1,7 @@
 import { ErroApi, traduzirErro } from './http'
 
 /** Mensagem do campo Nome para uma categoria duplicada (`409`) quando a API não manda mensagem */
-export const MENSAGEM_CATEGORIA_DUPLICADA = 'Já existe uma categoria com esse nome.'
+export const MENSAGEM_CATEGORIA_DUPLICADA = 'Já existe uma categoria com essa descrição.'
 
 /**
  * Erro que vai no campo Nome do diálogo de categoria: `409` (duplicada, pelo contrato de POST/PUT /categorias) ou o

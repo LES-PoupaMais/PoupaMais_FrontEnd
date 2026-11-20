@@ -16,7 +16,7 @@ import type { Categoria } from '@/types/api'
 // Diálogo de categoria (pranchetas categoria-nova, categoria-editar e categoria-em-uso; criar pelo campo do formulário em
 // nova-categoria-inline): o mesmo visual do ConfirmDialog, com o campo Nome (RN002: trim, obrigatório, até 255).
 // - Nova: "Criar categoria". Editar: "Salvar", mais "Inativar categoria" e "Excluir categoria" (só sem lançamentos).
-// - `erroNome` (ex.: 409 "Já existe uma categoria com esse nome.") aparece no campo até a pessoa mudar o nome.
+// - `erroNome` (ex.: 409 "Já existe uma categoria com essa descrição.") aparece no campo até a pessoa mudar o nome.
 // - `avisoEmUso` (DELETE respondeu 422): a `mensagem` da API num aviso de atenção no lugar das ações, oferecendo
 //   "Inativar categoria". A confirmação antes do DELETE fica com a tela (ConfirmDialog).
 // Puro: aberto, envio e erros chegam por props; quem chama a API é o Context da tela.

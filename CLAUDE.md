@@ -673,4 +673,5 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      para o `FRONT_URL` (a suíte só usa o caminho, então passa com qualquer porta). Proposta: padrão 3130 lá, ou documentar
      `E2E_FRONT_PORT=3130 npm run e2e:up`, e tirar o "preparada, ainda sem uso" do README de lá.
    - **Texto do 409 da categoria: decidido e feito em 20/11.** A seção Categorias agora usa a frase da API ("Já existe uma categoria
-     com essa descrição"), que o front já mostra.
+     com essa descrição"), que o front já mostra; a frase de reserva do `lib/erro-categoria` (409 sem mensagem da API) passou de
+     "Já existe uma categoria com esse nome." para "Já existe uma categoria com essa descrição." (feito em 20/11).
