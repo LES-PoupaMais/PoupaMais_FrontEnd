@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createContext, useContext, useState, useTransition, type ReactNode } from 'react'
 import { logoutAction } from '@/actions/auth.actions'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
+import { useOnline } from '@/hooks/use-online'
 import { fotoDoUsuario, useUsuario } from '@/hooks/use-usuario'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
 import { gravarSidebarRecolhida } from '@/lib/sidebar-cookie'
@@ -42,6 +43,8 @@ type AppShellContextValue = {
   fotoUrl: string | null
   /** "Nova categoria" da folha Criar: diálogo de categoria aberto ali mesmo */
   novaCategoria: ReturnType<typeof useNovaCategoria>
+  /** Com internet; sem ela, a faixa "Sem internet agora…" aparece no topo da tela (todas as telas logadas) */
+  online: boolean
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null)
@@ -57,6 +60,7 @@ export function AppShellProvider({ sidebarRecolhida, children }: { sidebarRecolh
   const [saindo, iniciarSaida] = useTransition()
   const { data: usuario, dataUpdatedAt } = useUsuario()
   const novaCategoria = useNovaCategoria()
+  const online = useOnline()
 
   function alternarSidebar() {
     if (computador) {
@@ -92,6 +96,7 @@ export function AppShellProvider({ sidebarRecolhida, children }: { sidebarRecolh
     usuario,
     fotoUrl: fotoDoUsuario(usuario, dataUpdatedAt),
     novaCategoria,
+    online,
   }
 
   return <AppShellContext.Provider value={valor}>{children}</AppShellContext.Provider>

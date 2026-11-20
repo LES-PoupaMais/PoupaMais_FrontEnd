@@ -55,6 +55,9 @@ export const ITENS_CRIAR: ItemCriar[] = [
   },
 ]
 
+/** id do espaço de ação à direita da TopBar nas telas internas (ex.: "Limpar" do Novo lançamento, que a tela põe ali) */
+export const ID_ACAO_DA_TOPBAR = 'top-bar-acao'
+
 /** O que a TopBar (celular) mostra em cada rota (DS: TopBar) */
 export type TopoDaRota = {
   /** Título curto, uma palavra quando possível */
@@ -63,6 +66,10 @@ export type TopoDaRota = {
   mostrarMes: boolean
   /** Telas internas: "‹" com o destino, sem mês e sem avatar */
   voltar?: { href: string; destino: string }
+  /** A tela desenha o próprio topo no celular (Visualizar: "‹ Lançamentos" ou "‹ Lixeira", conforme o status) */
+  semTopBar?: boolean
+  /** Sem o avatar (a própria tela do Perfil) */
+  semAvatar?: boolean
 }
 
 const VOLTAR_LANCAMENTOS = { href: ROTAS.lancamentos, destino: 'Lançamentos' }
@@ -75,9 +82,9 @@ const TOPOS: [RegExp, TopoDaRota][] = [
   [/^\/lancamentos\/novo$/, { titulo: 'Novo lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
   [/^\/lancamentos\/importar$/, { titulo: 'Importar CSV', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
   [/^\/lancamentos\/\d+\/editar$/, { titulo: 'Editar lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
-  [/^\/lancamentos\/\d+$/, { titulo: 'Lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS }],
+  [/^\/lancamentos\/\d+$/, { titulo: 'Lançamento', mostrarMes: false, voltar: VOLTAR_LANCAMENTOS, semTopBar: true }],
   [/^\/categorias$/, { titulo: 'Categorias', mostrarMes: false }],
-  [/^\/perfil$/, { titulo: 'Perfil', mostrarMes: false }],
+  [/^\/perfil$/, { titulo: 'Perfil', mostrarMes: false, semAvatar: true }],
 ]
 
 /** Título, mês e Voltar da TopBar para um caminho. Rota desconhecida: só o nome do app. */

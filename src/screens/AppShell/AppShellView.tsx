@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { MonthNavigator } from '@/components/molecules/month-navigator'
+import { OfflineBanner } from '@/components/molecules/offline-banner'
 import { BottomNav } from '@/components/organisms/bottom-nav'
 import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
 import { CreateSheet } from '@/components/organisms/create-sheet'
@@ -45,6 +46,7 @@ export function AppShellView({ children }: { children: ReactNode }) {
     usuario,
     fotoUrl,
     novaCategoria,
+    online,
   } = useAppShellContext()
 
   // Dashboard e Lançamentos mantêm o mês da URL ao trocar de aba (DS: BottomNav)
@@ -63,18 +65,21 @@ export function AppShellView({ children }: { children: ReactNode }) {
       recolhida={recolhida}
       aberta={aberta}
       onFecharSidebar={fecharSidebar}
+      aviso={!online && <OfflineBanner />}
       header={
-        <TopBar
-          titulo={topo.titulo}
-          voltar={topo.voltar}
-          hrefPerfil={ROTAS.perfil}
-          usuario={usuario && { nome: usuario.nome, fotoUrl }}
-          mes={
-            topo.mostrarMes && (
-              <MonthNavigator variante="compacto" mes={periodo.mes} ano={periodo.ano} onChange={irParaMes} />
-            )
-          }
-        />
+        !topo.semTopBar && (
+          <TopBar
+            titulo={topo.titulo}
+            voltar={topo.voltar}
+            hrefPerfil={ROTAS.perfil}
+            usuario={topo.semAvatar ? undefined : usuario && { nome: usuario.nome, fotoUrl }}
+            mes={
+              topo.mostrarMes && (
+                <MonthNavigator variante="compacto" mes={periodo.mes} ano={periodo.ano} onChange={irParaMes} />
+              )
+            }
+          />
+        )
       }
       sidebar={
         <Sidebar

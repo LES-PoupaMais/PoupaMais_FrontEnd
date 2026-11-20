@@ -33,7 +33,6 @@ export default defineConfig({
         'src/components/atoms/field.tsx',
         'src/components/atoms/input-group.tsx',
         'src/components/atoms/separator.tsx',
-        'src/components/atoms/sonner.tsx',
         'src/components/atoms/table.tsx',
       ],
       // Pisos de cobertura: o PR reprova abaixo deles. Subir junto quando a cobertura subir.

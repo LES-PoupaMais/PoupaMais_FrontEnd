@@ -282,7 +282,8 @@ describe('Perfil', () => {
   it('sem conexão: faixa de aviso e os botões que gravam desabilitados com o motivo', async () => {
     definirOnline(false)
     renderizar()
-    expect(await screen.findByText(/Sem internet agora/)).toBeInTheDocument()
+    // A faixa "Sem internet agora…" fica no topo da casca (AppShell); a tela só bloqueia o que grava
+    expect(screen.queryByText(/Sem internet agora/)).not.toBeInTheDocument()
     const salvar = await screen.findByRole('button', { name: 'Salvar nome' })
     expect(salvar).toBeDisabled()
     expect(salvar).toHaveAccessibleDescription(/Sem internet\. O que você preencheu/)

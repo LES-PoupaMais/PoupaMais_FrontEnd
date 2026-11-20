@@ -123,13 +123,14 @@ export function TransactionTable({
                     esmaecido && 'text-muted-foreground',
                   )}
                 >
-                  <Td>
+                  {/* Descrição inteira a 1440px; nomes longos quebram em até 2 linhas (o resto vai no title) */}
+                  <Td className="min-w-[200px] whitespace-normal">
                     <Link
                       href={hrefDe(lancamento)}
                       aria-label={`Ver ${descricao}`}
                       title={descricao}
                       onClick={onAbrir ? (evento) => onAbrir(lancamento, evento) : undefined}
-                      className="block max-w-[200px] truncate font-bold text-inherit no-underline outline-none after:absolute after:inset-0 focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-[var(--ring)]"
+                      className="line-clamp-2 max-w-[280px] font-bold break-words text-inherit no-underline outline-none after:absolute after:inset-0 focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-[var(--ring)]"
                     >
                       {descricao}
                     </Link>

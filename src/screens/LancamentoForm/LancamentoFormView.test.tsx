@@ -177,6 +177,8 @@ describe('Novo lançamento', () => {
 
     expect(await screen.findByText('Não foi possível salvar. O que você preencheu continua aqui.')).toBeInTheDocument()
     expect(screen.getByLabelText(/^Descrição/)).toHaveValue('Mercado do mês')
+    // Toast de erro do DS: a ação "Tentar de novo" no lugar do ×
+    expect(screen.queryByRole('button', { name: 'Fechar aviso' })).toBeNull()
     await usuario.click(screen.getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(rota.replace).toHaveBeenCalledWith('/lancamentos?mes=11&ano=2026'))
   })
@@ -250,6 +252,31 @@ describe('Novo lançamento', () => {
     expect(screen.getByRole('button', { name: 'Remover Farmácia' })).toBeInTheDocument()
   })
 
+  it('o lápis da lista abre "Editar categoria" e renomeia (PUT)', async () => {
+    const renomeadas: unknown[] = []
+    server.use(
+      http.put('*/api/categorias/:id', async ({ request, params }) => {
+        const corpo = (await request.json()) as { descricao: string }
+        renomeadas.push({ id: Number(params.id), ...corpo })
+        return HttpResponse.json({ id: Number(params.id), descricao: corpo.descricao, ativa: true })
+      }),
+    )
+    const { usuario } = renderizar()
+
+    await usuario.click(screen.getByRole('button', { name: 'Abrir lista de categorias' }))
+    await usuario.click(await screen.findByRole('button', { name: /^Editar categoria Mercado/ }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar categoria' })
+    const campo = within(dialogo).getByLabelText(/^Nome/)
+    expect(campo).toHaveValue('Mercado')
+    await usuario.clear(campo)
+    await usuario.type(campo, 'Supermercado')
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    expect(await screen.findByText('Categoria renomeada')).toBeInTheDocument()
+    expect(renomeadas).toEqual([expect.objectContaining({ descricao: 'Supermercado' })])
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Editar categoria' })).toBeNull())
+  })
+
   it('falha ao criar a categoria: toast; Cancelar fecha o diálogo', async () => {
     server.use(http.post('*/api/categorias', () => HttpResponse.json({ status: 500, mensagem: 'x' }, { status: 500 })))
     const { usuario } = renderizar()
@@ -285,9 +312,8 @@ describe('Novo lançamento', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
     const { usuario } = renderizar()
 
-    expect(
-      screen.getByText('Sem internet agora. Você pode continuar vendo, mas não dá para salvar.'),
-    ).toBeInTheDocument()
+    // A faixa "Sem internet agora…" fica no topo da casca (AppShell); a tela só bloqueia o que grava
+    expect(screen.queryByText(/Sem internet agora/)).not.toBeInTheDocument()
     expect(botaoSalvar()).toHaveAttribute('aria-disabled', 'true')
     expect(botaoSalvar()).toHaveAccessibleDescription(/Sem internet/)
     await preencher(usuario)

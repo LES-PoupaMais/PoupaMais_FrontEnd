@@ -326,9 +326,8 @@ describe('Lançamentos', () => {
   it('sem internet: OfflineBanner e o que grava desabilitado', async () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
     renderizar()
-    expect(
-      screen.getByText('Sem internet agora. Você pode continuar vendo, mas não dá para salvar.'),
-    ).toBeInTheDocument()
+    // A faixa "Sem internet agora…" fica no topo da casca (AppShell); a tela só bloqueia o que grava
+    expect(screen.queryByText(/Sem internet agora/)).not.toBeInTheDocument()
     expect(await screen.findByRole('switch', { name: 'Conta no saldo: Salário' })).toBeDisabled()
   })
 

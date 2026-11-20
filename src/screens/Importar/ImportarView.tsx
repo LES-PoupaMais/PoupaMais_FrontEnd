@@ -3,7 +3,7 @@
 import { ChevronLeft, Info, LoaderCircle, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/atoms/button'
-import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { OfflineMotivo } from '@/components/molecules/offline-banner'
 import { UploadArea } from '@/components/molecules/upload-area'
 import { FormatoCsv } from '@/components/organisms/formato-csv'
 import { ImportResult } from '@/components/organisms/import-result'
@@ -17,7 +17,8 @@ const AJUDA = 'ou escolha no seu aparelho. Até 2 MB e 5.000 linhas, com a data 
 
 function Cabecalho({ titulo, texto }: { titulo: string; texto: string }) {
   return (
-    <header className="flex flex-col gap-2">
+    // No resultado, o cabeçalho fica vazio no celular: some de vez para não somar o espaço da coluna (prancheta importar-resultado)
+    <header className={cn('flex flex-col gap-2', titulo !== 'Importar CSV' && 'max-md:hidden')}>
       <Button asChild variant="texto" className="-ml-3 hidden self-start md:inline-flex">
         <Link href={ROTAS.lancamentos}>
           <ChevronLeft aria-hidden="true" />
@@ -65,7 +66,6 @@ export function ImportarView() {
 
   return (
     <div className="mx-auto flex w-full max-w-260 flex-col gap-5 pb-28 md:gap-6 md:pb-0">
-      {bloqueado && <OfflineBanner variante="canto" />}
       <Cabecalho
         titulo="Importar CSV"
         texto="Traga vários lançamentos de uma vez a partir de uma planilha salva em CSV."

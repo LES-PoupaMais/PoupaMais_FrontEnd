@@ -2,15 +2,18 @@
 
 import { Check, ChevronLeft, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/atoms/button'
 import { ActionBanner } from '@/components/molecules/action-banner'
 import { ConfirmDialog } from '@/components/molecules/confirm-dialog'
 import { ErrorState } from '@/components/molecules/error-state'
-import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { OfflineMotivo } from '@/components/molecules/offline-banner'
 import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
 import { LancamentoForm } from '@/components/organisms/lancamento-form'
 import { TransactionDetail } from '@/components/organisms/transaction-detail'
 import { FormPageTemplate } from '@/components/templates/form-page-template'
+import { ID_ACAO_DA_TOPBAR } from '@/constants/navegacao'
 import { ROTAS } from '@/constants/rotas'
 import { LANCAMENTO_NAO_ENCONTRADO } from '@/constants/textos'
 import { formatarDataExtenso } from '@/lib/data'
@@ -31,9 +34,17 @@ function Voltar({ href, destino }: { href: string; destino: string }) {
   )
 }
 
+const semInscricao = () => () => {}
+
 export function LancamentoFormView() {
   const ctx = useLancamentoFormContext()
   const { modo, estado, lancamento, enviando, semConexao, sujo, hrefLista } = ctx
+  // Espaço de ação da TopBar da casca (celular); null no servidor e fora da casca (testes da tela)
+  const espacoNaTopBar = useSyncExternalStore(
+    semInscricao,
+    () => document.getElementById(ID_ACAO_DA_TOPBAR),
+    () => null,
+  )
   const titulo = modo === 'novo' ? 'Novo lançamento' : 'Editar lançamento'
 
   if (estado === 'carregando') return <LancamentoFormSkeleton titulo={titulo} />
@@ -142,24 +153,24 @@ export function LancamentoFormView() {
     </>
   )
 
+  const botaoLimpar = (className: string) => (
+    <Button variant="texto" className={className} disabled={!sujo || enviando} onClick={ctx.limpar}>
+      Limpar
+    </Button>
+  )
+
   return (
     <>
-      {/* Celular: "Limpar" à direita da TopBar (a TopBar da casca não tem slot de ação) */}
-      {modo === 'novo' && (
-        <Button
-          variant="texto"
-          className="fixed top-2 right-2 z-30 md:hidden"
-          disabled={!sujo || enviando}
-          onClick={ctx.limpar}
-        >
-          Limpar
-        </Button>
-      )}
+      {/* Celular: "Limpar" à direita da TopBar, no espaço de ação dela (portal); fora da casca, preso no canto */}
+      {modo === 'novo' &&
+        (espacoNaTopBar
+          ? createPortal(botaoLimpar(''), espacoNaTopBar)
+          : botaoLimpar('fixed top-2 right-2 z-30 md:hidden'))}
       <FormPageTemplate
         titulo={titulo}
         descricao={descricao || undefined}
         voltar={<Voltar href={hrefLista} destino="Lançamentos" />}
-        aviso={semConexao && <OfflineBanner variante="canto" />}
+
         acoes={acoes}
       >
         {ctx.valoresIniciais && (
@@ -184,6 +195,7 @@ export function LancamentoFormView() {
             errosDoServidor={ctx.errosDoServidor}
             onSubmit={ctx.salvar}
             onCriarCategoria={ctx.abrirNovaCategoria}
+            onEditarCategoria={ctx.abrirEditarCategoria}
             onSujoChange={ctx.setSujo}
             rodape={
               modo === 'editar' && (
@@ -205,14 +217,15 @@ export function LancamentoFormView() {
       <CategoriaDialog
         aberto={ctx.novaCategoria.aberto}
         onAbertoChange={(abrir) => !abrir && ctx.fecharNovaCategoria()}
+        categoria={ctx.novaCategoria.categoria}
         nomeInicial={ctx.novaCategoria.nome}
-        texto={
-          ctx.novaCategoria.nome.trim()
+        {...(!ctx.novaCategoria.categoria && {
+          texto: ctx.novaCategoria.nome.trim()
             ? `Você digitou "${ctx.novaCategoria.nome.trim()}" na busca. Confira o nome antes de criar.`
-            : undefined
-        }
-        rotuloNome="Nome da categoria"
-        ajuda="Ela já entra escolhida neste lançamento."
+            : undefined,
+          rotuloNome: 'Nome da categoria',
+          ajuda: 'Ela já entra escolhida neste lançamento.',
+        })}
         erroNome={ctx.novaCategoria.erro}
         salvando={ctx.criandoCategoria}
         onSalvar={ctx.criarCategoria}

@@ -39,6 +39,7 @@ export function BottomNav({ itens, ativo, criarAberto, onCriar }: BottomNavProps
     <nav
       aria-label="Navegação principal"
       data-slot="bottom-nav"
+      data-criar-aberto={criarAberto}
       className="bg-card border-border border-t px-1 pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="grid grid-cols-[repeat(2,minmax(0,1fr))_72px_repeat(2,minmax(0,1fr))] items-end">

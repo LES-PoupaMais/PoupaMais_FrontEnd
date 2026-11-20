@@ -35,7 +35,10 @@ describe('CategoryBarChart', () => {
 
   it('carregando e o link montado', () => {
     const { container } = render(<CategoryBarChart dados={[]} total={0} mes={1} ano={2026} carregando />)
-    expect(container.querySelector('[data-slot="grafico-carregando"]')).not.toBeNull()
+    // Esqueleto de lista (prancheta dashboard-carregando-celular): título + 4 linhas de rótulo e barra
+    const esqueleto = container.querySelector('[data-slot="lista-carregando"]')
+    expect(esqueleto).toHaveAttribute('aria-hidden', 'true')
+    expect(esqueleto?.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(9)
     expect(hrefDaCategoria(4, 1, 2027)).toBe('/lancamentos?categoria=4&mes=1&ano=2027&tipo=DESPESA')
   })
 

@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/molecules/empty-state'
 import { ROTAS } from '@/constants/rotas'
 import { formatarMoeda, formatarPeriodo } from '@/lib/format'
 import type { DespesaPorCategoria } from '@/types/api'
-import { DashboardSecao, GraficoCarregando } from './dashboard-secao'
+import { DashboardSecao, ListaCarregando } from './dashboard-secao'
 
 // CategoryBarChart do Design System: despesas do mês por categoria em barras horizontais, todas em despesa-grafico
 // (a cor diferencia tipos, não categorias), da maior para a menor, com o valor exato no fim da barra.
@@ -35,7 +35,7 @@ export function hrefDaCategoria(categoriaId: number, mes: number, ano: number): 
 }
 
 function CategoryBarChart({ dados, total, mes, ano, carregando = false, ...props }: CategoryBarChartProps) {
-  if (carregando) return <GraficoCarregando titulo="Despesas por categoria" barras={4} {...props} />
+  if (carregando) return <ListaCarregando titulo="Despesas por categoria" barras={4} {...props} />
 
   const ordenados = [...dados].sort((a, b) => b.valor - a.valor)
   const maior = ordenados[0]?.valor ?? 0

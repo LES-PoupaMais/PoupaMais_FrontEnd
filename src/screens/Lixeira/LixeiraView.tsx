@@ -6,7 +6,7 @@ import { Button } from '@/components/atoms/button'
 import { ActionBanner } from '@/components/molecules/action-banner'
 import { EmptyState } from '@/components/molecules/empty-state'
 import { ErrorState } from '@/components/molecules/error-state'
-import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { OfflineMotivo } from '@/components/molecules/offline-banner'
 import {
   TransactionDetail,
   TransactionDetailPanel,
@@ -29,7 +29,6 @@ export function LixeiraView() {
 
   return (
     <div className="flex flex-col gap-5">
-      {!online && <OfflineBanner variante="canto" />}
       <header className="hidden flex-wrap items-end justify-between gap-4 md:flex">
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-titulo-1">Lixeira</h1>
@@ -94,13 +93,12 @@ export function LixeiraView() {
         {!online && <OfflineMotivo id={ID_MOTIVO_OFFLINE} />}
 
         <section aria-labelledby="lixeira-contador" className="flex flex-col gap-3 lg:hidden">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <h2 id="lixeira-contador" className="text-titulo-3 tabular-nums">
-                {titulo}
-              </h2>
-              <span className="text-legenda text-muted-foreground">Todos os meses</span>
-            </div>
+          {/* Contador como sobretítulo, na linha de "Todos os meses" (prancheta lixeira-celular) */}
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="lixeira-contador" className="text-rotulo-secao text-muted-foreground uppercase tabular-nums">
+              {titulo}
+            </h2>
+            <span className="text-legenda text-muted-foreground">Todos os meses</span>
           </div>
           <TransactionRowList>
             {lancamentos.map((lancamento) => (

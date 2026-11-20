@@ -1,5 +1,6 @@
 'use client'
 
+import { RotateCw, WifiOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { toast } from 'sonner'
@@ -37,7 +38,8 @@ export const MENSAGENS_FORMULARIO = {
 
 export type EstadoDaTela = 'carregando' | 'erro' | 'nao-encontrado' | 'lixeira' | 'pronto'
 
-type NovaCategoria = { aberto: boolean; nome: string; erro: string | null }
+/** Diálogo de categoria do campo: criar (sem `categoria`) ou editar pelo lápis da lista (com `categoria`) */
+type NovaCategoria = { aberto: boolean; nome: string; erro: string | null; categoria?: Categoria | null }
 
 type LancamentoFormContextValue = {
   modo: 'novo' | 'editar'
@@ -65,6 +67,8 @@ type LancamentoFormContextValue = {
   novaCategoria: NovaCategoria
   criandoCategoria: boolean
   abrirNovaCategoria: (texto: string, selecionar: (id: number) => void) => void
+  /** Lápis de uma categoria na lista do campo: abre o diálogo de editar (renomear) */
+  abrirEditarCategoria: (idCategoria: number) => void
   criarCategoria: (descricao: string) => void
   fecharNovaCategoria: () => void
   // alterações não salvas
@@ -181,8 +185,19 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
       toast.error(mensagem)
       return
     }
+    // Toast de erro do DS: sem conexão (status 0, a requisição nem chegou) com o ícone de sem conexão; ação com ícone e sem ×
     toast.error(MENSAGENS_FORMULARIO.erroSalvar, {
-      action: { label: 'Tentar de novo', onClick: () => salvar(dados) },
+      ...(status === 0 && { icon: <WifiOff strokeWidth={1.75} aria-hidden="true" /> }),
+      closeButton: false,
+      action: {
+        label: (
+          <>
+            <RotateCw aria-hidden="true" />
+            Tentar de novo
+          </>
+        ),
+        onClick: () => salvar(dados),
+      },
     })
   }
 
@@ -208,33 +223,41 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
 
   const abrirNovaCategoria = (texto: string, selecionar: (idCategoria: number) => void) => {
     setSelecionarCriada({ fn: selecionar })
-    setNovaCategoria({ aberto: true, nome: texto, erro: null })
+    setNovaCategoria({ aberto: true, nome: texto, erro: null, categoria: null })
+  }
+
+  const abrirEditarCategoria = (idCategoria: number) => {
+    const categoria = categorias.find((c) => c.id === idCategoria)
+    if (categoria) setNovaCategoria({ aberto: true, nome: categoria.descricao, erro: null, categoria })
   }
 
   const fecharNovaCategoria = () => setNovaCategoria((atual) => ({ ...atual, aberto: false, erro: null }))
 
   const criarCategoria = (descricao: string) => {
     setNovaCategoria((atual) => ({ ...atual, erro: null }))
-    salvarCategoria.mutate(
-      { descricao },
-      {
-        onSuccess: (criada) => {
-          setCriadas((atuais) => [...atuais, criada])
-          selecionarCriada?.fn(criada.id)
+    const editada = novaCategoria.categoria
+    salvarCategoria.mutate(editada ? { id: editada.id, descricao } : { descricao }, {
+      onSuccess: (criada) => {
+        if (editada) {
           fecharNovaCategoria()
-          toast.success(MENSAGENS_FORMULARIO.categoriaCriada(criada.descricao))
-        },
-        onError: (erro) => {
-          // 409 e 400 vão para o campo Nome, como nos outros diálogos de categoria (lib/erro-categoria)
-          const doCampo = erroDoNomeDaCategoria(erro)
-          if (doCampo) {
-            setNovaCategoria((atual) => ({ ...atual, erro: doCampo }))
-          } else if (!ehSessaoVencida(erro)) {
-            toast.error(traduzirErro(erro, { padrao: MENSAGENS_FORMULARIO.erroCategoria }).mensagem)
-          }
-        },
+          toast.success('Categoria renomeada')
+          return
+        }
+        setCriadas((atuais) => [...atuais, criada])
+        selecionarCriada?.fn(criada.id)
+        fecharNovaCategoria()
+        toast.success(MENSAGENS_FORMULARIO.categoriaCriada(criada.descricao))
       },
-    )
+      onError: (erro) => {
+        // 409 e 400 vão para o campo Nome, como nos outros diálogos de categoria (lib/erro-categoria)
+        const doCampo = erroDoNomeDaCategoria(erro)
+        if (doCampo) {
+          setNovaCategoria((atual) => ({ ...atual, erro: doCampo }))
+        } else if (!ehSessaoVencida(erro)) {
+          toast.error(traduzirErro(erro, { padrao: MENSAGENS_FORMULARIO.erroCategoria }).mensagem)
+        }
+      },
+    })
   }
 
   const limpar = () => {
@@ -308,6 +331,7 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
     novaCategoria,
     criandoCategoria: salvarCategoria.isPending,
     abrirNovaCategoria,
+    abrirEditarCategoria,
     criarCategoria,
     fecharNovaCategoria,
     sujo,
