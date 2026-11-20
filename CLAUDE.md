@@ -37,7 +37,8 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
   `lib/format.plural`.
 - **Revisão geral (19/11):** corrigida na própria branch (link de categoria do Dashboard, status no POST/PUT, `destinoSeguro`,
   BFF com lista de rotas, lixeira com DELETE na hora + restaurar, regra única de mensagens de erro em `lib/http`, entre
-  outros). Depende do back `feat/status-no-lancamento` (contrato **v1.2.0**).
+  outros). O contrato **v1.2.0** do back (status no POST/PUT, restaurar ao status anterior, `codigo` em todo erro e `data` em
+  `maioresDespesas`) está na development do back desde 20/11 e espelhado abaixo.
 - **Próximo passo:** revisar as Pendências abaixo com a equipe (as marcadas "decidir" esperam o líder/design).
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
@@ -410,6 +411,9 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
 
 ## Contrato da API (espelho do CLAUDE.md do backend)
 
+Versão do contrato: **v1.2.0** (20/11/2026): `status` no POST/PUT de lançamento, restaurar ao status anterior, `codigo` em toda
+resposta de erro e `data` em `maioresDespesas`.
+
 O navegador chama `/api/...` do **próprio Next**; o BFF repassa para `${API_URL}/api/...` com `Authorization: Bearer <token>`. JSON camelCase.
 Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions** (que chamam a API e gravam o cookie), não pelo BFF.
 No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache em `hooks/` e chaves em `constants/query-keys.ts`.
@@ -454,8 +458,29 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
 Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
 (`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC (`dataAtualizacao` `null` até a primeira alteração), ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
 `dataExclusao` preenchida ao ir para a Lixeira e `null` ao restaurar).
-Erro: `{status, mensagem, erros?: [{campo, mensagem}], codigo?}` (`codigo` estável desde 20/11; o front não usa). Exibir com `lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos
-campos (`setError` do RHF), como vieram.
+**Erro (v1.2.0):** `{status, codigo, mensagem, erros?: [{campo, mensagem}]}`, ex. `{ "status": 422, "codigo": "CATEGORIA_VINCULADA",
+"mensagem": "Categoria vinculada a lançamentos, apenas inative" }`. `erros[]` só vem no `400 VALIDACAO`. Exibir com
+`lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos campos (`setError` do RHF), como vieram. O **`codigo`** é uma string
+estável (MAIÚSCULAS_COM_UNDERSCORE, nunca renomeada) e fica em `ErroApi.codigo` / `RespostaErro.codigo` (opcional no tipo, porque
+o BFF e o `lib/http` também montam erros sem ele: sem conexão, 404 de rota fora da lista), mas **o front não decide nada pelo
+código** (decisão de 20/11): mostra a `mensagem` da API ou a genérica. Tabela completa ("Padrão de erro") no `CLAUDE.md` do back;
+resumo:
+
+| Status | Códigos |
+| --- | --- |
+| 400 | `VALIDACAO` (com `erros[]`), `CORPO_INVALIDO`, `FORMATO_EXPORTACAO_INVALIDO`, `REQUISICAO_INVALIDA` |
+| 401 | `NAO_AUTENTICADO` (sem token, expirado, sessão derrubada), `CREDENCIAIS_INVALIDAS` (login) |
+| 403 | `ACESSO_NEGADO` (reservado) |
+| 404 | `NAO_ENCONTRADO` (rota), `CATEGORIA_NAO_ENCONTRADA`, `LANCAMENTO_NAO_ENCONTRADO`, `FOTO_NAO_ENCONTRADA` |
+| 405 | `METODO_NAO_PERMITIDO` |
+| 409 | `EMAIL_JA_CADASTRADO`, `CATEGORIA_DUPLICADA` |
+| 415 | `TIPO_CONTEUDO_NAO_SUPORTADO` (antes da v1.2.0 saía 500) |
+| 422 | arquivos: `ARQUIVO_GRANDE_DEMAIS` (413 se o servidor recusar antes), `ARQUIVO_VAZIO`, `ARQUIVO_INVALIDO`, `CABECALHO_INVALIDO`, `ARQUIVO_LINHAS_DEMAIS`, `SEM_DADOS_EXPORTACAO`; conta: `ACEITE_TERMOS_OBRIGATORIO`, `DADOS_CONTA_INVALIDOS`, `SENHA_ATUAL_INCORRETA`, `SENHA_IGUAL_A_ATUAL`, `SENHA_INCORRETA`, `TOKEN_INVALIDO`, `FOTO_TIPO_INVALIDO`; categorias: `CATEGORIA_INVALIDA`, `CATEGORIA_INATIVA`, `CATEGORIA_VINCULADA`; lançamentos: `LANCAMENTO_INVALIDO`, `LANCAMENTO_NA_LIXEIRA`, `LANCAMENTO_JA_EXCLUIDO`, `LANCAMENTO_NAO_EXCLUIDO`, `STATUS_INVALIDO`, `TRANSICAO_STATUS_INVALIDA` |
+| 500 | `ERRO_INTERNO` (sem detalhes) |
+
+Rota inexistente (com token) → `404` "Recurso não encontrado"; método não suportado → `405`. Fora do padrão (pendência do back): a
+recusa de CORS do Spring (`403` texto puro, o navegador não chama a API direto) e `@PathVariable` não numérico, parâmetro obrigatório
+ausente e `406`, que caem no `500 ERRO_INTERNO`.
 
 CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
 A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula de data.
@@ -639,8 +664,7 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - Landing: a prévia do Saldo do mês usa o `highlight-card`; a prévia de "Despesas por categoria" continua desenhada na própria
      `landing-passos` (o `category-bar-chart` tem links, total e a dica de toque, que a prancheta `landing-*` não tem).
 12. **Integração e contrato:**
-   - **Depende do back `feat/status-no-lancamento` (v1.2.0):** `status` no POST/PUT, restaurar ao status anterior e `PATCH /status`
-     com `422` na lixeira. Sem essa versão, o formulário perde o "Conta no saldo" desligado no POST e o Desfazer devolve INATIVO.
+   - ~~Depende do back v1.2.0~~: integrado na development do back em 20/11 (PR #31 de lá); contrato espelhado na seção "Contrato da API".
    - **Roteiro da demo contra a API real:** feito em 20/11 (`npm run test:e2e:api-real`, seção Testes). Falta decidir se entra no
      CI (precisa subir a pilha E2E do PoupaMais_Development no runner: Docker + build do back).
    - **Pilha E2E (PoupaMais_Development):** o `E2E_FRONT_PORT` padrão é 3200 e a suíte usa 3130; o link do e-mail de senha aponta
