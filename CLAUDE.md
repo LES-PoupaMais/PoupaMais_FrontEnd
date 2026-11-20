@@ -623,7 +623,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 8. **Lançamentos, visualização, exportar e Lixeira:**
    - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
      desenham uma página. **Decidido e feito em 20/11:** a Lixeira não tem "Exportar" (não está na prancheta `lixeira-*`); Exportar
-     fica só em Lançamentos. A prop `lixeira` do `export-dialog` ficou sem uso.
+     fica só em Lançamentos. Exportar a lixeira não está no escopo: a prop `lixeira` do `export-dialog` saiu (feito em 20/11, com
+     os testes dela) e a dica ficou só "A lixeira fica de fora."
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
    - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.

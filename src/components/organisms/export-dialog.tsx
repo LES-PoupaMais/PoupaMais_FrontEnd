@@ -10,8 +10,8 @@ import { SegmentedControl, type OpcaoSegmentada } from '@/components/molecules/s
 import type { FormatoExportacao } from '@/types/api'
 
 // Exportar lançamentos (pranchetas exportar-celular e exportar-computador): pergunta o formato (CSV ou Excel) e avisa que o
-// arquivo segue os filtros ativos (RN013); só exporta a lixeira quando o filtro é a Lixeira. Sem dados: "Não há dados para
-// exportação". Celular: tela cheia com "‹" e "Baixar arquivo" fixo embaixo; tablet e computador: card de 640px centralizado.
+// arquivo segue os filtros ativos (RN013); a lixeira fica de fora (exportar a lixeira não está no escopo). Sem dados: "Não há
+// dados para exportação". Celular: tela cheia com "‹" e "Baixar arquivo" fixo embaixo; tablet e computador: card de 640px centralizado.
 // Puro: formato, resumo e ações por props.
 
 const OPCOES: OpcaoSegmentada<FormatoExportacao>[] = [
@@ -37,8 +37,6 @@ export type ExportDialogProps = {
   total: number | null
   /** De onde vêm ("Novembro 2026 · os que contam e os que não contam no saldo") */
   origem: string
-  /** Filtro Lixeira: só os excluídos, de todos os meses */
-  lixeira?: boolean
   onBaixar: () => void
   baixando?: boolean
   /** "Mudar filtros" no aviso (fecha e leva aos filtros) */
@@ -55,7 +53,6 @@ export function ExportDialog({
   filtrosAtivos,
   total,
   origem,
-  lixeira = false,
   onBaixar,
   baixando = false,
   onMudarFiltros,
@@ -118,11 +115,7 @@ export function ExportDialog({
                 <span className="text-legenda text-muted-foreground">{origem}</span>
               </div>
             </div>
-            <p className="text-legenda text-muted-foreground">
-              {lixeira
-                ? 'Só os lançamentos da lixeira, de todos os meses.'
-                : 'A lixeira fica de fora. Para exportar só a lixeira, escolha o status Lixeira nos filtros.'}
-            </p>
+            <p className="text-legenda text-muted-foreground">A lixeira fica de fora.</p>
           </section>
         </div>
         <div className="border-border bg-card mt-auto flex flex-wrap items-center justify-end gap-3 border-t px-5 py-4 max-md:sticky max-md:bottom-0 md:px-6">

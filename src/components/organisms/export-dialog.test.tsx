@@ -25,7 +25,7 @@ describe('ExportDialog', () => {
     expect(screen.getByRole('dialog', { name: 'Exportar lançamentos' })).toBeInTheDocument()
     expect(screen.getByText('O arquivo segue os filtros ativos: Novembro 2026 · Todos os status')).toBeInTheDocument()
     expect(screen.getByText('30 lançamentos')).toBeInTheDocument()
-    expect(screen.getByText(/A lixeira fica de fora/)).toBeInTheDocument()
+    expect(screen.getByText('A lixeira fica de fora.')).toBeInTheDocument()
     expect(screen.getByText(/CSV: abre em qualquer planilha/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('radio', { name: 'Excel' }))
     expect(onFormatoChange).toHaveBeenCalledWith('xlsx')
@@ -35,10 +35,9 @@ describe('ExportDialog', () => {
     expect(onBaixar).toHaveBeenCalled()
   })
 
-  it('sem dados: avisa e não baixa; lixeira e Excel mudam os textos', async () => {
-    const { onBaixar } = renderizar({ total: 0, lixeira: true, formato: 'xlsx' })
+  it('sem dados: avisa e não baixa; Excel muda a ajuda', async () => {
+    const { onBaixar } = renderizar({ total: 0, formato: 'xlsx' })
     expect(screen.getByText(SEM_DADOS_PARA_EXPORTAR)).toBeInTheDocument()
-    expect(screen.getByText('Só os lançamentos da lixeira, de todos os meses.')).toBeInTheDocument()
     expect(screen.getByText(/Excel \(\.xlsx\)/)).toBeInTheDocument()
     const baixar = screen.getByRole('button', { name: 'Baixar arquivo' })
     expect(baixar).toHaveAttribute('aria-disabled', 'true')
