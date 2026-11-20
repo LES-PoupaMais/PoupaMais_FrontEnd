@@ -73,7 +73,7 @@ export function ImportarView() {
       <div id="modelo-csv" className="grid scroll-mt-20 items-stretch gap-5 md:gap-6 lg:grid-cols-2">
         <section
           aria-labelledby="importar-arquivo"
-          className="md:rounded-grande md:border-border md:bg-card md:shadow-card flex flex-col gap-5 md:gap-4 md:border md:p-6"
+          className="md:rounded-grande md:border-border md:bg-card md:shadow-card flex min-w-0 flex-col gap-5 md:gap-4 md:border md:p-6"
         >
           <h2 id="importar-arquivo" className="text-titulo-3 sr-only md:not-sr-only">
             Arquivo
@@ -87,10 +87,8 @@ export function ImportarView() {
             onBaixarModelo={ctx.baixarModelo}
             ajuda={AJUDA}
             disabled={ctx.importando}
-            className={cn(
-              'md:min-h-70 md:flex-1 md:[&_[data-slot=upload-area-modelo]]:hidden',
-              ctx.importando && 'opacity-60',
-            )}
+            areaClassName="md:min-h-70 md:flex-1 md:[&_[data-slot=upload-area-modelo]]:hidden"
+            className={cn(ctx.importando && 'opacity-60')}
           />
           {ctx.importando && ctx.arquivo ? (
             <section
