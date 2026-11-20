@@ -93,6 +93,7 @@ export default defineConfig([
     'next-env.d.ts',
     'coverage/**',
     'playwright-report/**',
+    'playwright-report-api-real/**',
     'test-results/**',
   ]),
 ])

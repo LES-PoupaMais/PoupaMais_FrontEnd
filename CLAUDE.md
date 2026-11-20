@@ -80,7 +80,8 @@ npm run format          # Prettier (format:check no CI)
 npm run typecheck       # next typegen + tsc --noEmit
 npm test                # Vitest
 npm run test:coverage   # Vitest + piso de cobertura (o que o CI roda)
-npm run test:e2e        # Playwright (sobe o build sozinho)
+npm run test:e2e        # Playwright (sobe o build sozinho), API simulada
+npm run test:e2e:api-real  # Playwright contra a API real (pilha E2E do PoupaMais_Development; ver Testes)
 npm run build           # build de produção
 ```
 
@@ -406,7 +407,8 @@ O navegador chama `/api/...` do **próprio Next**; o BFF repassa para `${API_URL
 Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions** (que chamam a API e gravam o cookie), não pelo BFF.
 No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache em `hooks/` e chaves em `constants/query-keys.ts`.
 
-- `POST /auth/cadastro` `{nome, email, senha, aceiteTermos}` → `201` · e-mail já usado → `409`
+- `POST /auth/cadastro` `{nome, email, senha, aceiteTermos}` → `201` · e-mail já usado → `409`. O cadastro já cria as 11 categorias
+  padrão (Alimentação, Educação, Freelance, Investimentos, Lazer, Moradia, Outros, Salário, Saúde, Transporte, Vestuário; RN002)
 - `POST /auth/recuperar-senha {email}` → `202` sempre · `POST /auth/redefinir-senha {token, novaSenha}` → `204` (`422` token inválido/expirado)
 - `POST /auth/login` `{email, senha}` → `{token, expiraEm, usuario: {id, nome, email}}` · `401` credenciais inválidas
 - `GET /usuarios/me` → `{id, nome, email, possuiFoto, dataCadastro}` · `PUT /usuarios/me {nome}`
@@ -477,8 +479,22 @@ Guia detalhado: skill `testes-frontend`.
 | **Integração da tela** | `screens/<Tela>/<Tela>View.test.tsx` | Provider + View + **MSW** (`renderComProviders`) | Carregando, vazio, erro, sucesso, ações e toasts |
 | **End-to-end** | `e2e/*.spec.ts` | **Playwright** (Chromium e Firefox) | Fluxos completos sobre o build de produção |
 
-- **E2E sem backend:** sessão pelo cookie `pm_token` (o `proxy.ts` só confere a presença) e API simulada no navegador com
+- **E2E sem backend (`npm run test:e2e`):** sessão pelo cookie `pm_token` (o `proxy.ts` só confere a presença) e API simulada no navegador com
   `page.route('**/api/**')` (`e2e/fixtures/`). Cobrir o roteiro da demo.
+- **E2E contra a API real (`npm run test:e2e:api-real`, `e2e/api-real/` + `playwright.api-real.config.ts`):** o roteiro da demo
+  inteiro com Spring, Postgres e Mailpit de verdade, só no Chromium (Firefox: `--project=firefox`), fora do CI por enquanto.
+  - Subir a pilha: `cd ../PoupaMais_Development && E2E_FRONT_PORT=3130 npm run e2e:up` (API `127.0.0.1:8580`, Mailpit `8525`,
+    banco `5435`, projeto docker `poupamais-e2e`); derrubar com `npm run e2e:down`. Não mexe na pilha dev (`poupamais`).
+  - O config sobe `next build && next start` em `PORT` (padrão **3130**) com `API_URL=http://localhost:8580` (build de produção,
+    como a outra suíte: sem a compilação sob demanda do `next dev`). Um `globalSetup` (`apoio/conferir-pilha.ts`) para a suíte
+    com a instrução certa se a API ou o Mailpit não responderem.
+  - Cada teste ganha um **usuário novo** (fixtures `usuario` e `logado` de `apoio/teste.ts`; e-mail único) e monta os dados pela
+    API (`apoio/api.ts`); nada depende de ordem nem de banco limpo. Lembre que o cadastro já cria as 11 categorias padrão
+    (`categoria()` reaproveita a existente). Datas fixas em outubro de 2026 (`MES`/`ANO`), sem depender do relógio.
+  - O "esqueci a senha" lê o link pela API HTTP do Mailpit (`apoio/mailpit.ts`) e abre só o caminho `/redefinir-senha?token=…`
+    no Next do teste (o domínio do link vem do `FRONT_URL` da pilha).
+  - Prazos maiores (passo 20 s, teste 90 s): cada passo vai até a API e o banco. Com a máquina muito carregada (várias worktrees
+    rodando testes ao mesmo tempo), o navegador pode travar; rode de novo com a máquina livre antes de culpar o código.
 - **Largura nos testes:** o jsdom não tem `matchMedia`; `src/test/media.ts` instala um falso (cada teste começa em 390px) e
   `simularLargura(1280)` muda. No E2E, `page.setViewportSize`.
 - **Cobertura (Vitest v8):** `npm run test:coverage` falha abaixo de **80% de linhas, funções e statements e 70% de branches**.
@@ -612,5 +628,11 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 12. **Integração e contrato:**
    - **Depende do back `feat/status-no-lancamento` (v1.2.0):** `status` no POST/PUT, restaurar ao status anterior e `PATCH /status`
      com `422` na lixeira. Sem essa versão, o formulário perde o "Conta no saldo" desligado no POST e o Desfazer devolve INATIVO.
-   - **Rodar o roteiro da demo contra a API real** (ambiente integrado em planejamento): os E2E usam a API simulada (`e2e/fixtures/`,
-     `e2e/api-falsa.mjs`), alinhada às mensagens do back em 19/11.
+   - **Roteiro da demo contra a API real:** feito em 20/11 (`npm run test:e2e:api-real`, seção Testes). Falta decidir se entra no
+     CI (precisa subir a pilha E2E do PoupaMais_Development no runner: Docker + build do back).
+   - **Pilha E2E (PoupaMais_Development):** o `E2E_FRONT_PORT` padrão é 3200 e a suíte usa 3130; o link do e-mail de senha aponta
+     para o `FRONT_URL` (a suíte só usa o caminho, então passa com qualquer porta). Proposta: padrão 3130 lá, ou documentar
+     `E2E_FRONT_PORT=3130 npm run e2e:up`, e tirar o "preparada, ainda sem uso" do README de lá.
+   - **Texto do 409 da categoria:** a seção Categorias diz "Já existe uma categoria com esse nome"; a API manda "Já existe uma
+     categoria com essa descrição" e o front mostra a da API (regra de 19/11). Só alinhar o texto deste arquivo, ou a frase no back
+     (decisão do líder, junto do item 3).

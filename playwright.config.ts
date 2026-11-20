@@ -12,6 +12,8 @@ const PORTA_API = PORTA + 1000
 
 export default defineConfig({
   testDir: 'e2e',
+  // e2e/api-real é a suíte contra a API real (playwright.api-real.config.ts)
+  testIgnore: 'api-real/**',
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 2 : 0,

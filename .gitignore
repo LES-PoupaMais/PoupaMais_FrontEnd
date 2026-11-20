@@ -4,6 +4,7 @@
 # testes
 /coverage
 /playwright-report
+/playwright-report-api-real
 /test-results
 /blob-report
 /playwright/.cache
