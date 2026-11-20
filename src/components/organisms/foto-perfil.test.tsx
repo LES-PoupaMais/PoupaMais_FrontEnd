@@ -12,6 +12,9 @@ describe('FotoPerfil', () => {
     expect(screen.getByLabelText('Enviar foto')).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp')
     expect(screen.queryByRole('button', { name: 'Remover foto' })).not.toBeInTheDocument()
     expect(screen.getByText('JPG, PNG ou WEBP até 2 MB.')).toBeInTheDocument()
+    expect(
+      screen.queryByText('Enquanto a foto nova não for aceita, a atual continua no seu perfil.'),
+    ).not.toBeInTheDocument()
   })
 
   it('com foto: escolher um arquivo entrega o File e remover chama onRemover', async () => {
@@ -40,12 +43,14 @@ describe('FotoPerfil', () => {
     expect(screen.getByRole('button', { name: 'Enviando…' })).toBeDisabled()
     expect(screen.getByRole('status')).toHaveTextContent('Enviando a foto…')
     expect(screen.getByRole('region', { name: 'Foto de perfil, enviando' })).toBeInTheDocument()
+    expect(screen.getByText('Enquanto a foto nova não for aceita, a atual continua no seu perfil.')).toBeInTheDocument()
   })
 
   it('erro: mensagem em alerta ligada ao campo', () => {
     render(<FotoPerfil {...base} fotoUrl={null} erro="A foto deve ter no máximo 2 MB. Escolha uma imagem menor." />)
     expect(screen.getByRole('alert')).toHaveTextContent('A foto deve ter no máximo 2 MB.')
     expect(screen.getByLabelText('Enviar foto')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Enquanto a foto nova não for aceita, a atual continua no seu perfil.')).toBeInTheDocument()
   })
 
   it('sem conexão: botões desabilitados com o motivo', () => {

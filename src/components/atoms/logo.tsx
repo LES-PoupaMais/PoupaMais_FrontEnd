@@ -20,7 +20,16 @@ const logoVariants = cva('inline-flex shrink-0 items-center', {
   defaultVariants: { variante: 'horizontal' },
 })
 
-type LogoProps = React.ComponentProps<'span'> & VariantProps<typeof logoVariants>
+// Pranchetas (topos e rodapés públicos e de acesso): no claro o logo fica numa moldura branca (raio 12, 4px × 8px de
+// respiro); no escuro não há moldura, mas o respiro vertical fica, então o cofrinho mede a altura menos 8px
+// (44 → 36, 48 → 40, 56 → 48), como nas pranchetas.
+const MOLDURA = 'bg-card rounded-xl px-2 py-1 dark:bg-transparent dark:px-0'
+
+type LogoProps = React.ComponentProps<'span'> &
+  VariantProps<typeof logoVariants> & {
+    /** Moldura branca do logo no claro (topos e rodapés das pranchetas públicas e de acesso) */
+    moldura?: boolean
+  }
 
 function Nome({ className }: { className?: string }) {
   return (
@@ -42,14 +51,14 @@ function Cofrinho({ escuro, className }: { escuro?: boolean; className?: string 
   )
 }
 
-function Logo({ variante = 'horizontal', className, ...props }: LogoProps) {
+function Logo({ variante = 'horizontal', moldura = false, className, ...props }: LogoProps) {
   return (
     <span
       data-slot="logo"
       data-variante={variante}
       role="img"
       aria-label="PoupaMais"
-      className={cn(logoVariants({ variante }), className)}
+      className={cn(logoVariants({ variante }), moldura && MOLDURA, className)}
       {...props}
     >
       {variante === 'horizontal' && (
@@ -62,9 +71,10 @@ function Logo({ variante = 'horizontal', className, ...props }: LogoProps) {
             priority
             className="h-full w-auto dark:hidden"
           />
-          <span className="hidden h-full items-center gap-3 dark:inline-flex">
+          {/* Pranchetas: cofrinho do tamanho do logo e o nome em titulo-3, com 10px entre eles (cabe no topo a 360px) */}
+          <span className="hidden h-full items-center gap-2.5 dark:inline-flex">
             <Cofrinho escuro />
-            <Nome className="text-titulo-2" />
+            <Nome />
           </span>
         </>
       )}

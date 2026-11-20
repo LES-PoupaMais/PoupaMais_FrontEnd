@@ -27,10 +27,11 @@ export function PublicTemplate({ children, variante = 'padrao', acoes, rodape, h
   const site = variante === 'site'
   const acoesPadrao = (
     <>
-      <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'xl' })}>
+      {/* cn: o buttonVariants sozinho não junta as classes (a borda do contornado perdia para a transparente) */}
+      <Link href="/login" className={cn(buttonVariants({ variant: 'texto' }), 'px-2 sm:px-3')}>
         Entrar
       </Link>
-      <Link href="/cadastro" className={buttonVariants({ variant: 'outline', size: 'xl' })}>
+      <Link href="/cadastro" className={cn(buttonVariants({ variant: 'contornado' }), 'px-4 sm:px-6')}>
         Criar conta
       </Link>
     </>
@@ -39,15 +40,15 @@ export function PublicTemplate({ children, variante = 'padrao', acoes, rodape, h
   const cabecalho = (
     <div
       className={cn(
-        'max-w-conteudo mx-auto flex w-full items-center justify-between gap-4 px-5 py-4 md:px-8',
-        site && 'min-h-19 py-2 md:py-2',
+        'max-w-conteudo mx-auto flex w-full items-center justify-between gap-3 py-4 pr-3 pl-5 sm:gap-4 md:px-8',
+        site && 'min-h-16 py-2 md:min-h-19',
       )}
     >
-      <Link href={hrefLogo} aria-label="PoupaMais, ir para a página inicial">
-        <Logo className="h-12" />
+      <Link href={hrefLogo} aria-label="PoupaMais, ir para a página inicial" className="inline-flex shrink-0">
+        <Logo moldura className="h-12 md:h-14" />
       </Link>
       {botoes && (
-        <nav aria-label="Acesso" className="flex items-center gap-2">
+        <nav aria-label="Acesso" className="flex min-w-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
           {botoes}
         </nav>
       )}
@@ -70,20 +71,23 @@ export function RodapeSite() {
   const link = 'text-corpo-forte text-primary inline-flex min-h-11 items-center'
   return (
     <footer className="bg-card border-border border-t">
-      <div className="max-w-conteudo mx-auto flex flex-col gap-3 px-5 py-6 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-6 md:px-8 md:py-8">
-        <div className="flex flex-col gap-2">
+      {/* Celular: uma coluna (logo, frase, links, ©). A partir de 768px, uma linha só: logo e frase (com o ©) à
+          esquerda, links à direita (prancheta landing-computador). */}
+      <div className="max-w-conteudo mx-auto flex flex-col gap-3 px-5 py-6 md:flex-row md:items-center md:justify-between md:gap-6 md:px-8 md:py-8">
+        <div className="flex min-w-0 flex-col gap-2">
           <Link
             href="/"
             aria-label="PoupaMais, voltar ao topo da página inicial"
-            className="inline-flex min-h-11 items-center"
+            className="inline-flex min-h-11 items-center self-start"
           >
-            <Logo className="h-12" />
+            <Logo moldura className="h-12" />
           </Link>
           <p className="text-legenda text-muted-foreground">
             Finanças pessoais e familiares, mês a mês. Letramento financeiro para o dia a dia.
+            <span className="hidden md:inline"> © 2026 PoupaMais</span>
           </p>
         </div>
-        <nav aria-label="Links do rodapé" className="flex flex-wrap gap-x-5 md:gap-x-6">
+        <nav aria-label="Links do rodapé" className="flex shrink-0 flex-wrap gap-x-5 md:gap-x-6">
           <Link href="/privacidade" className={link}>
             Política de privacidade
           </Link>
@@ -94,7 +98,7 @@ export function RodapeSite() {
             Criar conta
           </Link>
         </nav>
-        <p className="text-legenda text-muted-foreground md:w-full">© 2026 PoupaMais</p>
+        <p className="text-legenda text-muted-foreground md:hidden">© 2026 PoupaMais</p>
       </div>
     </footer>
   )

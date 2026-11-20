@@ -1,6 +1,6 @@
 'use client'
 
-import { Camera, LoaderCircle, Trash2 } from 'lucide-react'
+import { Camera, Info, LoaderCircle, Trash2 } from 'lucide-react'
 import { useId, type ChangeEvent } from 'react'
 import { AvatarUsuario } from '@/components/atoms/avatar'
 import { Button, buttonVariants } from '@/components/atoms/button'
@@ -14,6 +14,9 @@ import { cn } from '@/lib/cn'
 // - Enviando: véu + spinner sobre o avatar, botão "Enviando…" desabilitado e "Enviando a foto…" anunciado.
 // - Erro (tipo/tamanho, conferido pela tela antes de enviar, ou falha da API): borda do card em `erro` e a mensagem com `role="alert"`;
 //   a foto atual continua.
+// - Enviando ou com erro: abaixo do card, a nota "Enquanto a foto nova não for aceita, a atual continua no seu perfil."
+//   (prancheta perfil-foto-celular).
+// - Celular: a foto em cima e o nome com os botões embaixo; a partir de 768px, lado a lado (pranchetas perfil-*).
 
 export type FotoPerfilProps = {
   nome: string
@@ -53,13 +56,13 @@ export function FotoPerfil({
     if (arquivo) onEscolherArquivo(arquivo)
   }
 
-  return (
+  const foto = (
     <section
       aria-label={enviando ? 'Foto de perfil, enviando' : 'Foto de perfil'}
       data-erro={erro ? true : undefined}
       className="rounded-card border-border bg-card text-card-foreground shadow-card data-[erro=true]:border-destructive border p-5"
     >
-      <div className="flex flex-wrap items-center gap-5">
+      <div className="flex flex-col items-start gap-5 md:flex-row md:flex-wrap md:items-center">
         <span className="relative inline-grid shrink-0">
           {enviando ? (
             <span
@@ -137,5 +140,16 @@ export function FotoPerfil({
         </div>
       </div>
     </section>
+  )
+
+  if (!enviando && !erro) return foto
+  return (
+    <div className="flex flex-col gap-4">
+      {foto}
+      <p className="text-legenda text-muted-foreground flex gap-2">
+        <Info className="mt-px size-4 shrink-0" aria-hidden="true" />
+        Enquanto a foto nova não for aceita, a atual continua no seu perfil.
+      </p>
+    </div>
   )
 }

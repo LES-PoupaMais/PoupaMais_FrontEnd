@@ -94,7 +94,7 @@ export function PrivacidadeConta({
       </ListaDeAcoes>
       <Link
         href={hrefPrivacidade}
-        className="text-legenda text-primary hover:text-primaria-hover inline-flex min-h-11 items-center self-start font-bold underline-offset-4 hover:underline"
+        className="text-legenda text-primary hover:text-primaria-hover inline-flex min-h-11 items-center self-start font-bold underline"
       >
         Ler a Política de privacidade
       </Link>

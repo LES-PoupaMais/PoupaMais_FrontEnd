@@ -194,7 +194,7 @@ export function PoliticaPrivacidade({ hrefInicio, hrefLogin }: PoliticaPrivacida
         ))}
         <p className="text-corpo text-muted-foreground">
           Já tem conta?{' '}
-          <Link href={hrefLogin} className="text-corpo-forte text-primary">
+          <Link href={hrefLogin} className="text-corpo-forte text-primary hover:text-primaria-hover underline">
             Entre
           </Link>{' '}
           e abra o Perfil.

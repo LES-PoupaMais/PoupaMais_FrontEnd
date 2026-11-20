@@ -1,7 +1,8 @@
 import { formatarMoeda } from '@/lib/format'
 
 // "Como funciona" (landing-computador; não existe na prancheta do celular, por isso aparece a partir de 1024px):
-// três passos e uma prévia das despesas por categoria com dados de exemplo (barras horizontais em despesa-grafico).
+// três passos e uma prévia das despesas por categoria com dados de exemplo (barras horizontais em despesa-grafico, com o
+// valor ao fim de cada barra, como o CategoryBarChart do DS).
 const PASSOS = [
   { titulo: 'Crie sua conta', texto: 'Só nome, e-mail e senha.' },
   { titulo: 'Registre ou importe', texto: 'Cada lançamento tem data, valor e uma ou mais categorias.' },
@@ -57,14 +58,15 @@ export function LandingPassos() {
             {CATEGORIAS.map(({ nome, valor }) => (
               <li key={nome} className="flex flex-col gap-1.5">
                 <span className="text-corpo-forte">{nome}</span>
-                <span className="flex items-center gap-3">
-                  <span className="bg-secondary rounded-pilula h-3 flex-1 overflow-hidden">
-                    <span
-                      className="bg-despesa-grafico rounded-pilula block h-full"
-                      style={{ width: `${(valor / maior) * 100}%` }}
-                    />
+                {/* Como o CategoryBarChart do DS: sem trilho, a barra cresce até o valor, que fica logo depois dela */}
+                <span className="flex items-center gap-2">
+                  <span
+                    className="bg-despesa-grafico block h-3.5 min-w-1 shrink-0 rounded-r-[4px]"
+                    style={{ width: `calc((100% - 104px) * ${valor / maior})` }}
+                  />
+                  <span className="text-[13px] leading-[18px] font-bold whitespace-nowrap tabular-nums">
+                    {formatarMoeda(valor)}
                   </span>
-                  <span className="text-legenda font-bold tabular-nums">{formatarMoeda(valor)}</span>
                 </span>
               </li>
             ))}

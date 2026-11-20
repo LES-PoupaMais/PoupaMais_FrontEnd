@@ -92,4 +92,10 @@ describe('SegmentedControl', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Despesa' }))
     expect(aoMudar).not.toHaveBeenCalled()
   })
+
+  it('compacto: as opções do bloco podem encolher para caber no card', () => {
+    render(<SegmentedControl label="Tema" bloco compacto options={TIPOS} value="RECEITA" onChange={vi.fn()} />)
+
+    expect(screen.getByRole('radio', { name: 'Receita' })).toHaveClass('min-w-0', 'basis-0')
+  })
 })

@@ -18,13 +18,43 @@ describe('AuthTemplate', () => {
     expect(screen.getByText('Não tem conta?')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'PoupaMais, ir para a página inicial' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Política de privacidade' })).toHaveAttribute('href', '/privacidade')
+    expect(screen.getByRole('link', { name: 'Política de privacidade' })).toHaveClass('underline')
   })
 
-  it('sem subtítulo nem rodapé, mostra só o essencial', () => {
-    render(<AuthTemplate titulo="Criar conta">formulário</AuthTemplate>)
+  it('cadastro do computador: topo com a ação e o subtítulo próprio, só com o texto lateral', () => {
+    const { rerender } = render(
+      <AuthTemplate titulo="Esqueci minha senha" acaoComputador={<a href="/login">Já tenho conta</a>}>
+        formulário
+      </AuthTemplate>,
+    )
 
-    expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeInTheDocument()
-    expect(screen.queryByText('Não tem conta?')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Já tenho conta' })).not.toBeInTheDocument()
+
+    rerender(
+      <AuthTemplate
+        titulo="Criar conta"
+        subtitulo="Comece a organizar as suas finanças pelo mês atual."
+        subtituloComLateral="Só nome, e-mail e senha."
+        lateral={<p>Comece a organizar o seu dinheiro</p>}
+        acaoComputador={<a href="/login">Já tenho conta</a>}
+      >
+        formulário
+      </AuthTemplate>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Já tenho conta' })).toBeInTheDocument()
+    expect(screen.getByText('Comece a organizar as suas finanças pelo mês atual.')).toBeInTheDocument()
+    expect(screen.getByText('Só nome, e-mail e senha.')).toBeInTheDocument()
+  })
+
+  it('subtítulo do computador só existe com o texto lateral', () => {
+    render(
+      <AuthTemplate titulo="Criar conta" subtitulo="Comece a organizar." subtituloComLateral="Só nome, e-mail e senha.">
+        formulário
+      </AuthTemplate>,
+    )
+
+    expect(screen.queryByText('Só nome, e-mail e senha.')).not.toBeInTheDocument()
   })
 
   it('props opcionais: aviso acima do título, ícone decorativo e texto lateral do computador', () => {

@@ -34,7 +34,7 @@ export function EsqueciSenhaView() {
       rodape={
         <>
           Lembrou a senha?{' '}
-          <Link href={hrefLogin} className="text-corpo-forte text-primary">
+          <Link href={hrefLogin} className="text-corpo-forte text-primary hover:text-primaria-hover underline">
             Entrar
           </Link>
         </>

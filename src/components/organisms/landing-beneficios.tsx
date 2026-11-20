@@ -1,10 +1,10 @@
-import { Download, FileUp, LayoutDashboard, SunMoon, Tags, type LucideIcon } from 'lucide-react'
+import { ChartColumn, Download, FileUp, SunMoon, Tags, type LucideIcon } from 'lucide-react'
 import { FunctionIcon } from '@/components/atoms/function-icon'
 
 // "O que o PoupaMais faz" (landing): lista num card no celular; grade de cards (3 + 2) no computador. Estático.
 const ITENS: { Icone: LucideIcon; titulo: string; texto: string }[] = [
   {
-    Icone: LayoutDashboard,
+    Icone: ChartColumn,
     titulo: 'Dashboard do mês',
     texto:
       'Saldo, receitas, despesas e taxa de gasto de cada mês, com a evolução dos últimos 4 meses e as despesas por categoria.',

@@ -42,3 +42,19 @@ test('as telas públicas seguem o tema do sistema', async ({ page }) => {
   await page.goto('/login')
   await expect(page.locator('html')).not.toHaveClass(/\bdark\b/)
 })
+
+// Revisão visual de 20/11: o topo da Privacidade no escuro passava 6px da tela a 390px
+for (const largura of [360, 390]) {
+  for (const tema of ['light', 'dark'] as const) {
+    test(`landing e privacidade sem rolagem lateral a ${largura}px no tema ${tema}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: tema })
+      await page.setViewportSize({ width: largura, height: 800 })
+      for (const rota of ['/', '/privacidade']) {
+        await page.goto(rota)
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+        const larguraDaPagina = await page.evaluate(() => document.documentElement.scrollWidth)
+        expect(larguraDaPagina, rota).toBeLessThanOrEqual(largura)
+      }
+    })
+  }
+}

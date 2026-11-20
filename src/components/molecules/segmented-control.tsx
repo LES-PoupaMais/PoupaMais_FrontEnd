@@ -29,6 +29,9 @@ export type SegmentedControlProps<T extends string> = {
   'aria-label'?: string
   /** Largura total, opções divididas por igual */
   bloco?: boolean
+  /** Com `bloco`: opções que encolhem (base 0, 8px de respiro, 6px entre ícone e texto), para três opções com ícone
+   * caberem no card do celular (tema do Perfil, prancheta perfil-celular) */
+  compacto?: boolean
   error?: string | null
   required?: boolean
   disabled?: boolean
@@ -54,6 +57,7 @@ export function SegmentedControl<T extends string>({
   label,
   'aria-label': ariaLabel,
   bloco = false,
+  compacto = false,
   error,
   required = false,
   disabled = false,
@@ -105,6 +109,7 @@ export function SegmentedControl<T extends string>({
                 'text-muted-foreground hover:text-foreground rounded-pilula inline-flex min-h-10 items-center justify-center gap-2 border-[1.5px] border-transparent px-4 text-[15px] leading-[22px] font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-45 data-[state=checked]:font-bold',
                 COR_ESCOLHIDA[opcao.funcao ?? 'neutra'],
                 bloco && 'flex-1',
+                bloco && compacto && 'min-w-0 basis-0 gap-1.5 px-2',
               )}
             >
               {Seta ? <Seta className="size-5" aria-hidden="true" /> : opcao.icon}
