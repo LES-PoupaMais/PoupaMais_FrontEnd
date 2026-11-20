@@ -17,8 +17,11 @@ describe('HighlightCard', () => {
     expect(screen.getByRole('article')).toHaveAttribute('data-sinal', 'negativo')
     expect(screen.getByRole('article')).toHaveTextContent('negativo, − R$ 750,40')
 
+    // Zero é neutro (prancheta dashboard-vazio): sem "positivo", sem sinal
     rerender(<HighlightCard saldo={0} mes={1} ano={2026} />)
-    expect(screen.getByRole('article')).toHaveTextContent('positivo, R$ 0,00')
+    expect(screen.getByRole('article')).toHaveAttribute('data-sinal', 'zero')
+    expect(screen.getByRole('article')).toHaveTextContent(/^Saldo do mês.*R\$ 0,00$/)
+    expect(screen.getByRole('article')).not.toHaveTextContent('positivo')
   })
 
   it('carregando mostra o esqueleto escondido do leitor de tela', () => {

@@ -153,4 +153,35 @@ describe('MultiSelect', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Remover Casa' })).toBeDisabled()
   })
+
+  it('folha (celular): título, contador, busca, lápis e "Inativas"; marcar atualiza o contador', async () => {
+    const aoEditar = vi.fn()
+    render(<Controlado apresentacao="folha" inicial={[3]} onEdit={aoEditar} onCreate={vi.fn()} />)
+
+    await abrir()
+    const folha = screen.getByRole('dialog', { name: 'Categorias' })
+    expect(folha).toHaveAttribute('data-slot', 'multi-select-folha')
+    expect(folha).toHaveAccessibleDescription('1 escolhida · toque para marcar ou desmarcar')
+    expect(within(folha).getByRole('searchbox', { name: 'Buscar categoria' })).toBeInTheDocument()
+    expect(within(folha).getByRole('button', { name: 'Criar nova categoria' })).toBeInTheDocument()
+    expect(within(folha).getByText('Inativas')).toBeInTheDocument()
+
+    await userEvent.click(within(folha).getByRole('checkbox', { name: 'Casa' }))
+    expect(folha).toHaveAccessibleDescription('2 escolhidas · toque para marcar ou desmarcar')
+
+    await userEvent.click(within(folha).getByRole('button', { name: 'Editar categoria Mercado' }))
+    expect(aoEditar).toHaveBeenCalledWith(3)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('folha: o × e o botão do campo fecham', async () => {
+    render(<Controlado apresentacao="folha" />)
+
+    await userEvent.click(screen.getByRole('group', { name: 'Categorias' }))
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Categorias' })).getByRole('button', { name: 'Fechar' }),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Categorias' })).toHaveTextContent('Escolha uma ou mais')
+  })
 })

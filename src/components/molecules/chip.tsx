@@ -57,12 +57,21 @@ export function Chip({
           onClick={onRemove}
           disabled={disabled}
           aria-label={nomeRemover}
+          // Alvo de 44px (o botão inteiro, com margem negativa para não aumentar o chip); o círculo visível segue com 28px
           className={cn(
-            'text-muted-foreground hover:bg-border hover:text-foreground rounded-pilula relative inline-grid size-7 shrink-0 place-items-center after:absolute after:-inset-2 disabled:cursor-not-allowed',
-            ativo && 'text-primary hover:bg-card hover:text-primary',
+            'group/remover text-muted-foreground hover:text-foreground relative -my-2 -mr-2 -ml-2 inline-grid size-11 shrink-0 place-items-center disabled:cursor-not-allowed',
+            ativo && 'text-primary hover:text-primary',
           )}
         >
-          <X className="size-4" aria-hidden="true" />
+          <span
+            aria-hidden="true"
+            className={cn(
+              'rounded-pilula group-hover/remover:bg-border inline-grid size-7 place-items-center',
+              ativo && 'group-hover/remover:bg-card',
+            )}
+          >
+            <X className="size-4" />
+          </span>
         </button>
       )}
     </span>

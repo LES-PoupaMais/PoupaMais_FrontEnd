@@ -74,7 +74,13 @@ export function CreateSheet({ aberto, onAbertoChange, itens }: CreateSheetProps)
         showCloseButton={false}
         overlayClassName="bg-sobreposicao supports-backdrop-filter:backdrop-blur-none"
         data-travada={travada}
-        className="rounded-t-grande bg-card text-foreground shadow-flutuante flex max-h-[85dvh] flex-col gap-2 border-0 px-4 pt-2 pb-[calc(24px+env(safe-area-inset-bottom))]"
+        // Fica acima da barra inferior, que continua visível (o + vira ×); o véu cobre só o conteúdo
+        className="rounded-t-grande bg-card text-foreground shadow-flutuante flex max-h-[calc(85dvh-var(--barra-inferior))] flex-col gap-2 border-0 px-4 pt-2 pb-4 data-[side=bottom]:bottom-[calc(var(--barra-inferior)+env(safe-area-inset-bottom))]"
+        // Tocar no × da barra inferior não conta como "fora": quem fecha é o próprio botão (senão fecharia e abriria de novo)
+        onPointerDownOutside={(evento) => {
+          if (evento.target instanceof Element && evento.target.closest('[data-slot="bottom-nav"]'))
+            evento.preventDefault()
+        }}
         // O foco começa no primeiro item (DS), não no "Fechar"
         onOpenAutoFocus={(evento) => {
           evento.preventDefault()
@@ -88,7 +94,7 @@ export function CreateSheet({ aberto, onAbertoChange, itens }: CreateSheetProps)
       >
         <span aria-hidden="true" className="rounded-pilula bg-input mb-1 h-1 w-10 self-center" />
         <div className="flex items-center justify-between gap-3 pl-2">
-          <SheetTitle className="text-titulo-2">Criar</SheetTitle>
+          <SheetTitle className="text-titulo-2 font-bold">Criar</SheetTitle>
           <SheetClose
             aria-label="Fechar"
             className="rounded-pilula text-foreground hover:bg-secondary inline-grid size-11 place-items-center"

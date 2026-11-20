@@ -66,7 +66,7 @@ export type LancamentoFormProps = {
   avisoCategorias?: ReactNode
   /** Salvando: campos desabilitados (RNF006) */
   enviando?: boolean
-  /** Celular: calendário na folha de baixo; computador: popover */
+  /** Celular: calendário e lista de categorias na folha de baixo; computador: popover */
   apresentacaoData?: 'popover' | 'folha'
   /** Hoje em ISO (testes) */
   hoje?: string
@@ -75,6 +75,8 @@ export type LancamentoFormProps = {
   onSubmit: (dados: LancamentoFormDados) => void
   /** "+ Criar nova categoria" no campo: a tela cria e chama `selecionar(id)` para a nova já entrar escolhida */
   onCriarCategoria?: (texto: string, selecionar: (id: number) => void) => void
+  /** Lápis de cada categoria na lista: a tela abre o diálogo de editar */
+  onEditarCategoria?: (idCategoria: number) => void
   /** Avisa quando o formulário passa a ter (ou deixa de ter) alterações não salvas */
   onSujoChange?: (sujo: boolean) => void
   /** Conteúdo depois dos campos (ex.: "Mover para a lixeira" no celular) */
@@ -100,6 +102,7 @@ export function LancamentoForm({
   errosDoServidor,
   onSubmit,
   onCriarCategoria,
+  onEditarCategoria,
   onSujoChange,
   rodape,
   className,
@@ -264,8 +267,10 @@ export function LancamentoForm({
               value={field.value}
               onChange={field.onChange}
               carregando={carregandoCategorias}
+              apresentacao={apresentacaoData}
               error={fieldState.error?.message}
               onCreate={onCriarCategoria ? (texto) => onCriarCategoria(texto, selecionarCategoria) : undefined}
+              onEdit={onEditarCategoria}
             />
           )}
         />
@@ -280,7 +285,8 @@ export function LancamentoForm({
         control={control}
         name="contaNoSaldo"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
+          // Divisória acima (prancheta novo-*); a ajuda fica recuada sob o rótulo (switch de 52px + 12px)
+          <div className="border-border flex flex-col gap-1 border-t pt-4">
             <div className="flex items-center gap-3">
               <Switch
                 id={`${id}-saldo`}
@@ -307,7 +313,7 @@ export function LancamentoForm({
                 </TooltipContent>
               </Tooltip>
             </div>
-            <p id={`${id}-saldo-ajuda`} className="text-legenda text-muted-foreground">
+            <p id={`${id}-saldo-ajuda`} className="text-legenda text-muted-foreground pl-16">
               {contaNoSaldo ? 'Entra no saldo e no dashboard.' : 'Fica na lista, mas fora do saldo e do dashboard.'}
             </p>
           </div>

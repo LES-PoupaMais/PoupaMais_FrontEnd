@@ -64,6 +64,7 @@ function MaioresDespesas({
       titulo="Maiores despesas"
       lado={carregando || itens.length === 0 ? undefined : verTodos}
       cartao="a-partir-do-tablet"
+      tituloOculto={carregando}
       className={className}
       {...props}
     >
@@ -102,7 +103,8 @@ function MaioresDespesas({
                   >
                     {item.descricao}
                   </Link>
-                  <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-1 tabular-nums">
+                  {/* A partir do tablet, a meta fica numa linha só ("10 nov · Contas de casa"): nunca quebra no "·" */}
+                  <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-1 tabular-nums md:block md:truncate">
                     <time dateTime={item.data} className="mr-1 md:mr-0">
                       {formatarDataCurta(item.data)}
                     </time>
@@ -111,7 +113,7 @@ function MaioresDespesas({
                         key={categoria}
                         className={cn(
                           'rounded-pilula bg-secondary px-2 text-[12px] leading-5 font-semibold',
-                          'md:bg-transparent md:p-0 md:text-[13px] md:leading-[18px] md:font-medium',
+                          'md:ml-1 md:bg-transparent md:p-0 md:text-[13px] md:leading-[18px] md:font-medium',
                         )}
                       >
                         <span className="hidden md:inline">· </span>

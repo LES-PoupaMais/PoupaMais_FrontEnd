@@ -2,6 +2,7 @@ import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AvatarUsuario } from '@/components/atoms/avatar'
+import { ID_ACAO_DA_TOPBAR } from '@/constants/navegacao'
 
 // Topo do celular, abaixo de 768px (DS: TopBar): título, MonthNavigator compacto (só Início e Lançamentos) e avatar.
 // Telas internas (Lixeira, Novo, Editar, Visualizar, Importar) usam o "‹" com o destino, sem mês e sem avatar.
@@ -36,6 +37,8 @@ export function TopBar({ titulo, mes, voltar, usuario, hrefPerfil }: TopBarProps
         </Link>
       )}
       <h1 className="text-titulo-3 min-w-0 flex-1 truncate">{titulo}</h1>
+      {/* Telas internas: a tela pode pôr uma ação aqui (portal), ex.: "Limpar" do Novo lançamento */}
+      {voltar && <div id={ID_ACAO_DA_TOPBAR} className="flex shrink-0 items-center empty:hidden" />}
       {!voltar && mes}
       {!voltar && usuario && (
         <Link

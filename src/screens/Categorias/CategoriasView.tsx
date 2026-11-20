@@ -1,15 +1,16 @@
 'use client'
 
-import { FileUp, Plus, Tag } from 'lucide-react'
+import { Plus, Tags, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/atoms/button'
 import { EmptyState } from '@/components/molecules/empty-state'
 import { ConfirmDialog } from '@/components/molecules/confirm-dialog'
 import { ErrorState } from '@/components/molecules/error-state'
-import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { OfflineMotivo } from '@/components/molecules/offline-banner'
 import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
 import { CategoriaLista } from '@/components/organisms/categoria-lista'
 import { ROTAS } from '@/constants/rotas'
+import { cn } from '@/lib/cn'
 import { useCategoriasContext } from './CategoriasContext'
 import { CategoriasSkeleton } from './CategoriasSkeleton'
 
@@ -39,7 +40,7 @@ export function CategoriasView() {
   else if (ctx.categorias.length === 0)
     conteudo = (
       <EmptyState
-        icone={Tag}
+        icone={Tags}
         funcao="primaria"
         superficie="grande"
         titulo="Você ainda não tem categorias"
@@ -53,7 +54,7 @@ export function CategoriasView() {
             </Button>
             <Button asChild variant="texto">
               <Link href={ROTAS.importar}>
-                <FileUp aria-hidden="true" />
+                <Upload aria-hidden="true" />
                 Importar CSV com categorias
               </Link>
             </Button>
@@ -74,15 +75,16 @@ export function CategoriasView() {
     )
 
   const temLista = Boolean(ctx.categorias && ctx.categorias.length > 0)
+  const vazio = ctx.categorias?.length === 0
   const categoriaAberta = ctx.dialogo?.modo === 'editar' ? ctx.dialogo.categoria : null
 
   return (
     <div className="flex flex-col gap-5 md:gap-6">
-      {!ctx.online && <OfflineBanner variante="canto" />}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-titulo-1 hidden md:block">Categorias</h1>
-          <p className="text-corpo text-muted-foreground">
+          {/* No celular, sem categorias, o vazio já explica (prancheta categorias-vazio-celular) */}
+          <p className={cn('text-corpo text-muted-foreground', vazio && 'max-md:hidden')}>
             <span className="md:hidden">Organize seus lançamentos. Toque no lápis para renomear ou inativar.</span>
             <span className="hidden md:inline">Organize seus lançamentos. Crie, renomeie, inative ou reative.</span>
           </p>

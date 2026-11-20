@@ -1,11 +1,11 @@
 'use client'
 
-import { ChevronDown, ListX, Plus, SearchX } from 'lucide-react'
+import { Calendar, ChevronDown, Plus, SearchX } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/atoms/button'
 import { EmptyState } from '@/components/molecules/empty-state'
 import { ErrorState } from '@/components/molecules/error-state'
-import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { OfflineMotivo } from '@/components/molecules/offline-banner'
 import { ExportDialog } from '@/components/organisms/export-dialog'
 import { FilterBar, temFiltro } from '@/components/organisms/filter-bar'
 import {
@@ -33,7 +33,6 @@ export function LancamentosView() {
 
   return (
     <div className="flex flex-col gap-3 md:gap-5">
-      {!online && <OfflineBanner variante="canto" />}
       <header className="hidden flex-col gap-0.5 md:flex">
         <h1 className="text-titulo-1">Lançamentos</h1>
         <p className="text-corpo text-muted-foreground">Receitas e despesas de {mesExtenso}</p>
@@ -51,7 +50,8 @@ export function LancamentosView() {
         onExportar={() => ctx.setExportarAberto(true)}
         hrefImportar={ROTAS.importar}
         onBaixarModelo={ctx.baixarModelo}
-        className="-mt-2 md:mt-0"
+        // celular: os filtros encostam no topo como na prancheta lancamentos-celular (o main tem 24px)
+        className="-mt-6 md:mt-0"
       />
 
       {!online && <OfflineMotivo id={ID_MOTIVO_OFFLINE} />}
@@ -108,7 +108,7 @@ export function LancamentosView() {
         />
       ) : (
         <EmptyState
-          icone={ListX}
+          icone={Calendar}
           titulo={`Não há lançamentos em ${mesAno}`}
           texto="Troque o mês no topo ou crie um lançamento com uma data deste mês."
           acoes={

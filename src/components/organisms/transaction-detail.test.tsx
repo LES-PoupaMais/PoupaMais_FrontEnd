@@ -83,6 +83,17 @@ describe('TransactionDetail', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Restaurar' }))
     expect(onRestaurar).toHaveBeenCalled()
     expect(screen.getByRole('link', { name: 'Ver a lixeira' })).toBeInTheDocument()
+    // Na lixeira, Restaurar vem antes do histórico (visível sem rolar no computador)
+    const restaurar = screen.getByRole('button', { name: 'Restaurar' })
+    const historico = screen.getByRole('heading', { name: /Histórico/ })
+    expect(restaurar.compareDocumentPosition(historico) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('fora da lixeira, o histórico vem antes das ações', () => {
+    render(<TransactionDetail lancamento={mercado} hrefEditar="/x" />)
+    const editar = screen.getByRole('link', { name: 'Editar' })
+    const historico = screen.getByRole('heading', { name: /Histórico/ })
+    expect(historico.compareDocumentPosition(editar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('eventosDaAuditoria: sem "Alterado" quando nunca mudou', () => {

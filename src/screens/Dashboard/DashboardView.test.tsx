@@ -113,7 +113,8 @@ describe('Dashboard', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
     renderizar()
 
-    expect(await screen.findByText(/Sem internet agora/)).toBeInTheDocument()
+    // A faixa "Sem internet agora…" fica no topo da casca (AppShell); a tela só bloqueia o que grava
+    expect(screen.queryByText(/Sem internet agora/)).not.toBeInTheDocument()
     expect(await screen.findByRole('article', { name: /Saldo do mês/ })).toBeInTheDocument()
   })
 

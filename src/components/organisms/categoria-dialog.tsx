@@ -70,7 +70,7 @@ export function CategoriaDialog({
         onAbertoChange(abrir)
       }}
     >
-      <DialogContent showCloseButton={false} data-slot="categoria-dialog" className="max-w-100 sm:max-w-100">
+      <DialogContent showCloseButton={false} data-slot="categoria-dialog" className="sm:max-w-100">
         <Formulario
           {...props}
           salvando={salvando}

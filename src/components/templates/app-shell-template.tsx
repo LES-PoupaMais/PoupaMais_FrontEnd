@@ -8,6 +8,7 @@ import type { KeyboardEvent, ReactNode } from 'react'
 // - 768–1023px (tablet): sidebar no modo trilho (72px). `aberta` abre a sidebar POR CIMA do conteúdo, com véu.
 // - ≥ 1024px (computador): sidebar expandida (256px) empurrando o conteúdo; `recolhida` vira trilho e o conteúdo ganha largura.
 // O organismo da sidebar usa a variante `trilho:` (globals.css) para esconder os nomes no modo trilho.
+// `aviso` (OfflineBanner "Sem internet agora…"): faixa no topo da tela, em toda a largura do conteúdo, acima da TopBar.
 // Sem `sidebar` nem `bottomNav`, vira a casca simples (futura visualização por link): só o conteúdo centralizado.
 export type AppShellTemplateProps = {
   children: ReactNode
@@ -17,6 +18,8 @@ export type AppShellTemplateProps = {
   bottomNav?: ReactNode
   /** Organismo TopBar (< 768px) */
   header?: ReactNode
+  /** Faixa no topo da tela, acima da TopBar (ex.: OfflineBanner) */
+  aviso?: ReactNode
   /** Preferência do computador (cookie `sidebar`): sidebar recolhida no trilho */
   recolhida?: boolean
   /** Tablet: sidebar aberta por cima do conteúdo */
@@ -32,6 +35,7 @@ export function AppShellTemplate({
   sidebar,
   bottomNav,
   header,
+  aviso,
   recolhida = false,
   aberta = false,
   onFecharSidebar,
@@ -83,9 +87,14 @@ export function AppShellTemplate({
         data-com-sidebar={comSidebar}
         className="md:data-[com-sidebar=true]:pl-trilho lg:data-[com-sidebar=true]:pl-sidebar lg:group-data-[sidebar-recolhida=true]/app-shell:data-[com-sidebar=true]:pl-trilho flex min-h-screen flex-col transition-[padding] duration-200"
       >
-        {header && (
-          <div data-slot="app-shell-header" className="sticky top-0 z-20 md:hidden">
-            {header}
+        {(aviso || header) && (
+          <div data-slot="app-shell-topo" className="sticky top-0 z-20 md:static">
+            {aviso && <div data-slot="app-shell-aviso">{aviso}</div>}
+            {header && (
+              <div data-slot="app-shell-header" className="md:hidden">
+                {header}
+              </div>
+            )}
           </div>
         )}
 
@@ -99,7 +108,10 @@ export function AppShellTemplate({
       </div>
 
       {bottomNav && (
-        <div data-slot="app-shell-bottom-nav" className="fixed inset-x-0 bottom-0 z-30 md:hidden">
+        <div
+          data-slot="app-shell-bottom-nav"
+          className="fixed inset-x-0 bottom-0 z-30 has-[[data-criar-aberto=true]]:pointer-events-auto has-[[data-criar-aberto=true]]:z-60 md:hidden"
+        >
           {bottomNav}
         </div>
       )}

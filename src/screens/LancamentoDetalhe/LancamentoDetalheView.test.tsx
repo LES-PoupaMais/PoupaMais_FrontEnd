@@ -147,7 +147,8 @@ describe('Visualizar lançamento', () => {
       msw.get('*/api/lancamentos/:id', () => HttpResponse.json({ status: 500, mensagem: 'x' }, { status: 500 })),
     )
     renderizar()
-    expect(screen.getByText(/Sem internet agora/)).toBeInTheDocument()
+    // A faixa "Sem internet agora…" fica no topo da casca (AppShell); a tela só bloqueia o que grava
+    expect(screen.queryByText(/Sem internet agora/)).not.toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
 
     renderComProviders(<LancamentoDetalheSkeleton />)

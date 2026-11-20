@@ -47,12 +47,19 @@ describe('topo do celular e barra inferior', async () => {
       ['/lancamentos/7/editar', 'Editar lançamento'],
       ['/lancamentos/7', 'Lançamento'],
     ]) {
-      expect(topoDaRota(caminho)).toEqual({
+      expect(topoDaRota(caminho)).toMatchObject({
         titulo,
         mostrarMes: false,
         voltar: { href: '/lancamentos', destino: 'Lançamentos' },
       })
     }
+    // A visualização desenha o próprio topo no celular ("‹ Lançamentos" ou "‹ Lixeira", conforme o status)
+    expect(topoDaRota('/lancamentos/7').semTopBar).toBe(true)
+    expect(topoDaRota('/lancamentos/7/editar').semTopBar).toBeUndefined()
+  })
+
+  it('no Perfil, a TopBar fica sem o avatar', () => {
+    expect(topoDaRota('/perfil')).toEqual({ titulo: 'Perfil', mostrarMes: false, semAvatar: true })
   })
 
   it('rota desconhecida mostra só o nome do app', () => {

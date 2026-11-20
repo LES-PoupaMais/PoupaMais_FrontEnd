@@ -64,17 +64,19 @@ export function UndoToast({
         if (!evento.currentTarget.contains(evento.relatedTarget as Node | null)) setComFoco(false)
       }}
       className={cn(
-        'rounded-card border-border bg-card text-foreground shadow-flutuante relative flex w-full max-w-[420px] items-center gap-3 overflow-hidden border py-2 pr-2 pl-4',
+        'rounded-card border-border bg-card text-foreground shadow-flutuante relative flex min-h-14 w-full max-w-[420px] items-center gap-2 overflow-hidden border py-2 pr-1 pl-4',
         className,
       )}
     >
-      <Icone className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-      <p className="text-corpo-forte min-w-0 flex-1">{mensagem}</p>
-      <span aria-hidden="true" className="text-legenda text-muted-foreground tabular-nums">
+      <Icone className="text-primary size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+      {/* DS: texto de 15px/600 (cabe em 1 linha a 390px junto do contador e do Desfazer) */}
+      <p className="min-w-0 flex-1 py-2 text-[15px] leading-5 font-semibold">{mensagem}</p>
+      <span aria-hidden="true" className="text-legenda text-muted-foreground min-w-5 text-right font-bold tabular-nums">
         {Math.ceil(restante / 1000)} s
       </span>
       <Button
         variant="texto"
+        className="min-h-11 px-1.5"
         onClick={() => {
           terminou.current = true
           onDesfazer()
@@ -83,7 +85,7 @@ export function UndoToast({
         <Undo2 aria-hidden="true" />
         Desfazer
       </Button>
-      <span aria-hidden="true" className="bg-secondary absolute inset-x-0 bottom-0 h-1">
+      <span aria-hidden="true" className="bg-secondary absolute inset-x-0 bottom-0 h-[3px]">
         <span
           data-slot="undo-toast-tempo"
           className="bg-primary block h-full transition-[width] duration-100 ease-linear"

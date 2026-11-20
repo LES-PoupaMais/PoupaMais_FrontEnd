@@ -105,7 +105,7 @@ export function ExportDialog({
             aria-labelledby={idResumo}
             className="border-border max-md:rounded-card flex flex-col gap-3 max-md:border max-md:p-4 md:border-t md:pt-4"
           >
-            <h2 id={idResumo} className="text-titulo-3">
+            <h2 id={idResumo} className="text-rotulo-secao text-muted-foreground uppercase">
               O que vai no arquivo
             </h2>
             <div className="flex items-center gap-3">

@@ -30,7 +30,7 @@ const navegadorVariants = cva('inline-flex items-center', {
 })
 
 const seta =
-  'rounded-pilula text-foreground hover:enabled:bg-secondary relative inline-grid size-11 shrink-0 place-items-center disabled:cursor-not-allowed disabled:opacity-45 group-data-[variante=compacto]/mes:w-8 group-data-[variante=compacto]/mes:after:absolute group-data-[variante=compacto]/mes:after:inset-y-0 group-data-[variante=compacto]/mes:after:-inset-x-1.5'
+  'rounded-pilula text-foreground hover:enabled:bg-secondary relative inline-grid size-11 shrink-0 place-items-center disabled:cursor-not-allowed disabled:opacity-45 group-data-[variante=compacto]/mes:-mx-1.5'
 
 const nomeDoMes =
   'rounded-pilula text-foreground text-titulo-3 inline-flex min-h-11 min-w-42 items-center justify-center px-3 tabular-nums group-data-[variante=compacto]/mes:min-w-0 group-data-[variante=compacto]/mes:px-2 group-data-[variante=compacto]/mes:text-[15px] group-data-[variante=compacto]/mes:leading-[22px]'

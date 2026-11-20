@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Calendar } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Calendar, Wallet } from 'lucide-react'
 import type * as React from 'react'
 import { Skeleton } from '@/components/atoms/skeleton'
 import { cn } from '@/lib/cn'
@@ -33,13 +33,15 @@ function HighlightCard({ saldo, mes, ano, mensagem, carregando = false, classNam
   }
 
   const negativo = saldo < 0
-  const Icone = negativo ? ArrowDownRight : ArrowUpRight
+  // Saldo zero é neutro (prancheta dashboard-vazio): carteira em vez da seta, sem sinal
+  const zero = saldo === 0
+  const Icone = negativo ? ArrowDownRight : zero ? Wallet : ArrowUpRight
   const sinal = saldo > 0 ? '+ ' : ''
 
   return (
     <article
       data-slot="highlight-card"
-      data-sinal={negativo ? 'negativo' : 'positivo'}
+      data-sinal={negativo ? 'negativo' : zero ? 'zero' : 'positivo'}
       aria-label={`Saldo do mês de ${nomeDoMes(mes).toLowerCase()} de ${ano}`}
       className={cn(CARTAO, 'justify-between', className)}
       {...props}
@@ -69,7 +71,7 @@ function HighlightCard({ saldo, mes, ano, mensagem, carregando = false, classNam
           <Icone className="size-5" strokeWidth={2} />
         </span>
         <span>
-          <span className="sr-only">{negativo ? 'negativo, ' : 'positivo, '}</span>
+          {!zero && <span className="sr-only">{negativo ? 'negativo, ' : 'positivo, '}</span>}
           {sinal}
           {formatarSaldo(saldo)}
         </span>

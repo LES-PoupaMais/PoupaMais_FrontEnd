@@ -6,7 +6,6 @@ import { Button } from '@/components/atoms/button'
 import { EmptyState } from '@/components/molecules/empty-state'
 import { ErrorState } from '@/components/molecules/error-state'
 import { MonthNavigator } from '@/components/molecules/month-navigator'
-import { OfflineBanner } from '@/components/molecules/offline-banner'
 import { SpendRate } from '@/components/molecules/spend-rate'
 import { StatCard, StatCardGrade } from '@/components/molecules/stat-card'
 import { BalanceChart } from '@/components/organisms/balance-chart'
@@ -25,19 +24,8 @@ import { esqueletosDoDashboard } from './DashboardSkeleton'
 // medidas reais), vazio (mês sem lançamentos: saldo e tiles zerados no tablet/computador + EmptyState com a próxima ação),
 // erro (ErrorState com "Tentar de novo"), sem conexão (OfflineBanner; os dados já carregados continuam na tela).
 export function DashboardView() {
-  const {
-    periodo,
-    irParaMes,
-    dashboard,
-    carregando,
-    erro,
-    tentarDeNovo,
-    tentando,
-    vazio,
-    online,
-    primeiroNome,
-    baixarModelo,
-  } = useDashboardContext()
+  const { periodo, irParaMes, dashboard, carregando, erro, tentarDeNovo, tentando, vazio, primeiroNome, baixarModelo } =
+    useDashboardContext()
   const ola = primeiroNome ? `Olá, ${primeiroNome}` : 'Olá'
   // A frase do mês vazio usa o mês do próprio dado (nunca o da URL, que pode estar à frente durante a troca)
   const subtitulo =
@@ -62,7 +50,7 @@ export function DashboardView() {
       return (
         <DashboardTemplate
           cabecalho={cabecalho}
-          aviso={!online && <OfflineBanner variante="canto" />}
+
           estado={
             <ErrorState
               titulo="Não foi possível carregar o dashboard"
@@ -77,7 +65,7 @@ export function DashboardView() {
       return (
         <DashboardTemplate
           cabecalho={cabecalho}
-          aviso={!online && <OfflineBanner variante="canto" />}
+
           {...esqueletosDoDashboard}
         />
       )
@@ -85,7 +73,7 @@ export function DashboardView() {
       return (
         <DashboardTemplate
           cabecalho={cabecalho}
-          aviso={!online && <OfflineBanner variante="canto" />}
+
           estado={<MesVazio dashboard={dashboard} onBaixarModelo={baixarModelo} />}
         />
       )
@@ -93,7 +81,7 @@ export function DashboardView() {
     return (
       <DashboardTemplate
         cabecalho={cabecalho}
-        aviso={!online && <OfflineBanner variante="canto" />}
+
         saldo={
           <HighlightCard
             saldo={dashboard.saldo}
@@ -130,7 +118,7 @@ export function DashboardView() {
   return (
     <div className="flex flex-col gap-4 md:gap-0" aria-busy={carregando || undefined}>
       {/* celular: título e mês ficam na TopBar; aqui só a saudação */}
-      <div className="flex flex-col gap-0.5 md:hidden">
+      <div className="-mt-2 flex flex-col gap-0.5 md:hidden">
         <p className="text-titulo-2">{ola}</p>
         {vazio && <p className="text-legenda text-muted-foreground">{subtitulo}</p>}
       </div>

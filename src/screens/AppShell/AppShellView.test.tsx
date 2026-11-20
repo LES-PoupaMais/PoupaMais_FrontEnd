@@ -1,4 +1,5 @@
 import { act, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '@/components/atoms/sonner'
@@ -202,6 +203,54 @@ describe('AppShell (Context + View)', () => {
     expect((await screen.findAllByText('Categoria criada'))[0]).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).toBeNull()
     expect(enviados).toEqual([{ descricao: 'Mercado' }, { descricao: 'Erro' }, { descricao: 'Pet' }])
+  })
+
+  it('o × da barra (o + girado) fecha a folha Criar, que fica acima da barra', async () => {
+    const { container, usuario } = renderizar()
+
+    await usuario.click(barra(container).getByRole('button', { name: 'Criar' }))
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="bottom-nav"]')).toHaveAttribute('data-criar-aberto', 'true')
+
+    // Com a folha aberta, o Radix põe pointer-events: none no body; no navegador a barra volta a receber o toque
+    // (pointer-events-auto quando a folha está aberta), o que o jsdom não aplica (sem o CSS do Tailwind)
+    const semChecagem = userEvent.setup({ pointerEventsCheck: 0 })
+    await semChecagem.click(barra(container).getByRole('button', { name: 'Fechar Criar', hidden: true }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('sem internet, a faixa "Sem internet agora…" aparece no topo da casca, acima da TopBar', () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    const { container } = renderizar()
+
+    const faixa = container.querySelector('[data-slot="app-shell-aviso"]') as HTMLElement
+    expect(faixa).toHaveTextContent('Sem internet agora. Você pode continuar vendo, mas não dá para salvar.')
+    const topoDaTela = container.querySelector('[data-slot="app-shell-topo"]') as HTMLElement
+    expect(topoDaTela.firstElementChild).toBe(faixa)
+    vi.restoreAllMocks()
+  })
+
+  it('na visualização a tela desenha o próprio topo; no Perfil a TopBar fica sem o avatar', async () => {
+    navegacao.caminho = '/lancamentos/7'
+    const { container, unmount } = renderizar()
+    expect(container.querySelector('[data-slot="app-shell-header"]')).toBeNull()
+    unmount()
+
+    navegacao.caminho = '/perfil'
+    let contexto: ReturnType<typeof useAppShellContext> | undefined
+    function Espiao() {
+      contexto = useAppShellContext()
+      return null
+    }
+    const perfil = renderComProviders(
+      <AppShellProvider sidebarRecolhida={false}>
+        <Espiao />
+        <AppShellView>tela</AppShellView>
+      </AppShellProvider>,
+    )
+    expect(screen.getByRole('heading', { level: 1, name: 'Perfil' })).toBeInTheDocument()
+    await vi.waitFor(() => expect(contexto?.usuario?.nome).toBe('Usuário Demo'))
+    expect(topo(perfil.container).queryByRole('link', { name: 'Seu perfil' })).toBeNull()
   })
 
   it('Sair chama a logoutAction', async () => {

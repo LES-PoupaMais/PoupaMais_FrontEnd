@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDownRight, ArrowUpRight, FilePlus2, Pencil, RotateCcw, Trash2, TriangleAlert, X } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, FilePlus2, Pencil, RotateCcw, Trash2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useId } from 'react'
 import type * as React from 'react'
@@ -73,6 +73,66 @@ export function TransactionDetail({
   const desabilitado = Boolean(motivoDesabilitado)
   const funcao = naLixeira ? 'neutro' : tipo === 'RECEITA' ? 'receita' : 'despesa'
 
+  const historico = (
+    <section aria-labelledby={idHistorico} className="flex flex-col gap-3">
+      <h3 id={idHistorico} className="text-rotulo-secao text-muted-foreground uppercase">
+        Histórico<span className="sr-only">, do mais recente para o mais antigo</span>
+      </h3>
+      <Timeline itens={eventosDaAuditoria(lancamento)} aria-labelledby={idHistorico} />
+    </section>
+  )
+
+  const acoes = (
+    <div
+      className={cn(
+        'flex flex-col gap-2 [&>*]:w-full',
+        // Na lixeira, a partir de 768px: Restaurar e "Ver a lixeira" lado a lado
+        naLixeira && 'md:flex-row md:items-center md:[&>*]:w-auto',
+      )}
+    >
+      {naLixeira ? (
+        onRestaurar && (
+          <Button
+            loading={restaurando}
+            aria-disabled={desabilitado || undefined}
+            aria-describedby={motivoDesabilitado}
+            onClick={() => {
+              if (!desabilitado) onRestaurar()
+            }}
+          >
+            {!restaurando && <RotateCcw aria-hidden="true" />}
+            Restaurar
+          </Button>
+        )
+      ) : (
+        <>
+          {hrefEditar && (
+            <Button asChild>
+              <Link href={hrefEditar}>
+                <Pencil aria-hidden="true" />
+                Editar
+              </Link>
+            </Button>
+          )}
+          {onMoverParaLixeira && (
+            <Button
+              variant="perigo-texto"
+              aria-disabled={desabilitado || undefined}
+              aria-describedby={motivoDesabilitado}
+              onClick={() => {
+                if (!desabilitado) onMoverParaLixeira()
+              }}
+            >
+              <Trash2 aria-hidden="true" />
+              Mover para a lixeira
+            </Button>
+          )}
+        </>
+      )}
+      {acaoExtra}
+    </div>
+  )
+
   return (
     <div data-slot="transaction-detail" className={cn('text-foreground flex flex-col gap-5', className)}>
       {naLixeira && (
@@ -80,7 +140,7 @@ export function TransactionDetail({
           role="status"
           className="rounded-campo bg-atencao-fundo text-legenda text-atencao flex items-start gap-2 px-4 py-3 font-bold"
         >
-          <TriangleAlert className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <Trash2 className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
           {AVISO_LIXEIRA}
         </p>
       )}
@@ -135,54 +195,10 @@ export function TransactionDetail({
           )}
         </Item>
       </dl>
-      <section aria-labelledby={idHistorico} className="flex flex-col gap-3">
-        <h3 id={idHistorico} className="text-rotulo-secao text-muted-foreground uppercase">
-          Histórico<span className="sr-only">, do mais recente para o mais antigo</span>
-        </h3>
-        <Timeline itens={eventosDaAuditoria(lancamento)} aria-labelledby={idHistorico} />
-      </section>
-      <div className="flex flex-col gap-2 [&>*]:w-full">
-        {naLixeira ? (
-          onRestaurar && (
-            <Button
-              loading={restaurando}
-              aria-disabled={desabilitado || undefined}
-              aria-describedby={motivoDesabilitado}
-              onClick={() => {
-                if (!desabilitado) onRestaurar()
-              }}
-            >
-              {!restaurando && <RotateCcw aria-hidden="true" />}
-              Restaurar
-            </Button>
-          )
-        ) : (
-          <>
-            {hrefEditar && (
-              <Button asChild>
-                <Link href={hrefEditar}>
-                  <Pencil aria-hidden="true" />
-                  Editar
-                </Link>
-              </Button>
-            )}
-            {onMoverParaLixeira && (
-              <Button
-                variant="perigo-texto"
-                aria-disabled={desabilitado || undefined}
-                aria-describedby={motivoDesabilitado}
-                onClick={() => {
-                  if (!desabilitado) onMoverParaLixeira()
-                }}
-              >
-                <Trash2 aria-hidden="true" />
-                Mover para a lixeira
-              </Button>
-            )}
-          </>
-        )}
-        {acaoExtra}
-      </div>
+      {/* Na lixeira, as ações vêm antes do histórico: Restaurar fica visível sem rolar (prancheta editar-lixeira-computador) */}
+      {naLixeira && acoes}
+      {historico}
+      {!naLixeira && acoes}
     </div>
   )
 }

@@ -14,6 +14,8 @@ type DashboardSecaoProps = Omit<React.ComponentProps<'section'>, 'title'> & {
   lado?: React.ReactNode
   /** Sem a superfície de card (Maiores despesas no celular desenha cada linha como card) */
   cartao?: 'sempre' | 'a-partir-do-tablet'
+  /** Título só para leitor de tela (esqueleto: a prancheta dashboard-carregando não mostra o título) */
+  tituloOculto?: boolean
 }
 
 const SUPERFICIE = 'rounded-grande border border-border bg-card text-card-foreground shadow-card p-6'
@@ -25,6 +27,7 @@ function DashboardSecao({
   titulo,
   lado,
   cartao = 'sempre',
+  tituloOculto = false,
   className,
   children,
   ...props
@@ -36,7 +39,7 @@ function DashboardSecao({
       className={cn('flex h-full min-w-0 flex-col', cartao === 'sempre' ? SUPERFICIE : SUPERFICIE_TABLET, className)}
       {...props}
     >
-      <div className="mb-3 flex min-h-5 items-center justify-between gap-3">
+      <div className={cn('mb-3 flex min-h-5 items-center justify-between gap-3', tituloOculto && 'sr-only')}>
         <h2 id={idTitulo} className="text-rotulo-secao text-muted-foreground uppercase">
           {titulo}
         </h2>
@@ -67,6 +70,29 @@ function GraficoCarregando({ titulo, barras, className, ...props }: GraficoCarre
           <Skeleton key={i} className={cn('flex-1', ALTURAS[i % ALTURAS.length])} />
         ))}
       </div>
+    </section>
+  )
+}
+
+const LARGURAS = ['w-4/5', 'w-3/5', 'w-1/2', 'w-2/5'] as const
+
+/** Esqueleto de lista com barras (Despesas por categoria, prancheta dashboard-carregando-celular): título + linhas */
+function ListaCarregando({ titulo, barras, className, ...props }: GraficoCarregandoProps) {
+  return (
+    <section
+      data-slot="lista-carregando"
+      aria-hidden="true"
+      className={cn('flex h-full flex-col gap-3', SUPERFICIE, className)}
+      {...props}
+    >
+      <span className="sr-only">{titulo}</span>
+      <Skeleton forma="texto" className="w-2/5" />
+      {Array.from({ length: barras }, (_, i) => (
+        <div key={i} className="flex flex-col gap-2 pt-1">
+          <Skeleton forma="texto" className="w-2/5" />
+          <Skeleton forma="texto" className={LARGURAS[i % LARGURAS.length]} />
+        </div>
+      ))}
     </section>
   )
 }
@@ -110,6 +136,6 @@ function MarcaDoEixo({ x, y, payload, formatar }: TickDoMes & { formatar: (valor
   )
 }
 
-export { DashboardSecao, GraficoCarregando, MarcaDoEixo, MesDoEixo }
+export { DashboardSecao, GraficoCarregando, ListaCarregando, MarcaDoEixo, MesDoEixo }
 export type { TickDoMes }
 export type { DashboardSecaoProps }

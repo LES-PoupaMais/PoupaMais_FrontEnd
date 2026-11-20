@@ -3,7 +3,7 @@
 import { LogOut } from 'lucide-react'
 import { Button } from '@/components/atoms/button'
 import { ErrorState } from '@/components/molecules/error-state'
-import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
+import { OfflineMotivo } from '@/components/molecules/offline-banner'
 import { AlterarSenhaForm } from '@/components/organisms/alterar-senha-form'
 import { AparenciaTema } from '@/components/organisms/aparencia-tema'
 import { DadosPessoaisForm } from '@/components/organisms/dados-pessoais-form'
@@ -33,7 +33,6 @@ export function PerfilView() {
   const bloqueado = !p.online
   const aviso = bloqueado ? (
     <>
-      <OfflineBanner variante="canto" />
       <OfflineMotivo id={ID_MOTIVO} />
     </>
   ) : undefined

@@ -154,6 +154,17 @@ describe('LancamentoForm', () => {
     expect(await screen.findByRole('button', { name: 'Remover Farmácia' })).toBeInTheDocument()
   })
 
+  it('celular: a lista de categorias abre na folha, com o lápis de editar', async () => {
+    const onEditarCategoria = vi.fn()
+    const { usuario } = renderizar({ apresentacaoData: 'folha', onEditarCategoria })
+
+    await usuario.click(screen.getByRole('button', { name: 'Abrir lista de categorias' }))
+    const folha = await screen.findByRole('dialog', { name: 'Categorias' })
+    expect(folha).toHaveAccessibleDescription('0 escolhidas · toque para marcar ou desmarcar')
+    await usuario.click(screen.getByRole('button', { name: /^Editar categoria Mercado/ }))
+    expect(onEditarCategoria).toHaveBeenCalledWith(2)
+  })
+
   it('erros da API vão para os campos', async () => {
     renderizar({
       errosDoServidor: [
