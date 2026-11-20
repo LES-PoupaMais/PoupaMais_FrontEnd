@@ -17,7 +17,8 @@ import type { Categoria } from '@/types/api'
 // nova-categoria-inline): o mesmo visual do ConfirmDialog, com o campo Nome (RN002: trim, obrigatório, até 255).
 // - Nova: "Criar categoria". Editar: "Salvar", mais "Inativar categoria" e "Excluir categoria" (só sem lançamentos).
 // - `erroNome` (ex.: 409 "Já existe uma categoria com esse nome.") aparece no campo até a pessoa mudar o nome.
-// - `emUso` (DELETE respondeu 422): aviso de atenção no lugar das ações, oferecendo "Inativar categoria".
+// - `avisoEmUso` (DELETE respondeu 422): a `mensagem` da API num aviso de atenção no lugar das ações, oferecendo
+//   "Inativar categoria". A confirmação antes do DELETE fica com a tela (ConfirmDialog).
 // Puro: aberto, envio e erros chegam por props; quem chama a API é o Context da tela.
 
 export type CategoriaDialogProps = {
@@ -42,8 +43,8 @@ export type CategoriaDialogProps = {
   /** Editar: excluir a categoria (sem ele, o botão não aparece) */
   onExcluir?: () => void
   excluindo?: boolean
-  /** A exclusão foi recusada porque a categoria está em uso */
-  emUso?: boolean
+  /** A exclusão foi recusada porque a categoria está em uso: a mensagem da API (já traduzida) */
+  avisoEmUso?: string | null
   /** Sem internet: nada é gravado e o motivo aparece embaixo */
   semConexao?: boolean
 }
@@ -102,7 +103,7 @@ function Formulario({
   inativando = false,
   onExcluir,
   excluindo = false,
-  emUso = false,
+  avisoEmUso = null,
   semConexao = false,
   ocupado,
   onCancelar,
@@ -132,7 +133,7 @@ function Formulario({
     onSalvar(limpo)
   })
 
-  const mostrarAcoes = editar && !emUso && (onInativar || onExcluir)
+  const mostrarAcoes = editar && !avisoEmUso && (onInativar || onExcluir)
 
   return (
     <form noValidate onSubmit={enviar} className="flex flex-col gap-4">
@@ -154,10 +155,10 @@ function Formulario({
         <Input type="text" maxLength={255} autoComplete="off" {...register('descricao')} />
       </FormField>
 
-      {editar && emUso && onInativar && (
+      {editar && avisoEmUso && onInativar && (
         <ActionBanner
           variante="atencao"
-          texto={`Não dá para excluir ${categoria?.descricao}: ela está em uso em lançamentos. Inative a categoria: ela sai da lista de escolha e os lançamentos continuam com ela.`}
+          texto={avisoEmUso}
           acoes={[{ rotulo: 'Inativar categoria', onClick: () => !semConexao && !ocupado && onInativar() }]}
         />
       )}

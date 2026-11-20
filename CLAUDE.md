@@ -302,8 +302,10 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 
 ### Categorias (RF011 / UC009 / RN002)
 
-- Tela própria **Categorias** (lista com criar, renomear, inativar e reativar; contagem de lançamentos do mês com `quantidadeLancamentos`).
-  Inativar uma categoria em uso (`422`) mostra o aviso "categoria em uso" no próprio diálogo.
+- Tela própria **Categorias** (lista com criar, renomear, inativar, reativar e excluir; contagem de lançamentos do mês com
+  `quantidadeLancamentos`).
+- **Excluir** pede confirmação (`ConfirmDialog` "Excluir categoria?", decisão de 20/11) antes do `DELETE`. Categoria em uso
+  (`422` no `DELETE`): a `mensagem` da API aparece no aviso de atenção do diálogo, com "Inativar categoria".
 - No formulário de lançamento, o campo de categorias (multi-select) permite **criar uma nova no próprio campo**; a criada já entra selecionada.
   Categorias inativas não são selecionáveis.
 - `409` = "Já existe uma categoria com esse nome" (sem diferenciar maiúsculas/minúsculas), mostrado no diálogo.
@@ -604,9 +606,10 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      para a lista, como estava antes de ir para a lixeira.". As pranchetas `lixeira-*`, `editar-lixeira-computador` e o README do
      TransactionDetail (DS) ainda dizem "volta desligado"/"voltam fora do saldo": atualizar no DS.
 9. **Importar e Categorias:**
-   - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
-     o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.
-   - "Excluir categoria" exclui direto (sem ConfirmDialog), como na prancheta `categoria-editar-celular`; decidir se pede confirmação.
+   - ~~O `CLAUDE.md` dizia que "inativar uma categoria em uso (`422`)" mostra o aviso~~: alinhado em 20/11 (o `422` é do **DELETE**).
+   - **Excluir categoria: decidido e feito em 20/11.** Pede confirmação no `ConfirmDialog` ("Excluir categoria?" · "A categoria X sai
+     da sua lista. Não dá para desfazer." · "Excluir categoria"), que não está na prancheta `categoria-editar-celular`. No `422` (em
+     uso), o aviso do diálogo mostra a `mensagem` da API no lugar da frase da prancheta `categoria-em-uso-celular`. Registrar no DS.
    - Editar uma categoria **inativa** (computador) mostra só Nome e Excluir: não há prancheta de "Reativar" dentro do diálogo (Reativar fica na linha).
    - Textos dos toasts de categoria ("Categoria criada/renomeada/inativada/reativada/excluída") não estão no DS: registrar no DS.
    - Importar sem `stepper`: as pranchetas `importar-*` não têm indicador de passos (escolher → importando → resultado na mesma tela).
