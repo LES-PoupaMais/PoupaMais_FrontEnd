@@ -651,15 +651,22 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      prancheta fala também da senha ("…igual a EXCLUIR e a senha estiver preenchida." / "Tudo certo: o botão está liberado."). O
      `ConfirmDialog` não aceita `aria-describedby` no botão de confirmar nem um aviso dentro da descrição: o aviso "Não dá para desfazer."
      fica fora do `aria-describedby` do diálogo. Se o DS quiser, acrescentar essas duas props à molécula.
-   - `useMontado` fica em `screens/Perfil/usePerfilAmbiente.ts` (só o Perfil usa).
+   - `useHidratado` (`hooks/use-hidratado.ts`, antes `useMontado` do Perfil): `false` no servidor e na hidratação. O tema do
+     Perfil e o `useUsuario` usam: na hidratação o `useUsuario` devolve "carregando", igual ao HTML do servidor (sem isso, a
+     página hidratava depois da casca e achava o usuário no cache: erro #418 no Dashboard e no Perfil, 20/11).
    - Sem prancheta de tablet do Perfil: a 834px fica em 1 coluna (as 2 colunas só aparecem com 420px cada, como o `auto-fit` da
      prancheta do computador).
    - E2E das Server Actions: o `playwright.config.ts` sobe a API falsa `e2e/api-falsa.mjs` na porta `PORT + 1000` (rotas `/api/auth/*`,
      troca de senha e excluir conta) e passa `API_URL` para o Next.
 11. **Telas de acesso e públicas:**
    - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
-   - **AuthTemplate no celular: decidido em 20/11, fica como está.** A prancheta `login-celular` não tem card (logo no topo à
-     esquerda, texto alinhado à esquerda, rodapé só com a política); o template aprovado mantém o card central em todas as larguras.
+   - **AuthTemplate no celular: revisto e feito em 20/11 (revisão visual).** Abaixo de 768px não há cartão (logo pequeno no topo
+     à esquerda, título e campos à esquerda, rodapé só com a política), como nas pranchetas `-celular`; o link expirado mantém o
+     cartão (`cartaoNoCelular`). O esqueci tem "‹ Entrar" no topo (`acaoCelular`) e o cadastro, a partir de 1024px, o topo com
+     "Já tenho conta" (`acaoComputador`) e o subtítulo "Só nome, e-mail e senha." (`subtituloComLateral`).
+   - **Links de texto sublinhados (20/11, WCAG 1.4.1):** links dentro de frase e links soltos das telas públicas e de acesso
+     ("Esqueci minha senha", "Criar conta", "Entrar", "Ler a Política de privacidade", rodapé do acesso) levam `underline`.
+     Botões e links de navegação ("‹ Entrar", "Voltar para o início", links do rodapé do site e do topo) ficam sem, como nas pranchetas.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
    - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
