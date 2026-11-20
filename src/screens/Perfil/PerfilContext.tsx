@@ -19,7 +19,7 @@ import { salvarArquivo } from '@/lib/baixar-arquivo'
 import { traduzirErro } from '@/lib/http'
 import { validarFoto, type TrocarSenhaInput } from '@/schemas/perfil.schema'
 import type { Usuario } from '@/types/api'
-import { useMontado } from './usePerfilAmbiente'
+import { useHidratado } from '@/hooks/use-hidratado'
 
 // Estado e ações do Perfil (RN015/RN016): nome, foto, senha (Server Action que troca o cookie), tema (next-themes),
 // "Baixar meus dados" (LGPD), excluir conta (Server Action que apaga o cookie → "/" com toast) e "Sair" (celular).
@@ -78,7 +78,7 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const online = useOnline()
-  const montado = useMontado()
+  const montado = useHidratado()
   const { theme, setTheme } = useTheme()
 
   const usuarioQuery = useUsuario()

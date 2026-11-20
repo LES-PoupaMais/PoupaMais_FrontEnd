@@ -1,10 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/query-keys'
 import { usuarioService } from '@/services/usuario.service'
+import type { Usuario } from '@/types/api'
+import { useHidratado } from './use-hidratado'
 
-/** Usuário logado (nome e avatar na Sidebar, TopBar e Perfil) */
-export function useUsuario() {
-  return useQuery({ queryKey: queryKeys.usuario.eu, queryFn: usuarioService.obter, staleTime: 5 * 60_000 })
+/**
+ * Usuário logado (nome e avatar na Sidebar, TopBar e Perfil).
+ *
+ * Na hidratação devolve o estado "carregando", igual ao HTML do servidor (que não tem o usuário). Sem isso, a casca
+ * busca o usuário logo que hidrata e a página (que hidrata depois, em outro Suspense) já o encontrava no cache:
+ * o cliente desenhava o nome ("Olá, Leonardo", o Perfil inteiro) onde o servidor desenhou o esqueleto e o React
+ * acusava o erro de hidratação #418 (Dashboard e Perfil no celular e no tablet).
+ */
+export function useUsuario(): UseQueryResult<Usuario> {
+  const hidratado = useHidratado()
+  const consulta = useQuery({ queryKey: queryKeys.usuario.eu, queryFn: usuarioService.obter, staleTime: 5 * 60_000 })
+  if (hidratado) return consulta
+  return {
+    ...consulta,
+    data: undefined,
+    error: null,
+    status: 'pending',
+    isPending: true,
+    isLoading: true,
+    isSuccess: false,
+    isError: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    isPlaceholderData: false,
+  } as UseQueryResult<Usuario>
 }
 
 /**
