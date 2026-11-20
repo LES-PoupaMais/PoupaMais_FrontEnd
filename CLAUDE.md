@@ -627,8 +627,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      troca de senha e excluir conta) e passa `API_URL` para o Next.
 11. **Telas de acesso e públicas:**
    - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
-   - **AuthTemplate no celular (decidir):** a prancheta `login-celular` não tem card (logo no topo à esquerda, texto alinhado à esquerda,
-     rodapé só com a política); o template aprovado mantém o card central em todas as larguras. Decidir se o template ganha o layout do celular.
+   - **AuthTemplate no celular: decidido em 20/11, fica como está.** A prancheta `login-celular` não tem card (logo no topo à
+     esquerda, texto alinhado à esquerda, rodapé só com a política); o template aprovado mantém o card central em todas as larguras.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
    - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
