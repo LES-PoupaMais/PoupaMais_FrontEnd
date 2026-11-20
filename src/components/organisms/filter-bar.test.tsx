@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { categoriasDemo } from '@/test/msw/server-e-dados'
@@ -27,10 +27,12 @@ function renderizar(props: Partial<FilterBarProps> = {}) {
     onIrParaLixeira: vi.fn(),
     onExportar: vi.fn(),
     onBaixarModelo: vi.fn(),
+    onBuscaChange: vi.fn(),
   }
   render(
     <FilterBar
       filtros={FILTROS_VAZIOS}
+      busca=""
       categorias={categoriasDemo}
       periodo={{ mes: 11, ano: 2026 }}
       total={30}
@@ -69,15 +71,13 @@ describe('FilterBar', () => {
     expect(onChange).toHaveBeenCalledWith({ categoriaId: 2 })
   })
 
-  it('a busca filtra ao parar de digitar (300 ms)', () => {
-    vi.useFakeTimers()
-    const { barra, onChange } = renderizar()
-    fireEvent.change(within(barra).getByLabelText('Buscar'), { target: { value: 'mer' } })
-    act(() => vi.advanceTimersByTime(200))
+  it('a busca mostra o texto recebido e devolve cada tecla por onBuscaChange (a espera é da tela)', () => {
+    const { barra, onBuscaChange, onChange } = renderizar({ busca: 'mer' })
+    const campo = within(barra).getByLabelText('Buscar')
+    expect(campo).toHaveValue('mer')
+    fireEvent.change(campo, { target: { value: 'merc' } })
+    expect(onBuscaChange).toHaveBeenCalledWith('merc')
     expect(onChange).not.toHaveBeenCalled()
-    act(() => vi.advanceTimersByTime(150))
-    expect(onChange).toHaveBeenCalledWith({ q: 'mer' })
-    vi.useRealTimers()
   })
 
   it('com filtro: Limpar filtros na barra e chips removíveis no celular', async () => {

@@ -42,6 +42,38 @@ test.describe('Lançamentos', () => {
     await expect(barra.getByRole('status')).toHaveText('15 lançamentos')
   })
 
+  test('buscar digitando devagar, com a API lenta, não perde letras e mantém a lista anterior', async ({ page }) => {
+    await simularApiDeLancamentos(page)
+    // Registrada depois, esta rota vem antes: atrasa cada lista e depois segue para a API falsa
+    let listasPedidas = 0
+    await page.route(
+      (url) => url.pathname === '/api/lancamentos',
+      async (rota) => {
+        listasPedidas += 1
+        await new Promise((fim) => setTimeout(fim, 900))
+        await rota.fallback()
+      },
+    )
+    await page.setViewportSize(COMPUTADOR)
+    await page.goto('/lancamentos?mes=11&ano=2026')
+    const barra = page.getByRole('search', { name: 'Filtrar lançamentos' })
+    await expect(barra.getByRole('status')).toHaveText('15 lançamentos')
+    const pedidasAntes = listasPedidas
+
+    // Pausas maiores que a espera (500 ms): cada pedaço dispara uma busca e a URL volta enquanto se digita
+    const campo = barra.getByLabel('Buscar')
+    await campo.pressSequentially('merc', { delay: 650 })
+    // Enquanto a busca carrega, a lista anterior continua na tela (sem esqueleto)
+    await expect(page.getByLabel('Carregando lançamentos')).toHaveCount(0)
+    await campo.pressSequentially('ado do', { delay: 650 })
+    await expect(campo).toHaveValue('mercado do')
+    await expect(page).toHaveURL(/q=mercado\+do/)
+    await expect(campo).toHaveValue('mercado do')
+    await expect(barra.getByRole('status')).toHaveText('1 lançamento')
+    await expect(tabela(page).getByRole('link', { name: 'Ver Mercado do mês' })).toBeVisible()
+    expect(listasPedidas).toBeGreaterThan(pedidasAntes)
+  })
+
   test('mover para a lixeira: o DELETE vai na hora; o Desfazer restaura ao status de antes', async ({ page }) => {
     const api = await simularApiDeLancamentos(page)
     await page.setViewportSize(COMPUTADOR)

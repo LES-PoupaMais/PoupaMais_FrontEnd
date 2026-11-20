@@ -40,6 +40,8 @@ export function LancamentosView() {
 
       <FilterBar
         filtros={filtros}
+        busca={ctx.busca}
+        onBuscaChange={ctx.setBusca}
         categorias={categorias}
         periodo={periodo}
         onMudarMes={ctx.irParaMes}
