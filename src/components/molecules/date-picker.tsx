@@ -16,7 +16,7 @@ import { Input } from '@/components/atoms/input'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/atoms/popover'
 import { FormField } from '@/components/molecules/form-field'
 import { cn } from '@/lib/cn'
-import { formatarData, hojeIso, lerDataDigitada } from '@/lib/data'
+import { formatarData, hojeIso, lerDataDigitada, mensagemDataForaDaFaixa } from '@/lib/data'
 
 // Campo de data do Design System (components/DatePicker): digitação dd/mm/aaaa + calendário de três visões.
 // Para fora sai sempre ISO "AAAA-MM-DD" (ou null quando vazio ou inválido). Aceita "18112026", "18/11/2026" e "18-11-2026",
@@ -26,7 +26,7 @@ import { formatarData, hojeIso, lerDataDigitada } from '@/lib/data'
 
 export const MENSAGENS_DATA = {
   invalida: 'Informe uma data válida, no formato dd/mm/aaaa.',
-  faixa: (min: string, max: string) => `Informe uma data entre ${formatarData(min)} e ${formatarData(max)}.`,
+  faixa: mensagemDataForaDaFaixa,
 } as const
 
 export type DatePickerProps = Omit<

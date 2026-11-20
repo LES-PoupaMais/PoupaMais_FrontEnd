@@ -577,8 +577,9 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 2. **Mensagens do schema × DS: decidido e feito em 20/11.** `schemas/lancamento.schema.ts` usa as frases do DS e da prancheta
    `novo-erros-celular` ("A descrição é obrigatória.", "A descrição deve ter no máximo 100 caracteres.", "Escolha Receita ou Despesa.",
    "Informe uma data válida, no formato dd/mm/aaaa.", "Informe um valor maior que zero." para vazio e zero, "O valor máximo é
-   R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, ficam
-   "Informe a data." e "A data deve estar entre 2000 e 2100." Falta o README do MoneyField (DS) trocar o limite de
+   R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, fica
+   "Informe a data."; a data fora da faixa usa a frase do DatePicker, "Informe uma data entre 01/01/2000 e 31/12/2100." (feito em
+   20/11, uma função só: `lib/data.mensagemDataForaDaFaixa`). Falta o README do MoneyField (DS) trocar o limite de
    R$ 99.999.999.999.999,99 para R$ 999.999.999,99.
 3. **Mensagens de erro back↔front: decidido em 20/11.** O back passa a mandar um `codigo` estável em todo erro; o front
    **continua mostrando só a `mensagem` da API ou a genérica** e não decide nada pelo `codigo` (`RespostaErro` em `types/api` só

@@ -8,6 +8,7 @@ import {
   formatarDataExtenso,
   formatarInstante,
   hojeIso,
+  mensagemDataForaDaFaixa,
   paraDataIso,
   partesDaData,
 } from './data'
@@ -72,5 +73,15 @@ describe('lerDataDigitada', () => {
 
   it.each(['31/02/2026', '29/02/2026', '2026-11-18', '1811202', 'amanhã', ''])('recusa "%s"', (texto) => {
     expect(lerDataDigitada(texto)).toBeNull()
+  })
+})
+
+describe('mensagemDataForaDaFaixa', () => {
+  it('usa a faixa padrão 01/01/2000 a 31/12/2100', () => {
+    expect(mensagemDataForaDaFaixa()).toBe('Informe uma data entre 01/01/2000 e 31/12/2100.')
+  })
+
+  it('usa os limites recebidos', () => {
+    expect(mensagemDataForaDaFaixa('2026-01-01', '2026-12-31')).toBe('Informe uma data entre 01/01/2026 e 31/12/2026.')
   })
 })
