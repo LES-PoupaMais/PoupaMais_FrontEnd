@@ -22,7 +22,11 @@ createServer((req, res) => {
       const dados = texto ? JSON.parse(texto) : {}
       if (req.url === '/api/auth/login') {
         if (dados.senha === SENHA_ERRADA)
-          return responder(res, 401, { status: 401, mensagem: 'E-mail ou senha inválidos' })
+          return responder(res, 401, {
+            status: 401,
+            codigo: 'CREDENCIAIS_INVALIDAS',
+            mensagem: 'E-mail ou senha inválidos',
+          })
         return responder(res, 200, {
           token: 'token-login-e2e',
           expiraEm: new Date(Date.now() + 86_400_000).toISOString(),
@@ -31,21 +35,31 @@ createServer((req, res) => {
       }
       if (req.url === '/api/auth/cadastro') {
         if (dados.email === 'usado@poupamais.com.br')
-          return responder(res, 409, { status: 409, mensagem: 'Este e-mail já está cadastrado' })
+          return responder(res, 409, {
+            status: 409,
+            codigo: 'EMAIL_JA_CADASTRADO',
+            mensagem: 'Este e-mail já está cadastrado',
+          })
         return responder(res, 201, { id: 2, nome: dados.nome, email: dados.email })
       }
       if (req.url === '/api/auth/recuperar-senha') return responder(res, 202)
       if (req.url === '/api/auth/redefinir-senha') {
-        if (dados.token === 'token-expirado') return responder(res, 422, { status: 422, mensagem: 'Token inválido' })
+        if (dados.token === 'token-expirado')
+          return responder(res, 422, { status: 422, codigo: 'TOKEN_INVALIDO', mensagem: 'Token inválido' })
         return responder(res, 204)
       }
     }
-    if (!req.headers.authorization) return responder(res, 401, { status: 401, mensagem: 'Sessão expirada' })
+    if (!req.headers.authorization)
+      return responder(res, 401, { status: 401, codigo: 'NAO_AUTENTICADO', mensagem: 'Sessão expirada' })
     const corpo = texto ? JSON.parse(texto) : {}
 
     if (req.method === 'PUT' && req.url === '/api/usuarios/me/senha') {
       if (corpo.senhaAtual === SENHA_ERRADA) {
-        return responder(res, 422, { status: 422, mensagem: 'A senha atual está incorreta' })
+        return responder(res, 422, {
+          status: 422,
+          codigo: 'SENHA_ATUAL_INCORRETA',
+          mensagem: 'A senha atual está incorreta',
+        })
       }
       return responder(res, 200, {
         token: 'token-novo-e2e',
@@ -53,9 +67,10 @@ createServer((req, res) => {
       })
     }
     if (req.method === 'POST' && req.url === '/api/usuarios/me/excluir') {
-      if (corpo.senha === SENHA_ERRADA) return responder(res, 422, { status: 422, mensagem: 'Senha incorreta' })
+      if (corpo.senha === SENHA_ERRADA)
+        return responder(res, 422, { status: 422, codigo: 'SENHA_INCORRETA', mensagem: 'Senha incorreta' })
       return responder(res, 204)
     }
-    return responder(res, 404, { status: 404, mensagem: 'Não encontrado' })
+    return responder(res, 404, { status: 404, codigo: 'NAO_ENCONTRADO', mensagem: 'Não encontrado' })
   })
 }).listen(porta)

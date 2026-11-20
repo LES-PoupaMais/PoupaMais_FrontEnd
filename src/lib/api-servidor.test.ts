@@ -29,7 +29,12 @@ describe('chamarApiDoServidor (Server Actions → API)', () => {
     server.use(
       msw.post('*/api/auth/cadastro', () =>
         HttpResponse.json(
-          { status: 400, mensagem: 'Dados inválidos', erros: [{ campo: 'email', mensagem: 'x' }, { foo: 1 }] },
+          {
+            status: 400,
+            codigo: 'VALIDACAO',
+            mensagem: 'Dados inválidos',
+            erros: [{ campo: 'email', mensagem: 'x' }, { foo: 1 }],
+          },
           { status: 400 },
         ),
       ),
@@ -42,6 +47,7 @@ describe('chamarApiDoServidor (Server Actions → API)', () => {
       status: 400,
       mensagem: 'Dados inválidos',
       erros: [{ campo: 'email', mensagem: 'x' }],
+      codigo: 'VALIDACAO',
     })
   })
 

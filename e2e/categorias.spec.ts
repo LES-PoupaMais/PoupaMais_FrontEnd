@@ -12,7 +12,10 @@ async function simularCategorias(page: Page, iniciais: Categoria[]) {
     [...categorias].sort((a, b) => Number(b.ativa) - Number(a.ativa) || a.descricao.localeCompare(b.descricao))
   const repetida = (nome: string, id?: number) =>
     categorias.some((c) => c.id !== id && c.descricao.toLowerCase() === nome.toLowerCase())
-  const duplicada = { status: 409, json: { status: 409, mensagem: 'Já existe uma categoria com essa descrição' } }
+  const duplicada = {
+    status: 409,
+    json: { status: 409, codigo: 'CATEGORIA_DUPLICADA', mensagem: 'Já existe uma categoria com essa descrição' },
+  }
 
   await page.route(/\/api\/categorias(\?.*)?$/, async (rota) => {
     if (rota.request().method() === 'POST') {
@@ -31,7 +34,11 @@ async function simularCategorias(page: Page, iniciais: Categoria[]) {
       if (categoria.quantidadeLancamentos > 0)
         return rota.fulfill({
           status: 422,
-          json: { status: 422, mensagem: 'Categoria vinculada a lançamentos, apenas inative' },
+          json: {
+            status: 422,
+            codigo: 'CATEGORIA_VINCULADA',
+            mensagem: 'Categoria vinculada a lançamentos, apenas inative',
+          },
         })
       categorias.splice(categorias.indexOf(categoria), 1)
       return rota.fulfill({ status: 204 })

@@ -77,7 +77,8 @@ export function dashboardDoMes(mes: number, ano: number) {
 export async function simularDashboard(page: Page, opcoes: { falhar?: boolean } = {}) {
   const estado = { falhar: opcoes.falhar ?? false }
   await page.route('**/api/dashboard?*', (rota: Route) => {
-    if (estado.falhar) return rota.fulfill({ status: 500, json: { status: 500, mensagem: 'Erro interno' } })
+    if (estado.falhar)
+      return rota.fulfill({ status: 500, json: { status: 500, codigo: 'ERRO_INTERNO', mensagem: 'Erro interno' } })
     const url = new URL(rota.request().url())
     return rota.fulfill({
       json: dashboardDoMes(Number(url.searchParams.get('mes')), Number(url.searchParams.get('ano'))),

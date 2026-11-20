@@ -135,12 +135,21 @@ export async function simularApiDeLancamentos(page: Page): Promise<ApiFalsa> {
 
     const id = Number(partes[0])
     const lancamento = api.lancamentos.find((l) => l.id === id)
-    if (!lancamento) return json(rota, { status: 404, mensagem: 'Lançamento não encontrado' }, 404)
+    if (!lancamento)
+      return json(
+        rota,
+        { status: 404, codigo: 'LANCAMENTO_NAO_ENCONTRADO', mensagem: 'Lançamento não encontrado' },
+        404,
+      )
 
     if (partes[1] === 'status' && metodo === 'PATCH') {
       // v1.2.0: PATCH de status num item da lixeira dá 422 (só o /restaurar tira da lixeira)
       if (lancamento.status === 'DELETADO')
-        return json(rota, { status: 422, mensagem: 'Lançamento excluído não pode mudar de status' }, 422)
+        return json(
+          rota,
+          { status: 422, codigo: 'LANCAMENTO_NA_LIXEIRA', mensagem: 'Lançamento excluído não pode mudar de status' },
+          422,
+        )
       const { status } = pedido.postDataJSON() as { status: LancamentoFalso['status'] }
       api.statusAlterados.push({ id, status })
       lancamento.status = status
@@ -148,7 +157,15 @@ export async function simularApiDeLancamentos(page: Page): Promise<ApiFalsa> {
     }
     if (partes[1] === 'restaurar' && metodo === 'POST') {
       if (lancamento.status !== 'DELETADO')
-        return json(rota, { status: 422, mensagem: 'Só é possível restaurar um lançamento excluído' }, 422)
+        return json(
+          rota,
+          {
+            status: 422,
+            codigo: 'LANCAMENTO_NAO_EXCLUIDO',
+            mensagem: 'Só é possível restaurar um lançamento excluído',
+          },
+          422,
+        )
       // v1.2.0: volta ao status de antes da lixeira; sem esse dado (itens antigos), INATIVO
       api.restaurados.push(id)
       lancamento.status = lancamento.statusAnterior ?? 'INATIVO'

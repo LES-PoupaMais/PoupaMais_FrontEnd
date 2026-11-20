@@ -69,7 +69,7 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     if (categorias.some((c) => c.descricao.toLowerCase() === descricao.toLowerCase())) {
       return rota.fulfill({
         status: 409,
-        json: { status: 409, mensagem: 'Já existe uma categoria com essa descrição' },
+        json: { status: 409, codigo: 'CATEGORIA_DUPLICADA', mensagem: 'Já existe uma categoria com essa descrição' },
       })
     }
     const nova = { id: proximoId++, descricao, ativa: true, quantidadeLancamentos: 0 }
@@ -100,22 +100,34 @@ export async function simularApiDoFormulario(page: Page): Promise<Enviado[]> {
     const req = rota.request()
     const [, id, acao] = /\/lancamentos\/(\d+)(\/\w+)?$/.exec(new URL(req.url()).pathname) ?? []
     const atual = lancamentos.get(Number(id))
-    if (!atual) return rota.fulfill({ status: 404, json: { status: 404, mensagem: 'Lançamento não encontrado' } })
+    if (!atual)
+      return rota.fulfill({
+        status: 404,
+        json: { status: 404, codigo: 'LANCAMENTO_NAO_ENCONTRADO', mensagem: 'Lançamento não encontrado' },
+      })
     if (req.method() === 'GET') return rota.fulfill({ json: atual })
     const corpo = registrar(rota) as Record<string, unknown> | null
     // Regras da API v1.2.0 para o item da lixeira
     if (atual.status === 'DELETADO' && (acao === '/status' || req.method() === 'PUT'))
-      return rota.fulfill({ status: 422, json: { status: 422, mensagem: 'Lançamento excluído' } })
+      return rota.fulfill({
+        status: 422,
+        json: { status: 422, codigo: 'LANCAMENTO_NA_LIXEIRA', mensagem: 'Lançamento excluído' },
+      })
     if (acao === '/restaurar' && atual.status !== 'DELETADO')
       return rota.fulfill({
         status: 422,
-        json: { status: 422, mensagem: 'Só é possível restaurar um lançamento excluído' },
+        json: {
+          status: 422,
+          codigo: 'LANCAMENTO_NAO_EXCLUIDO',
+          mensagem: 'Só é possível restaurar um lançamento excluído',
+        },
       })
     if (corpo?.status === 'DELETADO')
       return rota.fulfill({
         status: 400,
         json: {
           status: 400,
+          codigo: 'VALIDACAO',
           mensagem: 'Dados inválidos',
           erros: [{ campo: 'status', mensagem: 'Informe o status ATIVO ou INATIVO' }],
         },

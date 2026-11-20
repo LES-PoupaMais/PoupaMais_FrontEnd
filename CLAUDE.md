@@ -557,7 +557,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    R$ 99.999.999.999.999,99 para R$ 999.999.999,99.
 3. **Mensagens de erro back↔front: decidido em 20/11.** O back passa a mandar um `codigo` estável em todo erro; o front
    **continua mostrando só a `mensagem` da API ou a genérica** e não decide nada pelo `codigo` (`RespostaErro` em `types/api` só
-   ganhou `codigo?` opcional). Contexto: desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
+   ganhou `codigo?` opcional; `ErroApi.codigo` e o resultado de `lib/api-servidor` guardam o que a API mandou, sem uso nas telas).
+   Contexto: desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
    (regra em `lib/http.traduzirErro`; sem conexão, 401 e 5xx com frases do front). O líder vai repensar as mensagens entre back e
    front: mudar só em `lib/http` (e no back). Ficaram no front só os status que o contrato dá a um caso único e que mudam a tela:
    401 no login (credenciais), 409 no cadastro e na categoria (campo E-mail/Nome; a mensagem da API vai no campo), 422 no
