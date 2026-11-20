@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { simularApiBasica } from './fixtures/api'
 import { entrarComSessaoFalsa } from './fixtures/sessao'
@@ -62,6 +63,47 @@ test.describe('importar CSV', () => {
     await expect(page.getByText('2 lançamentos importados. 1 linha ignorada.')).toBeVisible()
     expect(recebido).toContain('name="arquivo"')
     await expect(page.getByRole('link', { name: 'Ver lançamentos' })).toHaveAttribute('href', '/lancamentos')
+  })
+
+  test('baixa as linhas ignoradas com o cabeçalho do modelo, para corrigir e reenviar', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    const invalidas = ['Padaria;DESPESA;31/02/2026;32,50;Mercado', '"Farmácia; remédios";DESPESA;12/11/2026;;Saúde']
+    await page.route('**/api/lancamentos/importar', (rota) =>
+      rota.fulfill({
+        json: {
+          totalLinhas: 3,
+          importados: 1,
+          falhas: [
+            {
+              linha: 3,
+              conteudo: invalidas[0],
+              motivo: 'Data inválida (31/02/2026). Use dd/mm/aaaa com um dia que exista.',
+            },
+            { linha: 4, conteudo: invalidas[1], motivo: 'Valor vazio.' },
+          ],
+          categoriasCriadas: [],
+        },
+      }),
+    )
+    await page.goto('/lancamentos/importar')
+    await page.getByLabel('Escolher arquivo').setInputFiles({
+      name: 'lancamentos-novembro.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(CSV),
+    })
+    await page.getByRole('button', { name: 'Importar lançamentos' }).click()
+
+    const download = page.waitForEvent('download')
+    await page.getByRole('button', { name: 'Baixar linhas ignoradas (.csv)' }).click()
+    const arquivo = await download
+
+    expect(arquivo.suggestedFilename()).toMatch(/^linhas-ignoradas-\d{4}-\d{2}-\d{2}\.csv$/)
+    const conteudo = await readFile(await arquivo.path())
+    expect([...conteudo.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
+    expect(conteudo.subarray(3).toString('utf-8')).toBe(
+      ['descricao;tipo;data;valor;categorias', ...invalidas, ''].join('\r\n'),
+    )
+    await expect(page.getByText('Linhas ignoradas baixadas')).toBeVisible()
   })
 
   test('recusa arquivo acima de 2 MB sem enviar', async ({ page }) => {

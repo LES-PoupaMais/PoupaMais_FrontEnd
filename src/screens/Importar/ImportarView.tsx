@@ -54,6 +54,7 @@ export function ImportarView() {
           nomeArquivo={nomeArquivo}
           hrefLancamentos={ROTAS.lancamentos}
           onBaixarModelo={ctx.baixarModelo}
+          onBaixarLinhasIgnoradas={ctx.baixarLinhasIgnoradas}
           onImportarOutro={ctx.importarOutro}
         />
       </div>

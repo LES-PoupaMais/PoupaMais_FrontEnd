@@ -9,6 +9,9 @@ import type { ResultadoImportacao } from '@/types/api'
 import { ImportarProvider, useImportarContext } from './ImportarContext'
 import { ImportarView } from './ImportarView'
 
+const { salvarArquivo } = vi.hoisted(() => ({ salvarArquivo: vi.fn() }))
+vi.mock('@/lib/baixar-arquivo', () => ({ salvarArquivo }))
+
 const csv = (nome = 'lancamentos-novembro.csv', bytes = 2048) =>
   new File([new Uint8Array(bytes)], nome, { type: 'text/csv' })
 
@@ -39,7 +42,10 @@ function renderizar() {
 const botaoImportar = () => screen.getByRole('button', { name: /Importar lançamentos|Importando/ })
 
 describe('Importar CSV (Context + View)', () => {
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => {
+    vi.restoreAllMocks()
+    salvarArquivo.mockClear()
+  })
 
   it('começa sem arquivo: Importar desabilitado com o motivo e o modelo para baixar', async () => {
     server.use(
@@ -91,6 +97,31 @@ describe('Importar CSV (Context + View)', () => {
 
     await usuario.click(screen.getByRole('button', { name: 'Importar outro arquivo' }))
     expect(screen.getByText('Arraste o arquivo CSV para cá')).toBeInTheDocument()
+  })
+
+  it('"Baixar linhas ignoradas (.csv)": cabeçalho do modelo + linhas originais, com BOM e \\r\\n, e o toast', async () => {
+    const falhas = [
+      { linha: 3, conteudo: '"Padaria; pão";DESPESA;31/02/2026;32,50;Mercado', motivo: 'Data inválida (31/02/2026).' },
+      { linha: 5, conteudo: 'Farmácia;DESPESA;12/11/2026;;Saúde', motivo: 'Valor vazio.' },
+    ]
+    server.use(http.post('*/api/lancamentos/importar', () => HttpResponse.json({ ...resultado, falhas })))
+    const { usuario } = renderizar()
+    await usuario.upload(screen.getByLabelText('Escolher arquivo'), csv())
+    await usuario.click(botaoImportar())
+
+    await usuario.click(await screen.findByRole('button', { name: 'Baixar linhas ignoradas (.csv)' }))
+
+    expect(salvarArquivo).toHaveBeenCalledOnce()
+    const [blob, nome] = salvarArquivo.mock.calls[0] as [Blob, string]
+    expect(nome).toMatch(/^linhas-ignoradas-\d{4}-\d{2}-\d{2}\.csv$/)
+    const bytes = new Uint8Array(await blob.arrayBuffer())
+    expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
+    expect(new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes)).toBe(
+      '\uFEFFdescricao;tipo;data;valor;categorias\r\n' +
+        '"Padaria; pão";DESPESA;31/02/2026;32,50;Mercado\r\n' +
+        'Farmácia;DESPESA;12/11/2026;;Saúde\r\n',
+    )
+    expect(await screen.findByText('Linhas ignoradas baixadas')).toBeInTheDocument()
   })
 
   it('mostra "Importando…" enquanto envia', async () => {

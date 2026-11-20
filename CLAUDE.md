@@ -340,6 +340,8 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
   renomeada/inativada/reativada/excluída".
 - **Toasts do Perfil e do acesso:** "Nome salvo", "Foto atualizada", "Foto removida", "Senha alterada", "Seus dados foram
   baixados", "Sua conta foi excluída.", "Conta criada. Este é o seu mês.", "Senha nova salva. Entre com ela.".
+- **Importar (D3, 20/11, aguardando aprovação):** botão "Baixar linhas ignoradas (.csv)" no `import-result` e o toast "Linhas
+  ignoradas baixadas".
 - **Erros genéricos de cada tela** (quando a API não manda mensagem ou é 5xx, regra de `lib/http`): "Não foi possível …"
   (salvar, mover para a lixeira, restaurar, mudar Conta no saldo, exportar, baixar o modelo, criar a categoria, enviar e
   remover a foto, salvar o nome, alterar a senha, baixar seus dados, excluir a conta), "Não foi possível salvar. O que você
@@ -646,6 +648,11 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - Textos dos toasts de categoria ("Categoria criada/renomeada/inativada/reativada/excluída") não estão no DS: registrar no DS.
    - Importar sem `stepper`: as pranchetas `importar-*` não têm indicador de passos (escolher → importando → resultado na mesma tela).
    - O DS (ImportResult/UploadArea) cita `ResultadoImportacao`/`ImportarDialog`; no código são `import-result` e a tela `screens/Importar`.
+   - **Baixar linhas ignoradas (D3, feito em 20/11):** com falhas, o `import-result` mostra "Baixar linhas ignoradas (.csv)"
+     (contornado, ícone Download) abaixo da tabela; a tela monta no navegador (`lib/linhas-ignoradas`, sem chamar a API) o cabeçalho do
+     modelo seguido dos `falhas[].conteudo` exatamente como vieram, **sem** a coluna de motivo (para reenviar sem editar), com BOM
+     UTF-8 e `\r\n`, e baixa `linhas-ignoradas-AAAA-MM-DD.csv` (data local) por `lib/baixar-arquivo`, com o toast "Linhas ignoradas
+     baixadas". Não está no DS nem nas pranchetas `importar-*`: registrar no DS (README do ImportResult).
 10. **Perfil:**
    - `excluir-conta-dialog` compõe o `ConfirmDialog` com os campos nos `children` (não usa `confirmacaoDigitada`), porque a ajuda da
      prancheta fala também da senha ("…igual a EXCLUIR e a senha estiver preenchida." / "Tudo certo: o botão está liberado."). O
