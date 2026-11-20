@@ -23,6 +23,13 @@ describe('traduzirErro (lib/http)', () => {
     )
   })
 
+  it('o codigo (v1.2.0) não muda o que aparece: a mensagem da API ou a genérica', () => {
+    const comMensagem = new ErroApi(409, 'Já existe uma categoria com essa descrição', [], true, 'CATEGORIA_DUPLICADA')
+    expect(traduzirErro(comMensagem).mensagem).toBe('Já existe uma categoria com essa descrição')
+    const semMensagem = new ErroApi(500, MENSAGEM_ERRO_PADRAO, [], false, 'ERRO_INTERNO')
+    expect(traduzirErro(semMensagem).mensagem).toBe(MENSAGEM_ERRO_PADRAO)
+  })
+
   it('cada erros[] com campo vai para o seu campo com a mensagem da API', () => {
     const erro = new ErroApi(
       400,

@@ -1,23 +1,21 @@
 'use client'
 
 import { cva } from 'class-variance-authority'
-import { CircleAlert, CircleCheck, Info, TriangleAlert, X, type LucideIcon } from 'lucide-react'
+import { CircleAlert, Info, TriangleAlert, X, type LucideIcon } from 'lucide-react'
 import type * as React from 'react'
 import { cn } from '@/lib/cn'
 
 // ActionBanner do Design System: faixa de aviso dentro da página que fica até a pessoa agir, com 1 ou 2 ações em texto
 // sublinhado na cor da faixa (nunca botão preenchido). Ícone sempre junto da cor.
-// Papéis: info, sucesso e atenção → `role="status"`; erro → `role="alert"`.
-// `sucesso` é extensão do front (o DS tem info, atenção e erro): mesmas cores do toast de sucesso. Confirmação de ação
-// concluída continua sendo toast; use `sucesso` só para um aviso que precisa ficar na tela.
+// Variantes do DS: info, atenção e erro (confirmação de ação concluída é toast). Papéis: info e atenção → `role="status"`;
+// erro → `role="alert"`.
 
-type Variante = 'info' | 'sucesso' | 'atencao' | 'erro'
+type Variante = 'info' | 'atencao' | 'erro'
 
 const actionBannerVariants = cva('flex items-start gap-3 rounded-campo py-3 pr-2 pl-4', {
   variants: {
     variante: {
       info: 'bg-accent text-foreground',
-      sucesso: 'bg-receita-fundo text-receita',
       atencao: 'bg-atencao-fundo text-atencao',
       erro: 'bg-erro-fundo text-destructive',
     },
@@ -27,7 +25,6 @@ const actionBannerVariants = cva('flex items-start gap-3 rounded-campo py-3 pr-2
 
 const ICONE: Record<Variante, { Icone: LucideIcon; cor: string }> = {
   info: { Icone: Info, cor: 'text-primary' },
-  sucesso: { Icone: CircleCheck, cor: 'text-receita' },
   atencao: { Icone: TriangleAlert, cor: 'text-atencao' },
   erro: { Icone: CircleAlert, cor: 'text-destructive' },
 }

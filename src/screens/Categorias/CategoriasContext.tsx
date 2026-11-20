@@ -13,7 +13,8 @@ import { lerPeriodo } from '@/lib/periodo'
 import type { Categoria, CategoriaComContagem } from '@/types/api'
 
 // Tela Categorias (RF011/UC009/RN002): lista com a contagem do mês, criar, renomear, inativar, reativar e excluir.
-// A contagem usa o mês da URL (?mes&ano) ou o atual. 409 e 400 vão para o campo do diálogo; 422 no DELETE = "em uso".
+// A contagem usa o mês da URL (?mes&ano) ou o atual. 409 e 400 vão para o campo do diálogo. Excluir pede confirmação
+// (ConfirmDialog) antes do DELETE; 422 no DELETE = "em uso": a mensagem da API vai no aviso do diálogo.
 
 type Dialogo = { modo: 'nova' } | { modo: 'editar'; categoria: Categoria } | null
 
@@ -35,9 +36,15 @@ type CategoriasContextValue = {
   erroNome: string | null
   inativar: () => void
   inativando: boolean
+  /** "Excluir categoria" do diálogo: abre a confirmação */
   excluir: () => void
+  confirmandoExclusao: boolean
+  cancelarExclusao: () => void
+  /** Confirmou: manda o DELETE */
+  confirmarExclusao: () => void
   excluindo: boolean
-  emUso: boolean
+  /** Mensagem da API quando o DELETE respondeu 422 (em uso) */
+  avisoEmUso: string | null
   reativar: (categoria: Categoria) => void
   reativandoId: number | null
 }
@@ -58,11 +65,13 @@ export function CategoriasProvider({ children }: { children: ReactNode }) {
 
   const [dialogo, setDialogo] = useState<Dialogo>(null)
   const [erroNome, setErroNome] = useState<string | null>(null)
-  const [emUso, setEmUso] = useState(false)
+  const [avisoEmUso, setAvisoEmUso] = useState<string | null>(null)
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
 
   const abrir = (novo: Dialogo) => {
     setErroNome(null)
-    setEmUso(false)
+    setAvisoEmUso(null)
+    setConfirmandoExclusao(false)
     setDialogo(novo)
   }
 
@@ -102,14 +111,20 @@ export function CategoriasProvider({ children }: { children: ReactNode }) {
   }
 
   const excluir = () => {
+    if (categoriaAberta) setConfirmandoExclusao(true)
+  }
+
+  const confirmarExclusao = () => {
     if (!categoriaAberta) return
     excluirCategoria.mutate(categoriaAberta.id, {
       onSuccess: () => {
+        setConfirmandoExclusao(false)
         setDialogo(null)
         toast.success('Categoria excluída')
       },
       onError: (erro) => {
-        if (categoriaEmUso(erro)) setEmUso(true)
+        setConfirmandoExclusao(false)
+        if (categoriaEmUso(erro)) setAvisoEmUso(mensagemDe(erro))
         else toast.error(mensagemDe(erro))
       },
     })
@@ -142,8 +157,11 @@ export function CategoriasProvider({ children }: { children: ReactNode }) {
     inativar,
     inativando: alterarStatus.isPending && Boolean(categoriaAberta),
     excluir,
+    confirmandoExclusao,
+    cancelarExclusao: () => setConfirmandoExclusao(false),
+    confirmarExclusao,
     excluindo: excluirCategoria.isPending,
-    emUso,
+    avisoEmUso,
     reativar,
     reativandoId: alterarStatus.isPending && !categoriaAberta ? (alterarStatus.variables?.id ?? null) : null,
   }

@@ -7,12 +7,14 @@ import { EmptyState } from '@/components/molecules/empty-state'
 import { LabeledProgress } from '@/components/molecules/labeled-progress'
 import { ROTAS } from '@/constants/rotas'
 import { cn } from '@/lib/cn'
+import { formatarDataCurta } from '@/lib/data'
 import { formatarPorcentagem, formatarValorComSinal } from '@/lib/format'
 import type { Dashboard, MaiorDespesa } from '@/types/api'
 import { DashboardSecao } from './dashboard-secao'
 
 // "Maiores despesas" do Dashboard (pranchetas dashboard-*): as 5 maiores despesas do mês (RN008, prontas da API) e o
 // "Peso das 5 maiores" (`pesoMaioresDespesas`: soma e % sobre as despesas do mês). Tocar numa linha abre o lançamento.
+// Embaixo do nome: a data ("1 nov") e as categorias (chips no celular; "1 nov · Aluguel" a partir do tablet).
 // Celular: cada linha é um card (como a lista de lançamentos). A partir do tablet: lista dentro do card grande, com divisórias.
 // A cor nunca é a única pista: sinal "−", seta e o texto "Despesa," para o leitor de tela (MoneyText).
 
@@ -100,22 +102,23 @@ function MaioresDespesas({
                   >
                     {item.descricao}
                   </Link>
-                  {item.categorias.length > 0 && (
-                    <span className="text-legenda text-muted-foreground flex flex-wrap gap-1">
-                      {item.categorias.map((categoria, indice) => (
-                        <span
-                          key={categoria}
-                          className={cn(
-                            'rounded-pilula bg-secondary px-2 text-[12px] leading-5 font-semibold',
-                            'md:bg-transparent md:p-0 md:text-[13px] md:leading-[18px] md:font-medium',
-                          )}
-                        >
-                          {indice > 0 && <span className="hidden md:inline">· </span>}
-                          {categoria}
-                        </span>
-                      ))}
-                    </span>
-                  )}
+                  <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-1 tabular-nums">
+                    <time dateTime={item.data} className="mr-1 md:mr-0">
+                      {formatarDataCurta(item.data)}
+                    </time>
+                    {item.categorias.map((categoria) => (
+                      <span
+                        key={categoria}
+                        className={cn(
+                          'rounded-pilula bg-secondary px-2 text-[12px] leading-5 font-semibold',
+                          'md:bg-transparent md:p-0 md:text-[13px] md:leading-[18px] md:font-medium',
+                        )}
+                      >
+                        <span className="hidden md:inline">· </span>
+                        {categoria}
+                      </span>
+                    ))}
+                  </span>
                 </span>
                 <span className="text-valor-linha text-despesa self-start whitespace-nowrap tabular-nums md:self-center">
                   <span className="sr-only">Despesa, </span>

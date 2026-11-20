@@ -7,18 +7,17 @@ import { toast } from 'sonner'
 import { ROTAS } from '@/constants/rotas'
 import { textoRestaurado } from '@/constants/textos'
 import { useOnline } from '@/hooks/use-online'
-import { useExportarLancamentos } from '@/hooks/use-exportacao'
 import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useRestaurarLancamento } from '@/hooks/use-mutacoes-lancamento'
 import { traduzirErro } from '@/lib/http'
 import { partesDaData } from '@/lib/data'
 import { lerVer } from '@/lib/parametros-url'
-import type { FormatoExportacao, Lancamento } from '@/types/api'
+import type { Lancamento } from '@/types/api'
 
 // Lixeira (`/lancamentos/lixeira`, status=DELETADO, todos os meses): sem switch e sem Editar; Restaurar volta ao status de
 // antes da lixeira (v1.2.0), com o toast de `constants/textos` (TOAST_RESTAURADO). Visualização no painel `?ver=<id>` a
-// partir de 768px.
+// partir de 768px. Sem Exportar (não está na prancheta `lixeira-*`; decisão de 20/11).
 
 export const TOAST_RESTAURAR_ERRO = 'Não foi possível restaurar.'
 const FILTRO_LIXEIRA = { status: 'DELETADO' } as const
@@ -43,12 +42,6 @@ type LixeiraContextValue = {
   detalheErro: boolean
   tentarDetalheDeNovo: () => void
   fecharDetalhe: () => void
-  exportarAberto: boolean
-  setExportarAberto: (aberto: boolean) => void
-  formato: FormatoExportacao
-  setFormato: (formato: FormatoExportacao) => void
-  baixar: () => void
-  baixando: boolean
 }
 
 const LixeiraContext = createContext<LixeiraContextValue | null>(null)
@@ -109,21 +102,6 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
   const consultaDetalhe = useLancamento(verId)
   const detalhe = consultaDetalhe.data ?? itens.find((l) => l.id === verId)
 
-  const [exportarAberto, setExportarAberto] = useState(false)
-  const [formato, setFormato] = useState<FormatoExportacao>('csv')
-  const exportar = useExportarLancamentos()
-  const baixar = () =>
-    exportar.mutate(
-      { formato, filtros: FILTRO_LIXEIRA },
-      {
-        onSuccess: () => {
-          setExportarAberto(false)
-          toast.success('Arquivo exportado')
-        },
-        onError: (erro) => toast.error(traduzirErro(erro, { padrao: 'Não foi possível exportar.' }).mensagem),
-      },
-    )
-
   const valor: LixeiraContextValue = {
     lancamentos: itens,
     total: consulta.data ? consulta.data.total : null,
@@ -144,12 +122,6 @@ export function LixeiraProvider({ children }: { children: ReactNode }) {
     detalheErro: !detalhe && consultaDetalhe.isError,
     tentarDetalheDeNovo: () => void consultaDetalhe.refetch(),
     fecharDetalhe,
-    exportarAberto,
-    setExportarAberto,
-    formato,
-    setFormato,
-    baixar,
-    baixando: exportar.isPending,
   }
   return <LixeiraContext.Provider value={valor}>{children}</LixeiraContext.Provider>
 }

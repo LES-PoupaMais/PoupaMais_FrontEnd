@@ -76,7 +76,7 @@ describe('TransactionDetail', () => {
     )
     expect(screen.getByRole('status')).toHaveTextContent(AVISO_LIXEIRA)
     expect(screen.getByText('Na lixeira')).toBeInTheDocument()
-    expect(screen.getByText('Não · volta desligado ao restaurar')).toBeInTheDocument()
+    expect(screen.getByText('Não · ao restaurar, volta como estava antes')).toBeInTheDocument()
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Editar' })).not.toBeInTheDocument()
     expect(screen.getByText('Movido para a lixeira')).toBeInTheDocument()

@@ -140,30 +140,61 @@ describe('Categorias (Context + View)', () => {
     expect(chamadas).toEqual(['PUT 2 Feira', 'PATCH 2 false'])
   })
 
-  it('excluir uma categoria em uso (422) mostra o aviso e oferece inativar', async () => {
+  /** Clica em "Excluir categoria" no diálogo e confirma no ConfirmDialog */
+  async function excluirEConfirmar(usuario: ReturnType<typeof renderizar>['usuario']) {
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: 'Editar categoria' })).getByRole('button', {
+        name: 'Excluir categoria',
+      }),
+    )
+    const confirmacao = screen.getByRole('alertdialog', { name: 'Excluir categoria?' })
+    await usuario.click(within(confirmacao).getByRole('button', { name: 'Excluir categoria' }))
+  }
+
+  it('excluir uma categoria em uso (422) mostra a mensagem da API e oferece inativar', async () => {
     server.use(
       http.delete('*/api/categorias/:id', () =>
-        HttpResponse.json({ status: 422, mensagem: 'Categoria vinculada' }, { status: 422 }),
+        HttpResponse.json(
+          { status: 422, mensagem: 'Categoria vinculada a lançamentos, apenas inative' },
+          { status: 422 },
+        ),
       ),
     )
     const { usuario } = renderizar()
 
     await usuario.click(await naLista('button', { name: 'Editar categoria Mercado' }))
-    const dialogo = screen.getByRole('dialog', { name: 'Editar categoria' })
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Excluir categoria' }))
+    await excluirEConfirmar(usuario)
 
-    expect(await within(dialogo).findByText(/Não dá para excluir Mercado/)).toBeInTheDocument()
+    const dialogo = screen.getByRole('dialog', { name: 'Editar categoria' })
+    expect(await within(dialogo).findByText('Categoria vinculada a lançamentos, apenas inative')).toBeInTheDocument()
     expect(within(dialogo).getByRole('button', { name: 'Inativar categoria' })).toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).toBeNull()
   })
 
-  it('exclui uma categoria sem lançamentos', async () => {
-    server.use(http.delete('*/api/categorias/:id', () => new HttpResponse(null, { status: 204 })))
+  it('excluir pede confirmação: Cancelar não manda o DELETE; confirmar exclui', async () => {
+    let deletes = 0
+    server.use(
+      http.delete('*/api/categorias/:id', () => {
+        deletes += 1
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
     const { usuario } = renderizar()
 
     await usuario.click(await naLista('button', { name: 'Editar categoria Aluguel' }))
     await usuario.click(screen.getByRole('button', { name: 'Excluir categoria' }))
+    const confirmacao = screen.getByRole('alertdialog', { name: 'Excluir categoria?' })
+    expect(confirmacao).toHaveAccessibleDescription('A categoria Aluguel sai da sua lista. Não dá para desfazer.')
+    expect(within(confirmacao).getByRole('button', { name: 'Cancelar' })).toHaveFocus()
+    await usuario.click(within(confirmacao).getByRole('button', { name: 'Cancelar' }))
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+    expect(screen.getByRole('dialog', { name: 'Editar categoria' })).toBeInTheDocument()
+    expect(deletes).toBe(0)
 
+    await excluirEConfirmar(usuario)
     expect(await screen.findByText('Categoria excluída')).toBeInTheDocument()
+    expect(deletes).toBe(1)
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Editar categoria' })).toBeNull())
   })
 
   it('reativa uma inativa; erro da API vira toast', async () => {
@@ -203,7 +234,7 @@ describe('Categorias (Context + View)', () => {
     expect(await screen.findAllByText('Recusado pela API')).toHaveLength(1)
     await usuario.click(screen.getByRole('button', { name: 'Inativar categoria' }))
     await waitFor(() => expect(screen.getAllByText('Recusado pela API').length).toBeGreaterThanOrEqual(2))
-    await usuario.click(screen.getByRole('button', { name: 'Excluir categoria' }))
+    await excluirEConfirmar(usuario)
     expect(
       (await screen.findAllByText('Não foi possível concluir a operação. Tente novamente.'))[0],
     ).toBeInTheDocument()

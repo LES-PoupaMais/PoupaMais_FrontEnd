@@ -40,10 +40,12 @@ describe('ActionBanner', () => {
     expect(screen.queryByRole('button', { name: 'Fechar aviso' })).not.toBeInTheDocument()
   })
 
-  it('erro usa role="alert"; sucesso usa status', () => {
+  it('erro usa role="alert"; info e atenção usam status', () => {
     const { rerender } = render(<ActionBanner variante="erro" texto="Não foi possível carregar as categorias." />)
     expect(screen.getByRole('alert')).toHaveAttribute('data-variante', 'erro')
-    rerender(<ActionBanner variante="sucesso" texto="Tudo certo." />)
-    expect(screen.getByRole('status')).toHaveAttribute('data-variante', 'sucesso')
+    rerender(<ActionBanner texto="Seu rascunho foi guardado." />)
+    expect(screen.getByRole('status')).toHaveAttribute('data-variante', 'info')
+    rerender(<ActionBanner variante="atencao" texto="Sua sessão venceu." />)
+    expect(screen.getByRole('status')).toHaveAttribute('data-variante', 'atencao')
   })
 })

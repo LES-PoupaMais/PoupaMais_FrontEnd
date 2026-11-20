@@ -4,14 +4,18 @@ import { entrarComSessaoFalsa } from './fixtures/sessao'
 
 type Categoria = { id: number; descricao: string; ativa: boolean; quantidadeLancamentos: number }
 
-// API de categorias em memória: GET (ativas primeiro, ordem alfabética), POST (409 se repetida), PUT e PATCH status
+// API de categorias em memória: GET (ativas primeiro, ordem alfabética), POST (409 se repetida), PUT, PATCH status e
+// DELETE (422 se tiver lançamentos)
 async function simularCategorias(page: Page, iniciais: Categoria[]) {
   const categorias = [...iniciais]
   const ordenar = () =>
     [...categorias].sort((a, b) => Number(b.ativa) - Number(a.ativa) || a.descricao.localeCompare(b.descricao))
   const repetida = (nome: string, id?: number) =>
     categorias.some((c) => c.id !== id && c.descricao.toLowerCase() === nome.toLowerCase())
-  const duplicada = { status: 409, json: { status: 409, mensagem: 'Já existe uma categoria com essa descrição' } }
+  const duplicada = {
+    status: 409,
+    json: { status: 409, codigo: 'CATEGORIA_DUPLICADA', mensagem: 'Já existe uma categoria com essa descrição' },
+  }
 
   await page.route(/\/api\/categorias(\?.*)?$/, async (rota) => {
     if (rota.request().method() === 'POST') {
@@ -26,6 +30,19 @@ async function simularCategorias(page: Page, iniciais: Categoria[]) {
   await page.route(/\/api\/categorias\/\d+(\/status)?$/, async (rota) => {
     const id = Number(/categorias\/(\d+)/.exec(rota.request().url())?.[1])
     const categoria = categorias.find((c) => c.id === id)!
+    if (rota.request().method() === 'DELETE') {
+      if (categoria.quantidadeLancamentos > 0)
+        return rota.fulfill({
+          status: 422,
+          json: {
+            status: 422,
+            codigo: 'CATEGORIA_VINCULADA',
+            mensagem: 'Categoria vinculada a lançamentos, apenas inative',
+          },
+        })
+      categorias.splice(categorias.indexOf(categoria), 1)
+      return rota.fulfill({ status: 204 })
+    }
     const corpo = rota.request().postDataJSON() as { descricao?: string; ativa?: boolean }
     if (corpo.descricao !== undefined) {
       if (repetida(corpo.descricao, id)) return rota.fulfill(duplicada)
@@ -86,6 +103,43 @@ test.describe('categorias', () => {
     await tabela.getByRole('button', { name: 'Reativar Academia' }).click()
     await expect(page.getByText('Categoria reativada')).toBeVisible()
     await expect(tabela.getByRole('button', { name: 'Reativar Academia' })).toHaveCount(0)
+  })
+
+  test('excluir pede confirmação; em uso mostra a mensagem da API (celular)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/categorias?mes=11&ano=2026')
+    const cartoes = page.locator('[data-slot="categoria-lista-cartoes"]')
+
+    // em uso: confirma, a API recusa (422) e o diálogo mostra a mensagem dela com "Inativar categoria"
+    await cartoes.getByRole('button', { name: 'Editar categoria Mercado' }).click()
+    const edicao = page.getByRole('dialog', { name: 'Editar categoria' })
+    await edicao.getByRole('button', { name: 'Excluir categoria' }).click()
+    const confirmacao = page.getByRole('alertdialog', { name: 'Excluir categoria?' })
+    await expect(confirmacao.getByText('A categoria Mercado sai da sua lista. Não dá para desfazer.')).toBeVisible()
+    await expect(confirmacao.getByRole('button', { name: 'Cancelar' })).toBeFocused()
+    await confirmacao.getByRole('button', { name: 'Excluir categoria' }).click()
+    await expect(confirmacao).toBeHidden()
+    await expect(edicao.getByText('Categoria vinculada a lançamentos, apenas inative')).toBeVisible()
+    await expect(edicao.getByRole('button', { name: 'Inativar categoria' })).toBeVisible()
+    await edicao.getByRole('button', { name: 'Cancelar' }).click()
+    await expect(edicao).toBeHidden()
+
+    // sem lançamentos (criada agora): Cancelar não exclui; confirmar exclui
+    await page.getByRole('button', { name: 'Nova categoria' }).click()
+    const nova = page.getByRole('dialog', { name: 'Nova categoria' })
+    await nova.getByLabel(/Nome/).fill('Viagem')
+    await nova.getByRole('button', { name: 'Criar categoria' }).click()
+    await expect(nova).toBeHidden()
+    await cartoes.getByRole('button', { name: 'Editar categoria Viagem' }).click()
+    await edicao.getByRole('button', { name: 'Excluir categoria' }).click()
+    await confirmacao.getByRole('button', { name: 'Cancelar' }).click()
+    await expect(confirmacao).toBeHidden()
+    await expect(edicao).toBeVisible()
+    await edicao.getByRole('button', { name: 'Excluir categoria' }).click()
+    await confirmacao.getByRole('button', { name: 'Excluir categoria' }).click()
+    await expect(edicao).toBeHidden()
+    await expect(page.getByText('Categoria excluída')).toBeVisible()
+    await expect(cartoes.getByText('Viagem', { exact: true })).toHaveCount(0)
   })
 
   test('no celular, "Nova categoria" da folha Criar abre o diálogo sem sair da tela', async ({ page }) => {

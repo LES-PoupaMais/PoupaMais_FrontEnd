@@ -4,6 +4,7 @@ import { FileUp, Plus, Tag } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/atoms/button'
 import { EmptyState } from '@/components/molecules/empty-state'
+import { ConfirmDialog } from '@/components/molecules/confirm-dialog'
 import { ErrorState } from '@/components/molecules/error-state'
 import { OfflineBanner, OfflineMotivo } from '@/components/molecules/offline-banner'
 import { CategoriaDialog } from '@/components/organisms/categoria-dialog'
@@ -15,7 +16,7 @@ import { CategoriasSkeleton } from './CategoriasSkeleton'
 const MOTIVO_ID = 'categorias-motivo-offline'
 
 // Categorias: cabeçalho (título a partir de 768px; no celular ele está na TopBar), "Nova categoria" e a lista,
-// com os estados carregando, vazio, erro e sem conexão. O diálogo cria, renomeia, inativa e exclui.
+// com os estados carregando, vazio, erro e sem conexão. O diálogo cria, renomeia, inativa e exclui (com confirmação).
 export function CategoriasView() {
   const ctx = useCategoriasContext()
   const bloqueio = ctx.online ? {} : { 'aria-disabled': true as const, 'aria-describedby': MOTIVO_ID }
@@ -101,8 +102,17 @@ export function CategoriasView() {
         inativando={ctx.inativando}
         onExcluir={categoriaAberta ? ctx.excluir : undefined}
         excluindo={ctx.excluindo}
-        emUso={ctx.emUso}
+        avisoEmUso={ctx.avisoEmUso}
         semConexao={!ctx.online}
+      />
+      <ConfirmDialog
+        aberto={ctx.confirmandoExclusao}
+        titulo="Excluir categoria?"
+        texto={`A categoria ${categoriaAberta?.descricao ?? ''} sai da sua lista. Não dá para desfazer.`}
+        rotuloConfirmar="Excluir categoria"
+        carregando={ctx.excluindo}
+        onCancelar={ctx.cancelarExclusao}
+        onConfirmar={ctx.confirmarExclusao}
       />
     </div>
   )

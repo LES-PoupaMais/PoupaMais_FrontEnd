@@ -52,6 +52,21 @@ describe('lancamentoSchema (RN001)', () => {
     expect(erros({ ...valido, valor: 999_999_999.99 })).toEqual({})
   })
 
+  it('usa as mensagens do Design System e da prancheta novo-erros-celular', () => {
+    expect(erros({ descricao: '', tipo: 'X', data: '2026-02-31', valor: 0, categoriaIds: [] })).toEqual({
+      descricao: 'A descrição é obrigatória.',
+      tipo: 'Escolha Receita ou Despesa.',
+      data: 'Informe uma data válida, no formato dd/mm/aaaa.',
+      valor: 'Informe um valor maior que zero.',
+      categoriaIds: 'Informe pelo menos uma categoria.',
+    })
+    expect(erros({ ...valido, descricao: 'a'.repeat(101) }).descricao).toBe(
+      'A descrição deve ter no máximo 100 caracteres.',
+    )
+    expect(erros({ ...valido, valor: undefined }).valor).toBe('Informe um valor maior que zero.')
+    expect(erros({ ...valido, valor: 1_000_000_000 }).valor).toBe('O valor máximo é R$ 999.999.999,99.')
+  })
+
   it('exige pelo menos uma categoria', () => {
     expect(erros({ ...valido, categoriaIds: [] }).categoriaIds).toBe(M.categorias)
     expect(erros({ ...valido, categoriaIds: [1, 2] })).toEqual({})

@@ -87,6 +87,7 @@ describe('http (cliente do BFF)', () => {
         HttpResponse.json(
           {
             status: 400,
+            codigo: 'VALIDACAO',
             mensagem: 'Dados inválidos',
             erros: [{ campo: 'valor', mensagem: 'O valor deve ser maior que zero' }],
           },
@@ -103,6 +104,7 @@ describe('http (cliente do BFF)', () => {
       message: 'Dados inválidos',
       erros: [{ campo: 'valor', mensagem: 'O valor deve ser maior que zero' }],
       daApi: true,
+      codigo: 'VALIDACAO',
     })
   })
 

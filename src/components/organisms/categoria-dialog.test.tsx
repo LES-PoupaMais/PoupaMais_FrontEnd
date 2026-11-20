@@ -56,11 +56,12 @@ describe('CategoriaDialog', () => {
     expect(onSalvar).toHaveBeenCalledWith('Mercado')
   })
 
-  it('em uso: troca as ações pelo aviso com "Inativar categoria"', async () => {
+  it('em uso: troca as ações pelo aviso com a mensagem da API e "Inativar categoria"', async () => {
     const onInativar = vi.fn()
-    const { usuario } = renderizar({ categoria: mercado, onInativar, onExcluir: vi.fn(), emUso: true })
+    const avisoEmUso = 'Categoria vinculada a lançamentos, apenas inative'
+    const { usuario } = renderizar({ categoria: mercado, onInativar, onExcluir: vi.fn(), avisoEmUso })
 
-    expect(screen.getByText(/Não dá para excluir Mercado: ela está em uso em lançamentos/)).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(avisoEmUso)
     expect(screen.queryByRole('button', { name: 'Excluir categoria' })).toBeNull()
     await usuario.click(screen.getByRole('button', { name: 'Inativar categoria' }))
     expect(onInativar).toHaveBeenCalledOnce()

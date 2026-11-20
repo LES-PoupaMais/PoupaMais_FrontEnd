@@ -1,5 +1,6 @@
 // Cliente do BFF: o navegador só chama o próprio Next (/api/...), que repassa para a API com o token.
-// Converte o erro padrão da API ({ status, mensagem, erros }) em ErroApi.
+// Converte o erro padrão da API ({ status, codigo, mensagem, erros }) em ErroApi. O `codigo` (v1.2.0) só é guardado: a tela
+// mostra a `mensagem` da API ou a genérica (`traduzirErro`) e não decide nada por ele.
 
 export type ErroCampo = { campo: string; mensagem: string }
 
@@ -8,13 +9,16 @@ export class ErroApi extends Error {
   readonly erros: ErroCampo[]
   /** `true` quando `message` é a `mensagem` que a própria API mandou (não uma frase do front) */
   readonly daApi: boolean
+  /** Código estável que a API mandou (v1.2.0), ex.: "CATEGORIA_DUPLICADA". Sem uso nas telas. */
+  readonly codigo?: string
 
-  constructor(status: number, mensagem: string, erros: ErroCampo[] = [], daApi = false) {
+  constructor(status: number, mensagem: string, erros: ErroCampo[] = [], daApi = false, codigo?: string) {
     super(mensagem)
     this.name = 'ErroApi'
     this.status = status
     this.erros = erros
     this.daApi = daApi
+    this.codigo = codigo
   }
 }
 
@@ -42,10 +46,12 @@ function montarUrl(caminho: string, params?: Parametros): URL {
 async function lerErro(resposta: Response): Promise<ErroApi> {
   try {
     const corpo = await resposta.json()
+    const codigo = corpo && typeof corpo.codigo === 'string' ? corpo.codigo : undefined
     if (corpo && typeof corpo.mensagem === 'string' && corpo.mensagem.trim() !== '') {
-      return new ErroApi(resposta.status, corpo.mensagem, Array.isArray(corpo.erros) ? corpo.erros : [], true)
+      return new ErroApi(resposta.status, corpo.mensagem, Array.isArray(corpo.erros) ? corpo.erros : [], true, codigo)
     }
-    if (corpo && Array.isArray(corpo.erros)) return new ErroApi(resposta.status, MENSAGEM_ERRO_PADRAO, corpo.erros)
+    if (corpo && Array.isArray(corpo.erros))
+      return new ErroApi(resposta.status, MENSAGEM_ERRO_PADRAO, corpo.erros, false, codigo)
   } catch {
     // corpo vazio ou não-JSON: cai na mensagem padrão
   }

@@ -37,7 +37,8 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
   `lib/format.plural`.
 - **Revisão geral (19/11):** corrigida na própria branch (link de categoria do Dashboard, status no POST/PUT, `destinoSeguro`,
   BFF com lista de rotas, lixeira com DELETE na hora + restaurar, regra única de mensagens de erro em `lib/http`, entre
-  outros). Depende do back `feat/status-no-lancamento` (contrato **v1.2.0**).
+  outros). O contrato **v1.2.0** do back (status no POST/PUT, restaurar ao status anterior, `codigo` em todo erro e `data` em
+  `maioresDespesas`) está na development do back desde 20/11 e espelhado abaixo.
 - **Próximo passo:** revisar as Pendências abaixo com a equipe (as marcadas "decidir" esperam o líder/design).
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
@@ -302,11 +303,14 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 
 ### Categorias (RF011 / UC009 / RN002)
 
-- Tela própria **Categorias** (lista com criar, renomear, inativar e reativar; contagem de lançamentos do mês com `quantidadeLancamentos`).
-  Inativar uma categoria em uso (`422`) mostra o aviso "categoria em uso" no próprio diálogo.
+- Tela própria **Categorias** (lista com criar, renomear, inativar, reativar e excluir; contagem de lançamentos do mês com
+  `quantidadeLancamentos`).
+- **Excluir** pede confirmação (`ConfirmDialog` "Excluir categoria?", decisão de 20/11) antes do `DELETE`. Categoria em uso
+  (`422` no `DELETE`): a `mensagem` da API aparece no aviso de atenção do diálogo, com "Inativar categoria".
 - No formulário de lançamento, o campo de categorias (multi-select) permite **criar uma nova no próprio campo**; a criada já entra selecionada.
   Categorias inativas não são selecionáveis.
-- `409` = "Já existe uma categoria com esse nome" (sem diferenciar maiúsculas/minúsculas), mostrado no diálogo.
+- `409` = "Já existe uma categoria com essa descrição" (a `mensagem` da API, sem diferenciar maiúsculas/minúsculas), mostrado no
+  campo do diálogo.
 - Depois de criar ou editar: invalidar `categorias`, `lancamentos` e `dashboard` (`useSalvarCategoria` já faz).
 
 ### Conta no saldo e Lixeira (RN004 / RN006 / UC010)
@@ -322,7 +326,7 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
   `POST /restaurar`: o `PATCH /status` de item na lixeira dá `422`) e o toast pelo status devolvido (`constants/textos`):
   "Restaurado como inativo. Ative para voltar ao dashboard." (INATIVO) ou "Lançamento restaurado" (ATIVO).
 - Lançamento na lixeira não pode ser editado: em `/lancamentos/[id]/editar` mostrar o aviso e Restaurar.
-- A exportação segue o filtro: só exporta itens da lixeira quando o filtro é a Lixeira.
+- A exportação segue o filtro e não leva os itens da lixeira; a Lixeira não tem Exportar (decisão de 20/11).
 
 ## Textos fora do DS, aprovados em 19/11
 
@@ -407,6 +411,9 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
 
 ## Contrato da API (espelho do CLAUDE.md do backend)
 
+Versão do contrato: **v1.2.0** (20/11/2026): `status` no POST/PUT de lançamento, restaurar ao status anterior, `codigo` em toda
+resposta de erro e `data` em `maioresDespesas`.
+
 O navegador chama `/api/...` do **próprio Next**; o BFF repassa para `${API_URL}/api/...` com `Authorization: Bearer <token>`. JSON camelCase.
 Login, cadastro, troca de senha e exclusão de conta passam por **Server Actions** (que chamam a API e gravam o cookie), não pelo BFF.
 No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache em `hooks/` e chaves em `constants/query-keys.ts`.
@@ -444,14 +451,36 @@ No código: tipos em `types/api.ts`, chamadas em `services/*.service.ts`, cache 
 - `GET /lancamentos/exportar?formato=csv|xlsx&<filtros>` → arquivo (baixar como blob, nome vindo do `Content-Disposition`)
 - `GET /lancamentos/template-csv` → arquivo
 - `GET /dashboard?mes=&ano=` →
-  `{mes, ano, receitas, despesas, saldo, taxaGasto|null, classificacaoTaxa: "DENTRO_DO_LIMITE"|"ATENCAO"|"ACIMA_DO_LIMITE"|null, mensagem, ultimosMeses: [{mes, ano, receitas, despesas, saldo}] (4), despesasPorCategoria: [{categoriaId, descricao, valor}], maioresDespesas: [{id, descricao, valor, categorias: string[]}], pesoMaioresDespesas: {valor, percentual|null}}`
-  (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa)
+  `{mes, ano, receitas, despesas, saldo, taxaGasto|null, classificacaoTaxa: "DENTRO_DO_LIMITE"|"ATENCAO"|"ACIMA_DO_LIMITE"|null, mensagem, ultimosMeses: [{mes, ano, receitas, despesas, saldo}] (4), despesasPorCategoria: [{categoriaId, descricao, valor}], maioresDespesas: [{id, descricao, data, valor, categorias: string[]}], pesoMaioresDespesas: {valor, percentual|null}}`
+  (`pesoMaioresDespesas`: soma das 5 maiores e % sobre as despesas do mês, 2 casas; `percentual` `null` sem despesa).
+  **v1.2.0:** `data` (`"2026-08-05"`) em cada item de `maioresDespesas`, mostrada como "1 nov" (`formatarDataCurta`) antes das categorias.
 
 Lançamento: `{id, descricao, tipo: "RECEITA"|"DESPESA", data, valor, status: "ATIVO"|"INATIVO"|"DELETADO", categorias: [{id, descricao}], dataCadastro, dataAtualizacao, dataExclusao}`
 (`data` = `"2026-11-05"`; `dataCadastro`/`dataAtualizacao`/`dataExclusao` = instantes ISO em UTC (`dataAtualizacao` `null` até a primeira alteração), ex. `"2026-08-03T09:30:15Z"`, mostrar no fuso local;
 `dataExclusao` preenchida ao ir para a Lixeira e `null` ao restaurar).
-Erro: `{status, mensagem, erros?: [{campo, mensagem}]}`. Exibir com `lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos
-campos (`setError` do RHF), como vieram.
+**Erro (v1.2.0):** `{status, codigo, mensagem, erros?: [{campo, mensagem}]}`, ex. `{ "status": 422, "codigo": "CATEGORIA_VINCULADA",
+"mensagem": "Categoria vinculada a lançamentos, apenas inative" }`. `erros[]` só vem no `400 VALIDACAO`. Exibir com
+`lib/http.traduzirErro`: `mensagem` em toast/aviso e `erros` nos campos (`setError` do RHF), como vieram. O **`codigo`** é uma string
+estável (MAIÚSCULAS_COM_UNDERSCORE, nunca renomeada) e fica em `ErroApi.codigo` / `RespostaErro.codigo` (opcional no tipo, porque
+o BFF e o `lib/http` também montam erros sem ele: sem conexão, 404 de rota fora da lista), mas **o front não decide nada pelo
+código** (decisão de 20/11): mostra a `mensagem` da API ou a genérica. Tabela completa ("Padrão de erro") no `CLAUDE.md` do back;
+resumo:
+
+| Status | Códigos |
+| --- | --- |
+| 400 | `VALIDACAO` (com `erros[]`), `CORPO_INVALIDO`, `FORMATO_EXPORTACAO_INVALIDO`, `REQUISICAO_INVALIDA` |
+| 401 | `NAO_AUTENTICADO` (sem token, expirado, sessão derrubada), `CREDENCIAIS_INVALIDAS` (login) |
+| 403 | `ACESSO_NEGADO` (reservado) |
+| 404 | `NAO_ENCONTRADO` (rota), `CATEGORIA_NAO_ENCONTRADA`, `LANCAMENTO_NAO_ENCONTRADO`, `FOTO_NAO_ENCONTRADA` |
+| 405 | `METODO_NAO_PERMITIDO` |
+| 409 | `EMAIL_JA_CADASTRADO`, `CATEGORIA_DUPLICADA` |
+| 415 | `TIPO_CONTEUDO_NAO_SUPORTADO` (antes da v1.2.0 saía 500) |
+| 422 | arquivos: `ARQUIVO_GRANDE_DEMAIS` (413 se o servidor recusar antes), `ARQUIVO_VAZIO`, `ARQUIVO_INVALIDO`, `CABECALHO_INVALIDO`, `ARQUIVO_LINHAS_DEMAIS`, `SEM_DADOS_EXPORTACAO`; conta: `ACEITE_TERMOS_OBRIGATORIO`, `DADOS_CONTA_INVALIDOS`, `SENHA_ATUAL_INCORRETA`, `SENHA_IGUAL_A_ATUAL`, `SENHA_INCORRETA`, `TOKEN_INVALIDO`, `FOTO_TIPO_INVALIDO`; categorias: `CATEGORIA_INVALIDA`, `CATEGORIA_INATIVA`, `CATEGORIA_VINCULADA`; lançamentos: `LANCAMENTO_INVALIDO`, `LANCAMENTO_NA_LIXEIRA`, `LANCAMENTO_JA_EXCLUIDO`, `LANCAMENTO_NAO_EXCLUIDO`, `STATUS_INVALIDO`, `TRANSICAO_STATUS_INVALIDA` |
+| 500 | `ERRO_INTERNO` (sem detalhes) |
+
+Rota inexistente (com token) → `404` "Recurso não encontrado"; método não suportado → `405`. Fora do padrão (pendência do back): a
+recusa de CORS do Spring (`403` texto puro, o navegador não chama a API direto) e `@PathVariable` não numérico, parâmetro obrigatório
+ausente e `406`, que caem no `500 ERRO_INTERNO`.
 
 CSV de importação (RN012): separador `;`, cabeçalho `descricao;tipo;data;valor;categorias`, data em `dd/mm/aaaa` (dia que exista), várias categorias separadas por `|`.
 A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula de data.
@@ -545,12 +574,16 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; nenhuma tela liga ainda. Ligar ao `date-picker` no modo mês
      (o `calendar` já tem `modo="mes"`).
    - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
-2. **Mensagens do schema × DS (decidir):** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
-   o DS (MoneyField/DatePicker) pede "Informe um valor maior que zero." e "Informe uma data válida, no formato dd/mm/aaaa.". O limite do
-   valor também diverge (schema/CLAUDE.md R$ 999.999.999,99; README do MoneyField R$ 99.999.999.999.999,99). Decidir com a equipe e alinhar.
-   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido. A prancheta `novo-erros-celular`
-   ainda pede "A descrição é obrigatória." e "Informe pelo menos uma categoria."; o formulário usa as do schema até a decisão.
-3. **Mensagens de erro back↔front a definir (líder):** desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
+2. **Mensagens do schema × DS: decidido e feito em 20/11.** `schemas/lancamento.schema.ts` usa as frases do DS e da prancheta
+   `novo-erros-celular` ("A descrição é obrigatória.", "A descrição deve ter no máximo 100 caracteres.", "Escolha Receita ou Despesa.",
+   "Informe uma data válida, no formato dd/mm/aaaa.", "Informe um valor maior que zero." para vazio e zero, "O valor máximo é
+   R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, ficam
+   "Informe a data." e "A data deve estar entre 2000 e 2100." Falta o README do MoneyField (DS) trocar o limite de
+   R$ 99.999.999.999.999,99 para R$ 999.999.999,99.
+3. **Mensagens de erro back↔front: decidido em 20/11.** O back passa a mandar um `codigo` estável em todo erro; o front
+   **continua mostrando só a `mensagem` da API ou a genérica** e não decide nada pelo `codigo` (`RespostaErro` em `types/api` só
+   ganhou `codigo?` opcional; `ErroApi.codigo` e o resultado de `lib/api-servidor` guardam o que a API mandou, sem uso nas telas).
+   Contexto: desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
    (regra em `lib/http.traduzirErro`; sem conexão, 401 e 5xx com frases do front). O líder vai repensar as mensagens entre back e
    front: mudar só em `lib/http` (e no back). Ficaram no front só os status que o contrato dá a um caso único e que mudam a tela:
    401 no login (credenciais), 409 no cadastro e na categoria (campo E-mail/Nome; a mensagem da API vai no campo), 422 no
@@ -567,12 +600,10 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - O átomo `card` ainda é o do shadcn (raio e anel antigos): as moléculas desenham a superfície do DS (`rounded-card border bg-card
      shadow-card`) com uma prop para tirar o cartão. Alinhar o `card` ao DS (`.pm-card`, `tamanho`, `destaque`) e passar a compor.
    - `skeleton` usa `animate-pulse` (o brilho em degradê do DS precisa de um `@keyframes` no `globals.css`).
-   - `action-banner` tem a variante `sucesso` (cores do toast de sucesso), que o DS ainda não documenta: registrar no DS ou remover (decidir).
+   - ~~`action-banner` com a variante `sucesso`~~: **decidido e feito em 20/11**, removida (nenhuma tela usava; o DS tem info, atenção e erro).
    - `upload-area` ganhou na integração a prop opcional `onBaixarModelo` (botão com o mesmo visual do link `modeloHref`), para o modelo
      CSV baixar pelo hook com toast: registrar no README do UploadArea.
 6. **Dashboard:**
-   - `maioresDespesas` do contrato não traz a `data`: as pranchetas mostram "1 nov · Aluguel", a tela mostra só as categorias.
-     Acrescentar `data` em `maioresDespesas[]` (back + os dois `CLAUDE.md`) e exibir com `formatarDataCurta`.
    - O "mês vazio" é deduzido de `receitas = despesas = 0`: um mês só com lançamentos fora do saldo também cai no "Comece pelo seu
      primeiro lançamento". Resolver com uma contagem de lançamentos do mês no `GET /dashboard` (decisão com o back).
    - O gráfico de área não abre a dica no mês atual por padrão (a prancheta mostra "Nov" aberto como exemplo); abre com mouse, toque
@@ -590,20 +621,23 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      só entra quando houver rascunho.
 8. **Lançamentos, visualização, exportar e Lixeira:**
    - Exportar é um **diálogo** (tela cheia no celular, card de 640px no computador) com o conteúdo das pranchetas `exportar-*`, que
-     desenham uma página. A Lixeira ganhou um "Exportar" (não está na prancheta `lixeira-*`) para cumprir "só exporta a lixeira com o
-     filtro Lixeira"; confirmar com o design (decidir).
+     desenham uma página. **Decidido e feito em 20/11:** a Lixeira não tem "Exportar" (não está na prancheta `lixeira-*`); Exportar
+     fica só em Lançamentos. A prop `lixeira` do `export-dialog` ficou sem uso.
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
    - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
      Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
    - Textos sem prancheta: aprovados em 19/11 (seção "Textos fora do DS"); falta registrar no DS. Os toasts de Conta no saldo e
      lixeira ainda se repetem nos Contexts de Lançamentos, Lixeira, visualização e formulário: juntar em `constants/textos` se mudarem.
-   - **Restaurar volta ao status anterior (v1.2.0), decidir:** a visualização de item na lixeira diz "Não · volta desligado ao
-     restaurar" (`transaction-detail`, prancheta), o que só vale para itens antigos. A resposta da API não traz o status anterior:
-     acrescentar `statusAnterior` no back ou trocar o texto (design).
+   - **Restaurar volta ao status anterior (v1.2.0): decidido e feito em 20/11.** Os textos ficaram neutros, sem prometer status:
+     na visualização de item na lixeira (`transaction-detail`) "Não · ao restaurar, volta como estava antes"; na Lixeira, o aviso
+     "Ao restaurar, o lançamento volta como estava antes de ir para a lixeira." e a dica da tabela "…Restaurar devolve o lançamento
+     para a lista, como estava antes de ir para a lixeira.". As pranchetas `lixeira-*`, `editar-lixeira-computador` e o README do
+     TransactionDetail (DS) ainda dizem "volta desligado"/"voltam fora do saldo": atualizar no DS.
 9. **Importar e Categorias:**
-   - O `CLAUDE.md` diz que "inativar uma categoria em uso (`422`)" mostra o aviso; no contrato e nas pranchetas (`categoria-em-uso-celular`)
-     o `422` é do **DELETE** (Excluir): o aviso aparece ao excluir e oferece "Inativar categoria". O código segue o contrato; alinhar o texto.
-   - "Excluir categoria" exclui direto (sem ConfirmDialog), como na prancheta `categoria-editar-celular`; decidir se pede confirmação.
+   - ~~O `CLAUDE.md` dizia que "inativar uma categoria em uso (`422`)" mostra o aviso~~: alinhado em 20/11 (o `422` é do **DELETE**).
+   - **Excluir categoria: decidido e feito em 20/11.** Pede confirmação no `ConfirmDialog` ("Excluir categoria?" · "A categoria X sai
+     da sua lista. Não dá para desfazer." · "Excluir categoria"), que não está na prancheta `categoria-editar-celular`. No `422` (em
+     uso), o aviso do diálogo mostra a `mensagem` da API no lugar da frase da prancheta `categoria-em-uso-celular`. Registrar no DS.
    - Editar uma categoria **inativa** (computador) mostra só Nome e Excluir: não há prancheta de "Reativar" dentro do diálogo (Reativar fica na linha).
    - Textos dos toasts de categoria ("Categoria criada/renomeada/inativada/reativada/excluída") não estão no DS: registrar no DS.
    - Importar sem `stepper`: as pranchetas `importar-*` não têm indicador de passos (escolher → importando → resultado na mesma tela).
@@ -620,8 +654,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      troca de senha e excluir conta) e passa `API_URL` para o Next.
 11. **Telas de acesso e públicas:**
    - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando houver.
-   - **AuthTemplate no celular (decidir):** a prancheta `login-celular` não tem card (logo no topo à esquerda, texto alinhado à esquerda,
-     rodapé só com a política); o template aprovado mantém o card central em todas as larguras. Decidir se o template ganha o layout do celular.
+   - **AuthTemplate no celular: decidido em 20/11, fica como está.** A prancheta `login-celular` não tem card (logo no topo à
+     esquerda, texto alinhado à esquerda, rodapé só com a política); o template aprovado mantém o card central em todas as larguras.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
    - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
@@ -630,13 +664,11 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - Landing: a prévia do Saldo do mês usa o `highlight-card`; a prévia de "Despesas por categoria" continua desenhada na própria
      `landing-passos` (o `category-bar-chart` tem links, total e a dica de toque, que a prancheta `landing-*` não tem).
 12. **Integração e contrato:**
-   - **Depende do back `feat/status-no-lancamento` (v1.2.0):** `status` no POST/PUT, restaurar ao status anterior e `PATCH /status`
-     com `422` na lixeira. Sem essa versão, o formulário perde o "Conta no saldo" desligado no POST e o Desfazer devolve INATIVO.
+   - ~~Depende do back v1.2.0~~: integrado na development do back em 20/11 (PR #31 de lá); contrato espelhado na seção "Contrato da API".
    - **Roteiro da demo contra a API real:** feito em 20/11 (`npm run test:e2e:api-real`, seção Testes). Falta decidir se entra no
      CI (precisa subir a pilha E2E do PoupaMais_Development no runner: Docker + build do back).
    - **Pilha E2E (PoupaMais_Development):** o `E2E_FRONT_PORT` padrão é 3200 e a suíte usa 3130; o link do e-mail de senha aponta
      para o `FRONT_URL` (a suíte só usa o caminho, então passa com qualquer porta). Proposta: padrão 3130 lá, ou documentar
      `E2E_FRONT_PORT=3130 npm run e2e:up`, e tirar o "preparada, ainda sem uso" do README de lá.
-   - **Texto do 409 da categoria:** a seção Categorias diz "Já existe uma categoria com esse nome"; a API manda "Já existe uma
-     categoria com essa descrição" e o front mostra a da API (regra de 19/11). Só alinhar o texto deste arquivo, ou a frase no back
-     (decisão do líder, junto do item 3).
+   - **Texto do 409 da categoria: decidido e feito em 20/11.** A seção Categorias agora usa a frase da API ("Já existe uma categoria
+     com essa descrição"), que o front já mostra.
