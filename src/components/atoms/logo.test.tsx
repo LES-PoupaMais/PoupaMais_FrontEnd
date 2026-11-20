@@ -26,4 +26,10 @@ describe('Logo', () => {
 
     expect(screen.getByRole('img', { name: 'PoupaMais' })).toHaveTextContent('')
   })
+
+  it('com moldura ganha o fundo branco só no claro', () => {
+    render(<Logo moldura />)
+
+    expect(screen.getByRole('img', { name: 'PoupaMais' })).toHaveClass('bg-card', 'dark:bg-transparent')
+  })
 })

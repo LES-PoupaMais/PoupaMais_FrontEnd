@@ -1,4 +1,4 @@
-import { ArrowRight, Info, Percent, ShieldCheck, TrendingUp } from 'lucide-react'
+import { ArrowRight, Gauge, Info, ShieldCheck, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/atoms/badge'
 import { buttonVariants } from '@/components/atoms/button'
@@ -63,7 +63,7 @@ function LandingPrevia() {
         <StatCard funcao="despesa" rotulo="Despesas" valor={formatarMoeda(7560.5)} />
         <StatCard
           className="hidden lg:flex"
-          icone={Percent}
+          icone={Gauge}
           rotulo="Taxa de gasto"
           valor="60,6%"
           rodape={

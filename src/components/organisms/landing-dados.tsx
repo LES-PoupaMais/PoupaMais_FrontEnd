@@ -25,7 +25,7 @@ export function LandingDados({ hrefPrivacidade, hrefCadastro }: LandingDadosProp
           <div className="flex flex-wrap gap-3">
             <Link
               href={hrefPrivacidade}
-              className={cn(buttonVariants({ variant: 'texto' }), '-ml-3 self-start lg:ml-0')}
+              className={cn(buttonVariants({ variant: 'texto' }), '-ml-3 self-start underline lg:ml-0')}
             >
               Ler a Política de privacidade
               <ArrowRight aria-hidden="true" className="lg:hidden" />
