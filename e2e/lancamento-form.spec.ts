@@ -72,8 +72,8 @@ test('validação: data que não existe, valor zero e sem categoria não enviam'
 
   await expect(page.getByText('Faltam 3 informações. Confira os campos marcados.')).toBeVisible()
   await expect(page.getByText('Informe uma data válida, no formato dd/mm/aaaa.')).toBeVisible()
-  await expect(page.getByText('O valor deve ser maior que zero.')).toBeVisible()
-  await expect(page.getByText('Escolha pelo menos uma categoria.')).toBeVisible()
+  await expect(page.getByText('Informe um valor maior que zero.')).toBeVisible()
+  await expect(page.getByText('Informe pelo menos uma categoria.')).toBeVisible()
   expect(enviados).toHaveLength(0)
 })
 

@@ -7,17 +7,20 @@ import { ANO_MAXIMO, ANO_MINIMO, ehDataIsoValida, partesDaData } from '@/lib/dat
 export const VALOR_MAXIMO = 999_999_999.99
 export const DESCRICAO_MAXIMO = 100
 
+// Mensagens do Design System e da prancheta novo-erros-celular (decisão de 20/11): Input, SegmentedControl, DatePicker,
+// MoneyField (com o limite de R$ 999.999.999,99) e MultiSelect. Sem frase no DS: data vazia e fora da faixa.
 export const MENSAGENS_LANCAMENTO = {
-  descricaoObrigatoria: 'Informe a descrição.',
-  descricaoLonga: `A descrição pode ter até ${DESCRICAO_MAXIMO} caracteres.`,
+  descricaoObrigatoria: 'A descrição é obrigatória.',
+  descricaoLonga: `A descrição deve ter no máximo ${DESCRICAO_MAXIMO} caracteres.`,
   tipo: 'Escolha Receita ou Despesa.',
   dataObrigatoria: 'Informe a data.',
-  dataInvalida: 'Informe uma data que exista.',
+  dataInvalida: 'Informe uma data válida, no formato dd/mm/aaaa.',
   dataFaixa: `A data deve estar entre ${ANO_MINIMO} e ${ANO_MAXIMO}.`,
-  valorObrigatorio: 'Informe o valor.',
-  valorPositivo: 'O valor deve ser maior que zero.',
-  valorMaximo: 'O valor pode ser de até R$ 999.999.999,99.',
-  categorias: 'Escolha pelo menos uma categoria.',
+  // MoneyField: vazio e zero têm a mesma frase
+  valorObrigatorio: 'Informe um valor maior que zero.',
+  valorPositivo: 'Informe um valor maior que zero.',
+  valorMaximo: 'O valor máximo é R$ 999.999.999,99.',
+  categorias: 'Informe pelo menos uma categoria.',
 } as const
 
 const m = MENSAGENS_LANCAMENTO

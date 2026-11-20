@@ -60,10 +60,10 @@ describe('LancamentoForm', () => {
     await usuario.click(screen.getByRole('button', { name: 'Salvar lançamento' }))
 
     expect(await screen.findByText('Faltam 4 informações. Confira os campos marcados.')).toBeInTheDocument()
-    expect(screen.getByText('Informe a descrição.')).toBeInTheDocument()
+    expect(screen.getByText('A descrição é obrigatória.')).toBeInTheDocument()
     expect(screen.getByText('Escolha Receita ou Despesa.')).toBeInTheDocument()
-    expect(screen.getByText('Informe o valor.')).toBeInTheDocument()
-    expect(screen.getByText('Escolha pelo menos uma categoria.')).toBeInTheDocument()
+    expect(screen.getByText('Informe um valor maior que zero.')).toBeInTheDocument()
+    expect(screen.getByText('Informe pelo menos uma categoria.')).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()
   })
 

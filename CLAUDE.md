@@ -545,11 +545,12 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; nenhuma tela liga ainda. Ligar ao `date-picker` no modo mês
      (o `calendar` já tem `modo="mes"`).
    - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
-2. **Mensagens do schema × DS (decidir):** `schemas/lancamento.schema.ts` usa "O valor deve ser maior que zero." e "Informe uma data que exista.";
-   o DS (MoneyField/DatePicker) pede "Informe um valor maior que zero." e "Informe uma data válida, no formato dd/mm/aaaa.". O limite do
-   valor também diverge (schema/CLAUDE.md R$ 999.999.999,99; README do MoneyField R$ 99.999.999.999.999,99). Decidir com a equipe e alinhar.
-   Os componentes mostram o `error` que receberem; o DatePicker usa a mensagem do DS para texto inválido. A prancheta `novo-erros-celular`
-   ainda pede "A descrição é obrigatória." e "Informe pelo menos uma categoria."; o formulário usa as do schema até a decisão.
+2. **Mensagens do schema × DS: decidido e feito em 20/11.** `schemas/lancamento.schema.ts` usa as frases do DS e da prancheta
+   `novo-erros-celular` ("A descrição é obrigatória.", "A descrição deve ter no máximo 100 caracteres.", "Escolha Receita ou Despesa.",
+   "Informe uma data válida, no formato dd/mm/aaaa.", "Informe um valor maior que zero." para vazio e zero, "O valor máximo é
+   R$ 999.999.999,99." e "Informe pelo menos uma categoria."), com o limite de **R$ 999.999.999,99**. Sem frase no DS, ficam
+   "Informe a data." e "A data deve estar entre 2000 e 2100." Falta o README do MoneyField (DS) trocar o limite de
+   R$ 99.999.999.999.999,99 para R$ 999.999.999,99.
 3. **Mensagens de erro back↔front a definir (líder):** desde 19/11 o front mostra a `mensagem` e os `erros[]` da API como vieram
    (regra em `lib/http.traduzirErro`; sem conexão, 401 e 5xx com frases do front). O líder vai repensar as mensagens entre back e
    front: mudar só em `lib/http` (e no back). Ficaram no front só os status que o contrato dá a um caso único e que mudam a tela:
