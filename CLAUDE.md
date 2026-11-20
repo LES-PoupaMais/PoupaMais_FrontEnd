@@ -59,7 +59,7 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
 | Estilo        | Tailwind CSS 4 + **shadcn/ui** (átomos em `components/atoms`, tema em variáveis CSS) + `cn()` (`@/lib/cn`, pacote `cn` do shadcn, configurado com os tokens próprios) + `class-variance-authority` |
 | Tema          | `next-themes` (`attribute="class"`, padrão = sistema; troca Sistema/Claro/Escuro no Perfil) |
 | Primitivos acessíveis | Radix UI (pacote `radix-ui`), por baixo dos átomos do shadcn (RNF012) |
-| Dados remotos | TanStack Query (lista com `useInfiniteQuery`; invalidar lista, dashboard e categorias após mutações) |
+| Dados remotos | TanStack Query: cache de 5 min (`staleTime`) e 10 min na memória (`gcTime`), em `screens/App/AppProviders` (repetir um filtro ou voltar a uma tela não busca de novo; o foco na janela só recarrega o que venceu). Lista com `useInfiniteQuery` e `keepPreviousData` (a lista anterior fica na tela enquanto a nova carrega). Depois de cada mutação, as consultas afetadas recarregam pelo mapa de `lib/invalidacoes.ts` (`invalidarApos(queryClient, 'lancamentoSalvo')`), nunca com `invalidateQueries` solto nos hooks; login e logout fazem `queryClient.clear()`. Risco aceito: mudança feita em outro aparelho aparece em até 5 min (ou ao recarregar) |
 | HTTP          | `fetch` via `lib/http` apontando para o **BFF** do próprio Next (`/api/*`) |
 | Formulários   | React Hook Form + Zod (`@hookform/resolvers`) |
 | Gráficos      | Recharts pelo átomo `chart` do shadcn: **área** (Receitas × Despesas) e **barras** (saldo mensal, categorias). **Nunca pizza nem rosca** |
@@ -295,6 +295,10 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 - **Visualizar lançamento** (TransactionDetail): abre ao tocar em qualquer lugar da linha; tela cheia no celular, painel à direita
   (~440px, com véu) no computador; ação principal Editar (na lixeira, Restaurar).
 - **Lista:** cards (TransactionRow) + filtros em chips e folha no celular; tabela (TransactionTable) + barra de filtros acima no computador.
+- **Busca:** filtra 500 ms depois da última tecla (`ESPERA_BUSCA_MS` e `useValorComEspera` em `hooks/use-valor-com-espera.ts`) e vai para a
+  URL com `router.replace` (`?q=`, sem encher o histórico). O texto do campo fica no `LancamentosContext` (a `FilterBar` recebe `busca`
+  e `onBuscaChange`) e é a fonte da verdade enquanto a pessoa digita: a URL só reescreve o campo quando muda por fora (Limpar filtros,
+  chip removido, voltar no navegador), nunca pelo eco da própria busca, mesmo atrasado.
 - **Dashboard (computador, 12 colunas):** Saldo (4) + tiles Receitas, Despesas e Taxa de gasto (8) · área Receitas × Despesas (8) +
   Saldo mensal (4) · Despesas por categoria (6) + Maiores despesas (6). Tablet em 2 colunas; celular em 1 coluna nessa ordem (`DashboardTemplate`).
 - Destinos da sidebar: "Dia a dia" (Dashboard, Lançamentos, Categorias, Lixeira) e "Conta" (Perfil, Sair). Sem sino e sem menu ☰.
@@ -311,7 +315,8 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
   Categorias inativas não são selecionáveis.
 - `409` = "Já existe uma categoria com essa descrição" (a `mensagem` da API, sem diferenciar maiúsculas/minúsculas), mostrado no
   campo do diálogo.
-- Depois de criar ou editar: invalidar `categorias`, `lancamentos` e `dashboard` (`useSalvarCategoria` já faz).
+- Depois de criar, editar, inativar, reativar ou excluir: recarregar `categorias`, `lancamentos` e `dashboard` (`categoriaAlterada` em
+  `lib/invalidacoes.ts`; os hooks já fazem).
 
 ### Conta no saldo e Lixeira (RN004 / RN006 / UC010)
 
@@ -394,7 +399,7 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
   continuam filtrados por mês/ano. Mostrar erro por campo; também exibir os `erros[]` vindos da API (`setError` do RHF).
 - **RN002**: várias categorias por lançamento; criar pelo próprio campo; categorias inativas não podem ser selecionadas.
 - **RN003/RN004**: o dashboard só reflete lançamentos que contam no saldo (ATIVO); após mudar "Conta no saldo", invalidar o dashboard
-  (as mutations de `hooks/use-mutacoes-lancamento.ts` já invalidam lista, dashboard e categorias). `taxaGasto` `null` → "Não disponível para o período".
+  (as mutations de `hooks/use-mutacoes-lancamento.ts` já invalidam lista, lixeira, dashboard e categorias, pelo mapa de `lib/invalidacoes.ts`). `taxaGasto` `null` → "Não disponível para o período".
 - **RN006**: ATIVO/INATIVO alternam livremente; DELETADO só sai pelo restaurar (v1.2.0: volta ao status anterior; itens antigos sem
   esse dado voltam INATIVO).
 - **RN007**: após importar, resumo "X lançamentos importados, Y linhas ignoradas" + linha e motivo de cada falha + categorias criadas.

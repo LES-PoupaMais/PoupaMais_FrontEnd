@@ -18,7 +18,7 @@ describe('AppProviders', () => {
       </AppProviders>,
     )
 
-    expect(screen.getByText('30000')).toBeInTheDocument()
+    expect(screen.getByText('300000')).toBeInTheDocument()
   })
 
   it('sessão vencida (401) leva ao login guardando a página atual', () => {
@@ -38,6 +38,12 @@ describe('AppProviders', () => {
 
     expect(cliente.getQueryCache().config.onError).toBe(tratarNaoAutenticado)
     expect(cliente.getMutationCache().config.onError).toBe(tratarNaoAutenticado)
+  })
+
+  it('cache: o dado vale 5 min e sai da memória 10 min depois de ninguém usar', () => {
+    const opcoes = criarQueryClient().getDefaultOptions().queries
+    expect(opcoes?.staleTime).toBe(5 * 60_000)
+    expect(opcoes?.gcTime).toBe(10 * 60_000)
   })
 
   it('retry: não repete 4xx; repete uma vez rede e 5xx', () => {

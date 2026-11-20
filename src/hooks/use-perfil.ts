@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/query-keys'
+import { invalidarApos } from '@/lib/invalidacoes'
 import { usuarioService } from '@/services/usuario.service'
 import type { AtualizarUsuarioRequest, Usuario } from '@/types/api'
 
@@ -21,7 +22,7 @@ export function useAtualizarNome() {
  */
 function aposMudarFoto(queryClient: ReturnType<typeof useQueryClient>, possuiFoto: boolean) {
   queryClient.setQueryData<Usuario>(queryKeys.usuario.eu, (atual) => (atual ? { ...atual, possuiFoto } : atual))
-  return queryClient.invalidateQueries({ queryKey: queryKeys.usuario.eu })
+  return invalidarApos(queryClient, 'perfil')
 }
 
 /** JPG, PNG ou WEBP até 2 MB: valide com `validarFoto` (schemas/perfil.schema) antes de chamar. */

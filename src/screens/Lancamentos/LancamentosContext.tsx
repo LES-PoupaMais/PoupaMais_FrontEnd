@@ -1,7 +1,16 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { createContext, useCallback, useContext, useMemo, useState, type MouseEvent, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { toast } from 'sonner'
 import { mostrarToastDesfazer } from '@/components/molecules/undo-toast'
 import { FILTROS_VAZIOS, type FiltrosLista } from '@/components/organisms/filter-bar'
@@ -13,6 +22,7 @@ import { useLancamento, useLancamentos } from '@/hooks/use-lancamentos'
 import { useMoverParaLixeiraComDesfazer } from '@/hooks/use-lixeira'
 import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useAlterarStatusLancamento } from '@/hooks/use-mutacoes-lancamento'
+import { useValorComEspera } from '@/hooks/use-valor-com-espera'
 import { traduzirErro } from '@/lib/http'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
 import type { CategoriaComContagem, FormatoExportacao, Lancamento, MesAno } from '@/types/api'
@@ -37,6 +47,9 @@ export const TOAST_MODELO = TOAST_MODELO_CSV
 type LancamentosContextValue = {
   periodo: MesAno
   filtros: FiltrosLista
+  /** Texto do campo de busca: a fonte da verdade enquanto a pessoa digita (vai para a URL 500 ms depois da última tecla) */
+  busca: string
+  setBusca: (texto: string) => void
   irParaMes: (periodo: MesAno) => void
   mudarFiltros: (mudanca: Partial<FiltrosLista>) => void
   limparFiltros: () => void
@@ -96,11 +109,52 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
     [router, caminho],
   )
   const irParaMes = (novo: MesAno) => irPara(comPeriodo(busca, novo))
-  const mudarFiltros = useCallback(
+  const aplicarFiltros = useCallback(
     (mudanca: Partial<FiltrosLista>) => irPara(comFiltros(busca, { ...filtros, ...mudanca })),
     [irPara, busca, filtros],
   )
-  const limparFiltros = () => irPara(comFiltros(busca, FILTROS_VAZIOS))
+
+  // ---------- busca (o campo não perde o que a pessoa digita) ----------
+  // O texto do campo é a fonte da verdade. Ele vai para a URL 500 ms depois da última tecla (`replace`, sem encher o
+  // histórico). A URL só reescreve o campo quando muda POR FORA (Limpar, chip removido, voltar no navegador); o eco da
+  // própria busca (a URL chegando com um valor já enviado, talvez atrasado) é reconhecido em `enviadas` e ignorado.
+  const [textoBusca, setTextoBusca] = useState(filtros.q)
+  const [qAntes, setQAntes] = useState(filtros.q)
+  const [enviadas, setEnviadas] = useState<readonly string[]>([])
+  const buscaComEspera = useValorComEspera(textoBusca)
+  const [esperaAntes, setEsperaAntes] = useState(buscaComEspera)
+  const qComEspera = buscaComEspera.trim()
+
+  if (filtros.q !== qAntes) {
+    setQAntes(filtros.q)
+    const posicao = enviadas.indexOf(filtros.q)
+    if (posicao >= 0) {
+      setEnviadas(enviadas.slice(posicao + 1)) // eco da própria busca: o campo fica como está
+    } else {
+      setEnviadas([]) // veio de fora: o campo acompanha a URL
+      setTextoBusca(filtros.q)
+    }
+  } else if (buscaComEspera !== esperaAntes) {
+    setEsperaAntes(buscaComEspera)
+    // A pessoa parou de digitar num valor novo: ele será enviado (efeito abaixo) e o eco dele não mexe no campo
+    if (qComEspera !== filtros.q && enviadas.at(-1) !== qComEspera) setEnviadas([...enviadas, qComEspera])
+  }
+
+  useEffect(() => {
+    // Só envia quando o campo parou (o valor com espera alcançou o texto); depois de uma mudança de fora, o valor com
+    // espera ainda é o antigo e não pode desfazer o que veio da URL
+    if (buscaComEspera !== textoBusca || qComEspera === filtros.q) return
+    aplicarFiltros({ q: qComEspera })
+  }, [buscaComEspera, textoBusca, qComEspera, filtros.q, aplicarFiltros])
+
+  const mudarFiltros = (mudanca: Partial<FiltrosLista>) => {
+    if (mudanca.q !== undefined) setTextoBusca(mudanca.q) // chip "Remover busca"
+    aplicarFiltros(mudanca)
+  }
+  const limparFiltros = () => {
+    setTextoBusca('')
+    irPara(comFiltros(busca, FILTROS_VAZIOS))
+  }
   const irParaLixeira = () => router.push(ROTAS.lixeira)
 
   // ---------- dados ----------
@@ -196,6 +250,8 @@ export function LancamentosProvider({ children }: { children: ReactNode }) {
   const valor: LancamentosContextValue = {
     periodo,
     filtros,
+    busca: textoBusca,
+    setBusca: setTextoBusca,
     irParaMes,
     mudarFiltros,
     limparFiltros,

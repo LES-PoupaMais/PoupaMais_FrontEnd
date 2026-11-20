@@ -1,4 +1,5 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { http as msw, HttpResponse } from 'msw/http'
 import { Toaster } from 'sonner'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -340,5 +341,105 @@ describe('Lançamentos', () => {
       return null
     }
     expect(() => renderComProviders(<SemProvider />)).toThrow(/<LancamentosProvider>/)
+  })
+})
+
+describe('Lançamentos: busca sem perder o que se digita', () => {
+  // Elemento novo a cada render (o mesmo objeto faria o React pular o Provider e a URL nova não seria lida)
+  const arvore = () => (
+    <LancamentosProvider>
+      <LancamentosView />
+    </LancamentosProvider>
+  )
+  const campo = () => barra().getByLabelText('Buscar')
+  const digitar = (texto: string) => fireEvent.change(campo(), { target: { value: texto } })
+  const esperar = (ms: number) => act(() => vi.advanceTimersByTime(ms))
+  /** Renderiza e devolve `urlMudou`: a URL nova (rota.busca) chega à tela, como faria o roteador */
+  const montar = () => {
+    const { rerender, queryClient } = renderComProviders(arvore())
+    return { urlMudou: () => rerender(<QueryClientProvider client={queryClient}>{arvore()}</QueryClientProvider>) }
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    rota.busca = 'mes=11&ano=2026'
+    rota.replace.mockClear()
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('só leva a busca para a URL (replace) 500 ms depois da última tecla', () => {
+    renderComProviders(arvore())
+    digitar('m')
+    esperar(300)
+    digitar('me')
+    esperar(300)
+    digitar('mer')
+    esperar(499)
+    expect(rota.replace).not.toHaveBeenCalled()
+    esperar(1)
+    expect(rota.replace).toHaveBeenCalledExactlyOnceWith('/lancamentos?mes=11&ano=2026&q=mer', { scroll: false })
+    expect(rota.push).not.toHaveBeenCalled()
+  })
+
+  it('digitar enquanto a busca anterior volta não perde letras (o eco atrasado da URL não reescreve o campo)', () => {
+    const { urlMudou } = montar()
+    digitar('mer')
+    esperar(500)
+    digitar('merc')
+    digitar('merca')
+
+    rota.busca = 'mes=11&ano=2026&q=mer' // a URL da primeira busca chega agora
+    urlMudou()
+    expect(campo()).toHaveValue('merca')
+
+    esperar(500)
+    expect(rota.replace).toHaveBeenLastCalledWith('/lancamentos?mes=11&ano=2026&q=merca', { scroll: false })
+    rota.busca = 'mes=11&ano=2026&q=merca'
+    urlMudou()
+    expect(campo()).toHaveValue('merca')
+    expect(rota.replace).toHaveBeenCalledTimes(2)
+  })
+
+  it('o eco de duas buscas seguidas, chegando fora de hora, também não reescreve o campo', () => {
+    const { urlMudou } = montar()
+    digitar('mer')
+    esperar(500)
+    digitar('merc')
+    esperar(500)
+    digitar('merca')
+    rota.busca = 'mes=11&ano=2026&q=mer'
+    urlMudou()
+    rota.busca = 'mes=11&ano=2026&q=merc'
+    urlMudou()
+    expect(campo()).toHaveValue('merca')
+  })
+
+  it('mudança de fora (voltar no navegador, Limpar filtros, chip) atualiza o campo', async () => {
+    rota.busca = 'mes=11&ano=2026&q=feira'
+    const { urlMudou } = montar()
+    expect(campo()).toHaveValue('feira')
+
+    rota.busca = 'mes=11&ano=2026&q=padaria' // voltar no navegador
+    urlMudou()
+    expect(campo()).toHaveValue('padaria')
+    esperar(500)
+    expect(rota.replace).not.toHaveBeenCalled()
+
+    digitar('padaria pão')
+    fireEvent.click(barra().getByRole('button', { name: 'Limpar filtros' }))
+    expect(campo()).toHaveValue('')
+    expect(rota.replace).toHaveBeenCalledExactlyOnceWith('/lancamentos?mes=11&ano=2026', { scroll: false })
+    rota.busca = 'mes=11&ano=2026'
+    urlMudou()
+    esperar(500)
+    expect(rota.replace).toHaveBeenCalledOnce() // a busca antiga não volta
+    expect(campo()).toHaveValue('')
+
+    rota.busca = 'mes=11&ano=2026&q=feira'
+    urlMudou()
+    expect(campo()).toHaveValue('feira')
+    const celular = within(screen.getAllByRole('search', { name: 'Filtrar lançamentos' })[1])
+    fireEvent.click(celular.getByRole('button', { name: 'Remover busca' }))
+    expect(campo()).toHaveValue('')
   })
 })

@@ -2,7 +2,7 @@
 
 import { ChevronDown, Download, FileDown, FileUp, Search, SlidersHorizontal, Trash2, Upload, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import type * as React from 'react'
 import { Button } from '@/components/atoms/button'
 import {
@@ -24,7 +24,8 @@ import type { CategoriaResumo, MesAno, TipoLancamento } from '@/types/api'
 // FilterBar do Design System (filtros de Lançamentos, RF005). Tablet e computador (≥ 768px): barra em card com busca, tipo,
 // categoria e mês; embaixo status, total, "Limpar filtros", Exportar e Importar. Celular: "Filtros" (com o número de ativos),
 // busca (ícone), Exportar e Importar; chips removíveis dos filtros ativos e a folha de filtros. A troca de layout é só CSS.
-// A busca filtra ao parar de digitar (~300 ms). Puro: os filtros chegam por props e voltam por `onChange` (a tela guarda na URL).
+// Puro: os filtros chegam por props e voltam por `onChange` (a tela guarda na URL). O texto da busca também vem por props
+// (`busca`/`onBuscaChange`): é a tela que espera a pessoa parar de digitar (500 ms) e leva a busca para a URL.
 
 export type StatusDoFiltro = 'ATIVO' | 'INATIVO'
 export type FiltrosLista = {
@@ -36,7 +37,6 @@ export type FiltrosLista = {
 }
 
 export const FILTROS_VAZIOS: FiltrosLista = { q: '', tipo: null, status: null, categoriaId: null }
-export const ESPERA_BUSCA_MS = 300
 
 const ROTULO_TIPO: Record<TipoLancamento, string> = { RECEITA: 'Receita', DESPESA: 'Despesa' }
 const ROTULO_STATUS: Record<StatusDoFiltro, string> = { ATIVO: 'Ativos', INATIVO: 'Inativos' }
@@ -66,6 +66,9 @@ export function temFiltro(filtros: FiltrosLista) {
 
 export type FilterBarProps = {
   filtros: FiltrosLista
+  /** O que está no campo de busca agora (pode estar à frente de `filtros.q`, que é a busca já aplicada) */
+  busca: string
+  onBuscaChange: (texto: string) => void
   /** Categorias para o filtro (lista simples, sem criar nem editar) */
   categorias: CategoriaResumo[]
   periodo: MesAno
@@ -86,6 +89,8 @@ const plural = (n: number) => `${n} ${n === 1 ? 'lançamento' : 'lançamentos'}`
 
 export function FilterBar({
   filtros,
+  busca,
+  onBuscaChange,
   categorias,
   periodo,
   onMudarMes,
@@ -99,22 +104,8 @@ export function FilterBar({
   className,
 }: FilterBarProps) {
   const base = useId()
-  const [texto, setTexto] = useState(filtros.q)
-  const [qAntes, setQAntes] = useState(filtros.q)
-  const [buscaAberta, setBuscaAberta] = useState(filtros.q !== '')
+  const [buscaAberta, setBuscaAberta] = useState(busca !== '')
   const [folhaAberta, setFolhaAberta] = useState(false)
-
-  // A busca da URL mudou por fora (Limpar, voltar): o campo acompanha
-  if (filtros.q !== qAntes) {
-    setQAntes(filtros.q)
-    setTexto(filtros.q)
-  }
-
-  useEffect(() => {
-    if (texto === filtros.q) return
-    const espera = setTimeout(() => onChange({ q: texto }), ESPERA_BUSCA_MS)
-    return () => clearTimeout(espera)
-  }, [texto, filtros.q, onChange])
 
   const nomeCategoria = categorias.find((c) => c.id === filtros.categoriaId)?.descricao
   const ativos = contarFiltrosAtivos(filtros)
@@ -136,8 +127,8 @@ export function FilterBar({
         id={id}
         type="search"
         placeholder="Descrição do lançamento"
-        value={texto}
-        onChange={(evento) => setTexto(evento.target.value)}
+        value={busca}
+        onChange={(evento) => onBuscaChange(evento.target.value)}
         className="pl-10"
       />
     </div>
