@@ -15,7 +15,13 @@ export const CABECALHOS_DE_SEGURANCA = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ]
 
+// Saída "standalone" (pasta .next/standalone com server.js e só as dependências usadas) apenas quando pedida: a imagem do
+// modo "como produção" do PoupaMais_Development define NEXT_OUTPUT=standalone no build. Sem a variável, o build é o
+// normal, que a Vercel publica e que o `next start` do CI e dos E2E usa (o `next start` não serve a saída standalone).
+const SAIDA = process.env.NEXT_OUTPUT === 'standalone' ? 'standalone' : undefined
+
 const nextConfig: NextConfig = {
+  output: SAIDA,
   allowedDevOrigins: origensDevPermitidas,
   // Só no `next dev`: o Next 16 registra cada chamada de Server Function com os ARGUMENTOS
   // (`└─ ƒ loginAction({"email":…,"senha":"…"})`), o que deixava senhas de login, cadastro, troca de senha e exclusão de

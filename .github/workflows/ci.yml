@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  # Só para o build e o E2E: o E2E simula a API no navegador, nada chega aqui
+  # Só para o build e o E2E: o E2E simula a API no navegador, nada chega aqui (a suíte contra a API real usa a sua)
   API_URL: http://localhost:8080
 
 jobs:
@@ -89,3 +89,70 @@ jobs:
         with:
           name: relatorio-e2e
           path: playwright-report/
+
+  # Roteiro da demo contra a API real: Spring, Postgres e Mailpit da pilha E2E do PoupaMais_Development (projeto docker
+  # poupamais-e2e, API 127.0.0.1:8580, Mailpit 8525). Os três repositórios ficam em pastas irmãs, como o compose espera
+  # (BACK_DIR padrão = ../PoupaMais_BackEnd); o back e o Development vêm da branch development.
+  api-real:
+    name: Testes contra a API real
+    needs: qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: PoupaMais_FrontEnd
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: PoupaMais_FrontEnd
+
+      - uses: actions/checkout@v4
+        with:
+          repository: LES-PoupaMais/PoupaMais_BackEnd
+          ref: development
+          path: PoupaMais_BackEnd
+
+      - uses: actions/checkout@v4
+        with:
+          repository: LES-PoupaMais/PoupaMais_Development
+          ref: development
+          path: PoupaMais_Development
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: PoupaMais_FrontEnd/.nvmrc
+          cache: npm
+          cache-dependency-path: PoupaMais_FrontEnd/package-lock.json
+
+      # Constrói a imagem da API (Dockerfile do back) e espera API, banco e Mailpit ficarem saudáveis
+      - name: Pilha E2E (API, banco e Mailpit)
+        working-directory: PoupaMais_Development
+        run: npm run e2e:up
+
+      - run: npm ci
+
+      # Só o Chromium: o Firefox já roda na suíte com a API simulada (job e2e)
+      - name: Navegador do Playwright
+        run: npx playwright install --with-deps chromium
+
+      # O webServer do playwright.api-real.config.ts faz o build e sobe o Next na porta 3130 com API_URL=localhost:8580
+      - name: Testes contra a API real
+        run: npm run test:e2e:api-real
+
+      - name: Logs da API
+        if: failure()
+        working-directory: PoupaMais_Development
+        run: docker compose -f docker-compose.e2e.yml logs --tail 300 api
+
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e-api-real
+          path: PoupaMais_FrontEnd/playwright-report-api-real/
+
+      - name: Derrubar a pilha E2E
+        if: always()
+        working-directory: PoupaMais_Development
+        run: npm run e2e:down

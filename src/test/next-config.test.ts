@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import nextConfig, { CABECALHOS_DE_SEGURANCA } from '../../next.config'
 
 // O `next dev` registra os argumentos das Server Actions (inclusive senhas) se `logging.serverFunctions` não for `false`.
@@ -28,5 +28,15 @@ describe('next.config', () => {
     const regras = await nextConfig.headers!()
     const sw = regras.find((regra) => regra.source === '/sw.js')
     expect(sw?.headers).toContainEqual({ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' })
+  })
+
+  it('sem NEXT_OUTPUT, build normal (Vercel e next start do CI); com NEXT_OUTPUT=standalone, saída standalone', async () => {
+    expect(nextConfig.output).toBeUndefined()
+
+    vi.stubEnv('NEXT_OUTPUT', 'standalone')
+    vi.resetModules()
+    const comVariavel = (await import('../../next.config')).default
+    expect(comVariavel.output).toBe('standalone')
+    vi.unstubAllEnvs()
   })
 })
