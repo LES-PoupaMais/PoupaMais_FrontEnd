@@ -1,7 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { onlineManager, useQueryClient } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ErroApi } from '@/lib/http'
+import { simularServiceWorker } from '@/test/service-worker'
 import { AppProviders, criarQueryClient, deveRepetir, tratarNaoAutenticado } from './AppProviders'
 
 describe('AppProviders', () => {
@@ -31,6 +32,34 @@ describe('AppProviders', () => {
 
     expect(assign).toHaveBeenCalledOnce()
     expect(assign).toHaveBeenCalledWith('/login?voltar=%2Flancamentos%3Fmes%3D11&sessao=vencida')
+  })
+
+  it('sessão vencida (401) pede ao service worker que apague os dados guardados antes de ir ao login', () => {
+    const sw = simularServiceWorker()
+    const assign = vi.fn(() => expect(sw.postMessage).toHaveBeenCalledWith({ tipo: 'limpar-dados' }, expect.any(Array)))
+    vi.stubGlobal('location', { pathname: '/dashboard', search: '', assign })
+
+    tratarNaoAutenticado(new ErroApi(500, 'Erro'))
+    expect(sw.postMessage).not.toHaveBeenCalled()
+    tratarNaoAutenticado(new ErroApi(401, 'Sessão expirada'))
+
+    expect(assign).toHaveBeenCalledOnce()
+    sw.desfazer()
+  })
+
+  it('consultas em offlineFirst: sem internet ainda tentam (o service worker responde com o que guardou)', async () => {
+    const cliente = criarQueryClient()
+    expect(cliente.getDefaultOptions().queries?.networkMode).toBe('offlineFirst')
+
+    onlineManager.setOnline(false)
+    try {
+      const guardado = { saldo: 10 }
+      await expect(cliente.fetchQuery({ queryKey: ['dashboard'], queryFn: async () => guardado })).resolves.toBe(
+        guardado,
+      )
+    } finally {
+      onlineManager.setOnline(true)
+    }
   })
 
   it('o QueryClient trata o 401 das queries e das mutations', () => {

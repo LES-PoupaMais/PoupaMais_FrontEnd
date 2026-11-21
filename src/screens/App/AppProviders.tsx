@@ -6,11 +6,14 @@ import { useState, type ReactNode } from 'react'
 import { Toaster } from '@/components/atoms/sonner'
 import { TooltipProvider } from '@/components/atoms/tooltip'
 import { ErroApi } from '@/lib/http'
+import { limparDadosOffline } from '@/lib/service-worker'
+import { RegistroServiceWorker } from './RegistroServiceWorker'
 
 // Sessão vencida (401 vindo do BFF): volta para o login de qualquer tela, guardando o destino.
 export function tratarNaoAutenticado(erro: unknown) {
   if (erro instanceof ErroApi && erro.status === 401) {
     const voltar = encodeURIComponent(window.location.pathname + window.location.search)
+    void limparDadosOffline() // PWA: apaga os dados guardados no aparelho (a mensagem sai antes de navegar)
     // Navegação completa de propósito: descarta o cache e o estado da sessão vencida (fora do React, sem useRouter)
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(`/login?voltar=${voltar}&sessao=vencida`) // tela Sessão vencida
@@ -34,7 +37,11 @@ export function criarQueryClient() {
   return new QueryClient({
     queryCache: new QueryCache({ onError: tratarNaoAutenticado }),
     mutationCache: new MutationCache({ onError: tratarNaoAutenticado }),
-    defaultOptions: { queries: { staleTime: CACHE.staleTime, gcTime: CACHE.gcTime, retry: deveRepetir } },
+    // offlineFirst: sem internet a consulta ainda tenta uma vez, e o service worker (PWA) responde com os dados
+    // guardados; sem cópia guardada, fica pausada como antes. As mutations continuam exigindo internet.
+    defaultOptions: {
+      queries: { staleTime: CACHE.staleTime, gcTime: CACHE.gcTime, retry: deveRepetir, networkMode: 'offlineFirst' },
+    },
   })
 }
 
@@ -48,6 +55,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
+        <RegistroServiceWorker />
         <TooltipProvider>{children}</TooltipProvider>
         {/* Toast: 5 s, embaixo à direita no computador e acima da barra inferior no celular (DS, Toast) */}
         <Toaster
