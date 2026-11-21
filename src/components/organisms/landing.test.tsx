@@ -41,7 +41,9 @@ describe('organismos da landing', () => {
 
     expect(screen.getByRole('heading', { name: /Passo 1:\s*Crie sua conta/ })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Passo 3:\s*Acompanhe mês a mês/ })).toBeInTheDocument()
-    expect(screen.getByText('Aluguel')).toBeInTheDocument()
+    const previa = screen.getByRole('region', { name: 'Prévia: maiores despesas por categoria em novembro de 2026' })
+    expect(within(previa).getByText('Aluguel')).toBeInTheDocument()
+    expect(within(previa).queryAllByRole('link')).toHaveLength(0)
   })
 
   it('LandingDados: privacidade e links', () => {

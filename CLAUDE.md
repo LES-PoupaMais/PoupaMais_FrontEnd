@@ -725,8 +725,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
      `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`, `landing-passos`,
      `landing-dados`, `politica-privacidade`.
-   - Landing: a prévia do Saldo do mês usa o `highlight-card`; a prévia de "Despesas por categoria" continua desenhada na própria
-     `landing-passos` (o `category-bar-chart` tem links, total e a dica de toque, que a prancheta `landing-*` não tem).
+   - Landing: a prévia do Saldo do mês usa o `highlight-card` e a de "Despesas por categoria" usa o `category-bar-chart` em modo
+     `previa` (sem links, total e dica; título h3), como a prancheta `landing-computador` (feito em 20/11).
 12. **Integração e contrato:**
    - ~~Depende do back v1.2.0~~: integrado na development do back em 20/11 (PR #31 de lá); contrato espelhado na seção "Contrato da API".
    - **Roteiro da demo contra a API real:** feito em 20/11 (`npm run test:e2e:api-real`, seção Testes). Falta decidir se entra no

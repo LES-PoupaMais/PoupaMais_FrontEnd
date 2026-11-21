@@ -1,8 +1,8 @@
-import { formatarMoeda } from '@/lib/format'
+import { CategoryBarChart } from './category-bar-chart'
 
 // "Como funciona" (landing-computador; não existe na prancheta do celular, por isso aparece a partir de 1024px):
-// três passos e uma prévia das despesas por categoria com dados de exemplo (barras horizontais em despesa-grafico, com o
-// valor ao fim de cada barra, como o CategoryBarChart do DS).
+// três passos e uma prévia das despesas por categoria com dados de exemplo: o próprio CategoryBarChart em modo `previa`
+// (sem links, total nem dica), como a prancheta.
 const PASSOS = [
   { titulo: 'Crie sua conta', texto: 'Só nome, e-mail e senha.' },
   { titulo: 'Registre ou importe', texto: 'Cada lançamento tem data, valor e uma ou mais categorias.' },
@@ -10,14 +10,13 @@ const PASSOS = [
 ]
 
 const CATEGORIAS = [
-  { nome: 'Aluguel', valor: 2200 },
-  { nome: 'Mercado', valor: 1480.35 },
-  { nome: 'Contas de casa', valor: 912.4 },
-  { nome: 'Transporte', valor: 780 },
+  { categoriaId: 1, descricao: 'Aluguel', valor: 2200 },
+  { categoriaId: 2, descricao: 'Mercado', valor: 1480.35 },
+  { categoriaId: 3, descricao: 'Contas de casa', valor: 912.4 },
+  { categoriaId: 4, descricao: 'Transporte', valor: 780 },
 ]
 
 export function LandingPassos() {
-  const maior = CATEGORIAS[0].valor
   return (
     <section aria-labelledby="passos-titulo" className="hidden px-5 py-12 lg:block">
       <div className="max-w-conteudo mx-auto grid grid-cols-2 items-center gap-12 px-3">
@@ -46,32 +45,14 @@ export function LandingPassos() {
             ))}
           </ol>
         </div>
-        <article
+        <CategoryBarChart
+          previa
+          dados={CATEGORIAS}
+          total={CATEGORIAS.reduce((soma, c) => soma + c.valor, 0)}
+          mes={11}
+          ano={2026}
           aria-label="Prévia: maiores despesas por categoria em novembro de 2026"
-          className="bg-card border-border rounded-grande shadow-card flex flex-col gap-4 border p-6"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-rotulo-secao text-muted-foreground uppercase">Despesas por categoria</h3>
-            <span className="text-legenda text-muted-foreground">Nov/2026</span>
-          </div>
-          <ul className="flex flex-col gap-4">
-            {CATEGORIAS.map(({ nome, valor }) => (
-              <li key={nome} className="flex flex-col gap-1.5">
-                <span className="text-corpo-forte">{nome}</span>
-                {/* Como o CategoryBarChart do DS: sem trilho, a barra cresce até o valor, que fica logo depois dela */}
-                <span className="flex items-center gap-2">
-                  <span
-                    className="bg-despesa-grafico block h-3.5 min-w-1 shrink-0 rounded-r-[4px]"
-                    style={{ width: `calc((100% - 104px) * ${valor / maior})` }}
-                  />
-                  <span className="text-[13px] leading-[18px] font-bold whitespace-nowrap tabular-nums">
-                    {formatarMoeda(valor)}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </article>
+        />
       </div>
     </section>
   )
