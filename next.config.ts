@@ -7,6 +7,14 @@ const origensDevPermitidas = (process.env.ORIGENS_DEV_PERMITIDAS ?? '')
   .map((origem) => origem.trim())
   .filter(Boolean)
 
+/** nosniff: o navegador não "adivinha" o tipo do arquivo; DENY: ninguém abre o app dentro de um iframe (clickjacking) */
+export const CABECALHOS_DE_SEGURANCA = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+]
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: origensDevPermitidas,
   // Só no `next dev`: o Next 16 registra cada chamada de Server Function com os ARGUMENTOS
@@ -16,9 +24,12 @@ const nextConfig: NextConfig = {
   logging: {
     serverFunctions: false,
   },
-  // PWA: o navegador sempre confere se há versão nova do service worker (public/sw.js)
   async headers() {
     return [
+      // Cabeçalhos de segurança em todas as respostas. Na Vercel não há nginx na frente (o HSTS ela já manda); no modo
+      // "como produção" do PoupaMais_Development o nginx esconde estes e põe os dele, para não sair repetido.
+      { source: '/:path*', headers: CABECALHOS_DE_SEGURANCA },
+      // PWA: o navegador sempre confere se há versão nova do service worker (public/sw.js)
       {
         source: '/sw.js',
         headers: [

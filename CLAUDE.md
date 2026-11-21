@@ -47,9 +47,15 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
   faz). As Pendências abaixo ficam para depois, salvo decisão nova.
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
-- Entrega do código no GitHub até **26/11/2026**. Sem deploy (decisão de 12/11/2026): roda localmente. O jeito mais simples é
-  subir tudo pelo PoupaMais_Development (`npm run dev` lá, app em `http://localhost:8000`); sem ele, a API com
-  `docker compose up -d --build` no backend e o front com `npm run dev` (`API_URL=http://localhost:8080`).
+- Entrega do código no GitHub até **26/11/2026**. Para desenvolver, o jeito mais simples é subir tudo pelo
+  PoupaMais_Development (`npm run dev` lá, app em `http://localhost:8000`); sem ele, a API com `docker compose up -d --build`
+  no backend e o front com `npm run dev` (`API_URL=http://localhost:8080`).
+- **Deploy (21/11/2026; a decisão de 12/11 de não publicar foi revista):** front na **Vercel**
+  (https://poupamais-one.vercel.app, publica a `main` a cada merge, variável `API_URL`), API no **Render**
+  (https://poupamais-backend.onrender.com, Docker, plano Free que dorme sem uso; um job do cron-job.org chama
+  `/actuator/health` a cada 10 min), banco no **Neon** e e-mail pelo **Brevo**. Passo a passo no README do
+  PoupaMais_Development (seção "Deploy"). Cabeçalhos de segurança no `next.config.ts` (`CABECALHOS_DE_SEGURANCA`, todas as
+  rotas; o HSTS é da Vercel e, no modo "como produção", do nginx, que esconde os do Next e põe os dele).
 
 ### Roteiro da demo: o front precisa suportar exatamente isto (os E2E cobrem)
 
@@ -560,11 +566,14 @@ O PoupaMais instala como app (tela inicial do celular, janela própria sem barra
   - **Limpeza:** "Sair" (casca e Perfil), sessão vencida (401 no `AppProviders`) e conta excluída mandam
     `{tipo: 'limpar-dados'}` (`lib/service-worker.limparDadosOffline`), que apaga as respostas da API e as páginas guardadas;
     qualquer 401 de `/api/*` também limpa no próprio service worker. Nada de uma pessoa fica no aparelho para a próxima.
+    Cada limpeza sobe a `geracao` do service worker: resposta de um pedido feito **antes** da limpeza e que chega **depois**
+    (ex.: as consultas que o app refaz quando a internet volta, se a pessoa sai logo em seguida) vai para a tela, mas não é
+    guardada (achado no ensaio do deploy, 21/11; `VERSAO` passou a `v2`).
 - **Registro:** `screens/App/RegistroServiceWorker` (no `AppProviders`) chama `lib/service-worker.registrarServiceWorker`, que só
   registra com `NODE_ENV=production` e `'serviceWorker' in navigator`. No `npm run dev` não há service worker.
 - **Onde instala:** só em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x:3000`) o navegador não registra o
   service worker nem oferece instalar. Para testar no celular: o modo "como produção" do PoupaMais_Development
-  (`https://poupamais.localhost:8443`) ou, de verdade, depois do deploy com HTTPS.
+  (`https://poupamais.localhost:8443`) ou o site publicado (https://poupamais-one.vercel.app).
 - **Como testar:** `npm run build && npm run start`, abrir `http://localhost:3000` no Chrome → DevTools > **Application**
   (Manifest: nome, ícones e "Installable"; Service workers: ativo; Cache storage: `poupamais-*`; marque "Offline" e recarregue
   uma tela já visitada) e **Lighthouse** (categoria PWA / "Installable"). No celular (Chrome Android): menu ⋮ > "Instalar app";
@@ -621,7 +630,7 @@ Arquivo: `.github/workflows/ci.yml`. Roda em push na `development` e na `main` e
   com todos, testes de tela passavam do timeout de 5 s com a máquina ocupada). Localmente o Playwright usa 3 workers (com mais, o Firefox estoura o tempo no WSL).
   Com várias worktrees ao mesmo tempo, use uma porta por worktree (`PORT=3101 npm run test:e2e`): o `reuseExistingServer` reaproveita
   qualquer servidor que já esteja na porta e testaria o build de outra pasta.
-- **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. Sem deploy: a entrega roda localmente.
+- **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. A Vercel publica a `main` sozinha depois do merge.
 
 ## Claude Code: skills e plugins
 

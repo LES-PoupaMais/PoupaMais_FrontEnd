@@ -192,6 +192,22 @@ describe('public/sw.js', () => {
     expect(porta.postMessage).toHaveBeenCalledWith({ tipo: 'dados-limpos' })
   })
 
+  it('resposta que chega depois do "limpar-dados" não é guardada (pedido feito antes do Sair)', async () => {
+    let entregar: (resposta: Response) => void = () => {}
+    sw.fetch.mockReturnValueOnce(new Promise<Response>((ok) => (entregar = ok)))
+    const emAndamento = sw.buscar(requisicao('/api/dashboard?mes=11&ano=2026'))
+
+    await sw.esperar('message', { data: { tipo: 'limpar-dados' }, ports: [] })
+    entregar(json({ saldo: 10 }))
+
+    expect(await (await emAndamento)!.json()).toEqual({ saldo: 10 }) // a tela ainda recebe a resposta
+    expect(await sw.caches.keys()).not.toContain(sw.CACHE_API) // mas nada fica no aparelho
+
+    sw.fetch.mockResolvedValueOnce(json({ saldo: 20 }))
+    await sw.buscar(requisicao('/api/dashboard?mes=11&ano=2026'))
+    expect(await sw.caches.keys()).toContain(sw.CACHE_API) // pedidos feitos depois da limpeza voltam a ser guardados
+  })
+
   it('ignora outras mensagens', async () => {
     sw.fetch.mockResolvedValueOnce(json({ saldo: 10 }))
     await sw.buscar(requisicao('/api/dashboard'))

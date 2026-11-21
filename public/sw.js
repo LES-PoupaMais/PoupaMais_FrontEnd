@@ -8,12 +8,13 @@
  * - Nunca entram no cache: POST/PUT/PATCH/DELETE e Server Actions (header Next-Action), respostas que não são 200,
  *   redirecionamentos, downloads (Content-Disposition: attachment), /api/usuarios/me/dados e as rotas de acesso.
  * - Mensagem {tipo: 'limpar-dados'} (logout, sessão vencida, conta excluída) e qualquer 401 da API apagam os dados
- *   guardados (API e páginas), para não sobrar dado de outra pessoa no aparelho.
+ *   guardados (API e páginas), para não sobrar dado de outra pessoa no aparelho. Resposta que chega depois de uma
+ *   limpeza (pedido feito antes dela) não é guardada.
  *
  * Mudou alguma regra ou a lista de arquivos? Suba a VERSAO: o activate apaga os caches das versões antigas.
  */
 
-const VERSAO = 'v1'
+const VERSAO = 'v2'
 const CACHE_ESTATICO = 'poupamais-estatico-' + VERSAO
 const CACHE_PAGINAS = 'poupamais-paginas-' + VERSAO
 const CACHE_API = 'poupamais-api-' + VERSAO
@@ -58,7 +59,15 @@ async function guardar(nomeCache, requisicao, resposta) {
   await cache.put(requisicao, resposta.clone())
 }
 
+/**
+ * Sobe a cada limpeza. Uma resposta só é guardada se a limpeza não aconteceu enquanto ela vinha da rede: sem isso, uma
+ * consulta que saiu antes do "Sair" (ex.: as que o app refaz quando a internet volta) e chegou depois gravaria de novo
+ * os dados da pessoa no aparelho.
+ */
+let geracao = 0
+
 function limparDados() {
+  geracao += 1
   return Promise.all([caches.delete(CACHE_API), caches.delete(CACHE_PAGINAS)])
 }
 
@@ -71,6 +80,7 @@ async function cacheFirst(requisicao) {
 }
 
 async function networkFirst(requisicao, nomeCache) {
+  const geracaoDoPedido = geracao
   let resposta
   try {
     resposta = await fetch(requisicao)
@@ -79,7 +89,7 @@ async function networkFirst(requisicao, nomeCache) {
     return guardada || Response.error()
   }
   if (nomeCache === CACHE_API && resposta.status === 401) await limparDados()
-  else await guardar(nomeCache, requisicao, resposta)
+  else if (geracaoDoPedido === geracao) await guardar(nomeCache, requisicao, resposta)
   return resposta
 }
 
