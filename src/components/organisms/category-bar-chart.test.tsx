@@ -33,11 +33,11 @@ describe('CategoryBarChart', () => {
 
     expect(within(secao).queryAllByRole('link')).toHaveLength(0)
     expect(within(secao).getByRole('heading', { level: 3, name: 'Despesas por categoria' })).toBeInTheDocument()
-    expect(within(secao).getAllByRole('listitem').map((li) => li.textContent?.replace(/\s/g, ' '))).toEqual([
-      'AluguelR$ 2.200,00',
-      'MercadoR$ 1.480,35',
-      'OutrosR$ 202,00',
-    ])
+    expect(
+      within(secao)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent?.replace(/\s/g, ' ')),
+    ).toEqual(['AluguelR$ 2.200,00', 'MercadoR$ 1.480,35', 'OutrosR$ 202,00'])
     expect(secao).not.toHaveTextContent('Total de despesas')
     expect(secao).not.toHaveTextContent('Tocar numa categoria')
   })

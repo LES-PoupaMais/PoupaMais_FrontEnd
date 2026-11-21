@@ -31,7 +31,8 @@ export function LancamentoDetalheView() {
     )
 
   return (
-    <div className="mx-auto flex w-full max-w-[640px] flex-col gap-4">
+    // Celular: o fundo branco vai até a barra inferior (altura da tela menos a barra e os 24px de respiro de cima e de baixo)
+    <div className="mx-auto flex w-full max-w-[640px] flex-col gap-4 max-md:min-h-[calc(100dvh-var(--barra-inferior)-env(safe-area-inset-bottom)-3rem)]">
       {/* Celular: barra branca no topo com "‹ Lançamentos" ou "‹ Lixeira" (prancheta lixeira-detalhe-celular; a casca não
           mostra a TopBar nesta rota, porque só a tela sabe o status). Tablet e computador: o link acima do card. */}
       <div className="bg-card border-border sticky top-0 z-20 -mx-5 -mt-6 flex min-h-14 items-center border-b px-2 md:static md:m-0 md:block md:min-h-0 md:border-0 md:bg-transparent md:p-0">
@@ -44,7 +45,7 @@ export function LancamentoDetalheView() {
       </div>
       <section
         aria-label="Lançamento"
-        className="bg-card md:rounded-grande md:border-border md:shadow-card -mx-5 -mt-4 -mb-6 p-5 md:mx-0 md:my-0 md:border md:p-6"
+        className="bg-card md:rounded-grande md:border-border md:shadow-card -mx-5 -mt-4 -mb-6 p-5 max-md:flex-1 md:mx-0 md:my-0 md:border md:p-6"
       >
         {ctx.carregando ? (
           <TransactionDetailSkeleton />

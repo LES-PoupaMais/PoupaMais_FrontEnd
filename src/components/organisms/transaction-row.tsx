@@ -127,7 +127,7 @@ export function TransactionRow({
           </Link>
           <MoneyText valor={valor} tipo={tipo} suave={esmaecido} anunciarTipo className="pt-px [&>svg]:hidden" />
         </span>
-        <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums">
+        <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-x-1.5 gap-y-1 tabular-nums">
           <time dateTime={data}>{dataDaLinha(data, comAno)}</time>
           <ChipsDeCategorias categorias={categorias} maximo={2} />
           <SeloStatus status={status} />

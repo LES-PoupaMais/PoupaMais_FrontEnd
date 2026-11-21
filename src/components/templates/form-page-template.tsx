@@ -39,7 +39,7 @@ export function FormPageTemplate({ titulo, descricao, voltar, aviso, children, a
         {acoes && (
           <div
             data-slot="form-page-acoes"
-            className="bg-background border-border fixed inset-x-0 bottom-0 z-30 flex flex-col-reverse gap-3 border-t px-5 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:static md:-mx-6 md:-mb-6 md:flex-row md:justify-end md:border-t md:bg-transparent md:px-6 md:py-4"
+            className="bg-background border-border fixed inset-x-0 bottom-0 z-30 flex flex-col-reverse gap-3 border-t px-5 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:static md:-mx-6 md:-mb-6 md:flex-row md:flex-wrap md:justify-end md:border-t md:bg-transparent md:px-6 md:py-4"
           >
             {acoes}
           </div>

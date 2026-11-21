@@ -99,24 +99,26 @@ function MaioresDespesas({
                   <Link
                     href={ROTAS.lancamento(item.id)}
                     aria-label={`Ver ${item.descricao}`}
-                    className="text-corpo-forte text-foreground rounded-card focus-visible:after:outline-ring after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 md:truncate"
+                    className="text-corpo-forte text-foreground rounded-card focus-visible:after:outline-ring after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 lg:truncate"
                   >
                     {item.descricao}
                   </Link>
-                  {/* A partir do tablet, a meta fica numa linha só ("10 nov · Contas de casa"): nunca quebra no "·" */}
-                  <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-1 tabular-nums md:block md:truncate">
-                    <time dateTime={item.data} className="mr-1 md:mr-0">
+                  {/* A partir do tablet, a meta é texto corrido ("10 nov · Contas de casa"): no tablet quebra em 2 linhas, sem
+                      "…" (prancheta dashboard-tablet); no computador, uma linha só. O "·" fica colado à categoria (nunca
+                      sobra sozinho no fim da linha). No celular, chips que não quebram por dentro. */}
+                  <span className="text-legenda text-muted-foreground flex flex-wrap items-center gap-1 tabular-nums md:block lg:truncate">
+                    <time dateTime={item.data} className="mr-0.5 md:mr-0">
                       {formatarDataCurta(item.data)}
                     </time>
                     {item.categorias.map((categoria) => (
                       <span
                         key={categoria}
                         className={cn(
-                          'rounded-pilula bg-secondary px-2 text-[12px] leading-5 font-semibold',
+                          'rounded-pilula bg-secondary px-2 text-[12px] leading-5 font-semibold whitespace-nowrap md:whitespace-normal',
                           'md:ml-1 md:bg-transparent md:p-0 md:text-[13px] md:leading-[18px] md:font-medium',
                         )}
                       >
-                        <span className="hidden md:inline">· </span>
+                        <span className="hidden md:inline">·{'\u00a0'}</span>
                         {categoria}
                       </span>
                     ))}
