@@ -31,7 +31,7 @@ export function PublicTemplate({ children, variante = 'padrao', acoes, rodape, h
       <Link href="/login" className={cn(buttonVariants({ variant: 'texto' }), 'px-2 sm:px-3')}>
         Entrar
       </Link>
-      <Link href="/cadastro" className={cn(buttonVariants({ variant: 'contornado' }), 'px-4 sm:px-6')}>
+      <Link href="/cadastro" className={cn(buttonVariants({ variant: 'contornado' }), 'px-4 max-[374px]:px-3 sm:px-6')}>
         Criar conta
       </Link>
     </>
@@ -40,12 +40,14 @@ export function PublicTemplate({ children, variante = 'padrao', acoes, rodape, h
   const cabecalho = (
     <div
       className={cn(
-        'max-w-conteudo mx-auto flex w-full items-center justify-between gap-3 py-4 pr-3 pl-5 sm:gap-4 md:px-8',
+        // Abaixo de 375px (ex.: 360 no escuro, em que o logo tem o nome em texto e fica mais largo), o logo, o respiro e o
+        // "Criar conta" encolhem um pouco para o topo caber numa linha
+        'max-w-conteudo mx-auto flex w-full items-center justify-between gap-3 py-4 pr-3 pl-5 max-[374px]:gap-2 max-[374px]:pl-4 sm:gap-4 md:px-8',
         site && 'min-h-16 py-2 md:min-h-19',
       )}
     >
       <Link href={hrefLogo} aria-label="PoupaMais, ir para a página inicial" className="inline-flex shrink-0">
-        <Logo moldura className="h-12 md:h-14" />
+        <Logo moldura className="h-12 max-[374px]:h-10 md:h-14" />
       </Link>
       {botoes && (
         <nav aria-label="Acesso" className="flex min-w-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
