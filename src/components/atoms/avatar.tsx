@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { cn } from '@/lib/cn'
 import { Avatar as AvatarPrimitive } from 'radix-ui'
+import { UserIcon } from 'lucide-react'
 
 function Avatar({
   className,
@@ -89,35 +90,46 @@ function AvatarGroupCount({ className, ...props }: React.ComponentProps<'div'>) 
   )
 }
 
-// PoupaMais: avatar do usuário. Mostra a foto (RN015) e, sem foto ou enquanto ela carrega,
-// a primeira letra do nome em maiúscula, no verde da marca (como no protótipo).
+// PoupaMais: avatar do usuário (DS components/Avatar). Mostra a foto (RN015) e, sem foto ou enquanto ela carrega,
+// a primeira letra do nome em maiúscula sobre `primaria-fundo` (cor única, sem significado). Sem nome: neutro, com o ícone `user`.
 function inicialDoNome(nome: string): string {
-  return nome.trim().charAt(0).toLocaleUpperCase('pt-BR') || '?'
+  return nome.trim().charAt(0).toLocaleUpperCase('pt-BR')
 }
 
-function AvatarUsuario({
-  nome,
-  fotoUrl,
-  size,
-  className,
-}: {
+// PoupaMais: tamanhos do DS: 32 (TopBar), 40 (listas) e 96 (Perfil).
+const TAMANHOS_AVATAR = {
+  32: 'size-8 text-[13px]',
+  40: 'size-10 text-base',
+  96: 'size-24 text-[38px]',
+} as const
+
+type AvatarUsuarioProps = {
   nome: string
   fotoUrl?: string | null
-  size?: 'default' | 'sm' | 'lg'
+  tamanho?: keyof typeof TAMANHOS_AVATAR
+  /** Dentro de um link ou botão que já tem nome ("Seu perfil"): o avatar fica escondido do leitor de tela. */
+  decorativo?: boolean
   className?: string
-}) {
+}
+
+function AvatarUsuario({ nome, fotoUrl, tamanho = 40, decorativo = false, className }: AvatarUsuarioProps) {
+  const inicial = inicialDoNome(nome)
   return (
-    <Avatar size={size} className={className}>
-      {fotoUrl && <AvatarImage src={fotoUrl} alt={`Foto de ${nome}`} />}
+    <Avatar className={cn(TAMANHOS_AVATAR[tamanho], 'after:hidden', className)} aria-hidden={decorativo || undefined}>
+      {fotoUrl && <AvatarImage src={fotoUrl} alt={decorativo ? '' : `Foto de ${nome}`} />}
       <AvatarFallback
-        role="img"
-        aria-label={`Avatar de ${nome}`}
-        className="bg-success font-heading text-success-foreground font-semibold"
+        role={decorativo ? undefined : 'img'}
+        aria-label={decorativo ? undefined : inicial ? `Avatar de ${nome}` : 'Avatar'}
+        className={cn(
+          'text-[length:inherit] leading-none font-extrabold uppercase',
+          inicial ? 'bg-primaria-fundo text-primary' : 'bg-secondary text-muted-foreground',
+        )}
       >
-        {inicialDoNome(nome)}
+        {inicial || <UserIcon className="size-1/2" aria-hidden="true" />}
       </AvatarFallback>
     </Avatar>
   )
 }
 
+export type { AvatarUsuarioProps }
 export { AvatarUsuario, inicialDoNome, Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarBadge }

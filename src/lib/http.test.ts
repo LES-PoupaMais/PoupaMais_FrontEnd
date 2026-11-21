@@ -1,7 +1,7 @@
 import { http as msw, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { server } from '@/test/msw/server'
-import { ErroApi, http, MENSAGEM_ERRO_PADRAO, MENSAGEM_SEM_CONEXAO } from './http'
+import { ErroApi, http, MENSAGEM_ERRO_PADRAO, MENSAGEM_SEM_CONEXAO, nomeDoArquivo } from './http'
 
 describe('http (cliente do BFF)', () => {
   it('faz GET em /api e devolve o JSON', async () => {
@@ -87,6 +87,7 @@ describe('http (cliente do BFF)', () => {
         HttpResponse.json(
           {
             status: 400,
+            codigo: 'VALIDACAO',
             mensagem: 'Dados inválidos',
             erros: [{ campo: 'valor', mensagem: 'O valor deve ser maior que zero' }],
           },
@@ -102,6 +103,8 @@ describe('http (cliente do BFF)', () => {
       status: 400,
       message: 'Dados inválidos',
       erros: [{ campo: 'valor', mensagem: 'O valor deve ser maior que zero' }],
+      daApi: true,
+      codigo: 'VALIDACAO',
     })
   })
 
@@ -110,7 +113,7 @@ describe('http (cliente do BFF)', () => {
 
     const erro = await http.patch('/lancamentos/1/status', { corpo: { status: 'ATIVO' } }).catch((e: unknown) => e)
 
-    expect(erro).toMatchObject({ status: 502, message: MENSAGEM_ERRO_PADRAO, erros: [] })
+    expect(erro).toMatchObject({ status: 502, message: MENSAGEM_ERRO_PADRAO, erros: [], daApi: false })
   })
 
   it('avisa quando não há conexão', async () => {
@@ -119,5 +122,50 @@ describe('http (cliente do BFF)', () => {
     const erro = await http.get('/dashboard').catch((e: unknown) => e)
 
     expect(erro).toMatchObject({ status: 0, message: MENSAGEM_SEM_CONEXAO })
+  })
+
+  describe('baixar', () => {
+    it('devolve o arquivo e o nome do Content-Disposition, repassando os filtros', async () => {
+      let urlRecebida = ''
+      server.use(
+        msw.get('*/api/lancamentos/exportar', ({ request }) => {
+          urlRecebida = request.url
+          return new HttpResponse('descricao;tipo;data;valor;categorias;status', {
+            headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="lancamentos.csv"' },
+          })
+        }),
+      )
+
+      const arquivo = await http.baixar('/lancamentos/exportar', { formato: 'csv', mes: 11 })
+
+      expect(arquivo.nomeArquivo).toBe('lancamentos.csv')
+      expect(await arquivo.blob.text()).toContain('descricao;tipo;data')
+      expect(new URL(urlRecebida).searchParams.get('formato')).toBe('csv')
+    })
+
+    it('converte o erro da API em ErroApi', async () => {
+      server.use(
+        msw.get('*/api/lancamentos/exportar', () =>
+          HttpResponse.json({ status: 400, mensagem: 'Dados inválidos' }, { status: 400 }),
+        ),
+      )
+
+      await expect(http.baixar('/lancamentos/exportar')).rejects.toBeInstanceOf(ErroApi)
+      await expect(http.baixar('/lancamentos/exportar')).rejects.toThrow('Dados inválidos')
+    })
+
+    it('sem conexão, avisa com a mensagem padrão', async () => {
+      server.use(msw.get('*/api/usuarios/me/dados', () => HttpResponse.error()))
+
+      await expect(http.baixar('/usuarios/me/dados')).rejects.toThrow(MENSAGEM_SEM_CONEXAO)
+    })
+
+    it('lê o nome do arquivo nos formatos comuns', () => {
+      expect(nomeDoArquivo('attachment; filename="meus-dados-poupamais.json"')).toBe('meus-dados-poupamais.json')
+      expect(nomeDoArquivo("attachment; filename*=UTF-8''lan%C3%A7amentos.xlsx")).toBe('lançamentos.xlsx')
+      expect(nomeDoArquivo('attachment; filename=modelo.csv')).toBe('modelo.csv')
+      expect(nomeDoArquivo('attachment')).toBeNull()
+      expect(nomeDoArquivo(null)).toBeNull()
+    })
   })
 })

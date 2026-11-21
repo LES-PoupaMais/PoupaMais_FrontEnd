@@ -1,0 +1,344 @@
+/*
+ * Tema do PoupaMais: bloco "Para copiar no código" do Design System, colado SEM alteração
+ * (fonte: ../Documentação/design/ds/globals.css.gerado). Não edite as cores aqui: mude no Design System e cole de novo.
+ * Os complementos do front (sombras, medidas de layout, estilos de texto e a variante `trilho:`) ficam no fim do arquivo.
+ */
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Gerado do design system PoupaMais (tokens.json). Tema: next-themes com attribute="class", padrão = sistema. */
+:root {
+  --radius: 1.125rem; /* 18px = raio-card */
+  /* shadcn */
+  --background: #f4f6f8; /* fundo */
+  --foreground: #0c1830; /* texto */
+  --card: #ffffff; /* superficie */
+  --card-foreground: #0c1830; /* texto */
+  --popover: #ffffff; /* superficie */
+  --popover-foreground: #0c1830; /* texto */
+  --primary: #2b68d6; /* primaria */
+  --primary-foreground: #ffffff; /* sobre-primaria */
+  --secondary: #e8ecf2; /* superficie-2 */
+  --secondary-foreground: #0c1830; /* texto */
+  --muted: #e8ecf2; /* superficie-2 */
+  --muted-foreground: #5b6577; /* texto-suave */
+  --accent: #edf3fe; /* primaria-fundo */
+  --accent-foreground: #2b68d6; /* primaria */
+  --destructive: #c81e1e; /* erro */
+  --destructive-foreground: #ffffff; /* sobre-erro */
+  --border: #dce2ea; /* borda */
+  --input: #8a94a6; /* borda-campo */
+  --ring: #2b68d6; /* foco */
+  --chart-1: #1f9d63; /* receita-grafico */
+  --chart-2: #e2553a; /* despesa-grafico */
+  --chart-3: #2b68d6; /* primaria */
+  --chart-4: #0e7490; /* investimento */
+  --chart-5: #7c3aed; /* compartilhado */
+  --sidebar: #ffffff; /* superficie */
+  --sidebar-foreground: #0c1830; /* texto */
+  --sidebar-primary: #2b68d6; /* primaria */
+  --sidebar-primary-foreground: #ffffff; /* sobre-primaria */
+  --sidebar-accent: #edf3fe; /* primaria-fundo */
+  --sidebar-accent-foreground: #2b68d6; /* primaria */
+  --sidebar-border: #dce2ea; /* borda */
+  --sidebar-ring: #2b68d6; /* foco */
+  /* PoupaMais (domínio) */
+  --primaria-hover: #2257b8;
+  --marca-azul: #3c84e4;
+  --marca-menta: #54d89c;
+  --marca-marinho: #0c1830;
+  --receita: #167a4c;
+  --receita-grafico: #1f9d63;
+  --receita-fundo: #e3f6ec;
+  --despesa: #c2410c;
+  --despesa-grafico: #e2553a;
+  --despesa-fundo: #fdece7;
+  --erro-fundo: #fde8e8;
+  --atencao: #92400e;
+  --atencao-fundo: #fef3c7;
+  --destaque-card: #ffffff;
+  --sobre-destaque-card: #0c1830;
+  --investimento: #0e7490;
+  --investimento-fundo: #e0f2f7;
+  --destaque-borda: #dce2ea;
+  --destaque-positivo: #167a4c;
+  --destaque-negativo: #c2410c;
+  --destaque-icone-positivo: #167a4c;
+  --destaque-icone-negativo: #c2410c;
+  --despesa-area: rgba(226, 85, 58, 0.12);
+  --receita-area: rgba(31, 157, 99, 0.14);
+  --compartilhado: #7c3aed;
+  --compartilhado-fundo: #efe7fd;
+  --destaque: #a16207;
+  --destaque-fundo: #fef9c3;
+  --sobreposicao: rgba(12, 24, 48, 0.48);
+  --primaria-fundo: #edf3fe;
+}
+
+.dark {
+  /* shadcn */
+  --background: #111a2f; /* fundo */
+  --foreground: #e8edf7; /* texto */
+  --card: #1a2542; /* superficie */
+  --card-foreground: #e8edf7; /* texto */
+  --popover: #1a2542; /* superficie */
+  --popover-foreground: #e8edf7; /* texto */
+  --primary: #6aa0f2; /* primaria */
+  --primary-foreground: #0c1830; /* sobre-primaria */
+  --secondary: #24304f; /* superficie-2 */
+  --secondary-foreground: #e8edf7; /* texto */
+  --muted: #24304f; /* superficie-2 */
+  --muted-foreground: #9aa6bf; /* texto-suave */
+  --accent: #1f3463; /* primaria-fundo */
+  --accent-foreground: #6aa0f2; /* primaria */
+  --destructive: #f87171; /* erro */
+  --destructive-foreground: #0c1830; /* sobre-erro */
+  --border: #2a3758; /* borda */
+  --input: #6b7a9e; /* borda-campo */
+  --ring: #6aa0f2; /* foco */
+  --chart-1: #54d89c; /* receita-grafico */
+  --chart-2: #f2735a; /* despesa-grafico */
+  --chart-3: #6aa0f2; /* primaria */
+  --chart-4: #4fc3d9; /* investimento */
+  --chart-5: #b69cf7; /* compartilhado */
+  --sidebar: #1a2542; /* superficie */
+  --sidebar-foreground: #e8edf7; /* texto */
+  --sidebar-primary: #6aa0f2; /* primaria */
+  --sidebar-primary-foreground: #0c1830; /* sobre-primaria */
+  --sidebar-accent: #1f3463; /* primaria-fundo */
+  --sidebar-accent-foreground: #6aa0f2; /* primaria */
+  --sidebar-border: #2a3758; /* borda */
+  --sidebar-ring: #6aa0f2; /* foco */
+  /* PoupaMais (domínio) */
+  --primaria-hover: #8bb5f5;
+  --marca-azul: #3c84e4;
+  --marca-menta: #54d89c;
+  --marca-marinho: #0c1830;
+  --receita: #54d89c;
+  --receita-grafico: #54d89c;
+  --receita-fundo: #14382d;
+  --despesa: #f2735a;
+  --despesa-grafico: #f2735a;
+  --despesa-fundo: #3d2224;
+  --erro-fundo: #3b1c24;
+  --atencao: #fcd34d;
+  --atencao-fundo: #3a2e0a;
+  --destaque-card: #22407e;
+  --sobre-destaque-card: #ffffff;
+  --investimento: #4fc3d9;
+  --investimento-fundo: #123442;
+  --destaque-borda: #22407e;
+  --destaque-positivo: #ffffff;
+  --destaque-negativo: #ffffff;
+  --destaque-icone-positivo: #54d89c;
+  --destaque-icone-negativo: #f2735a;
+  --despesa-area: rgba(242, 115, 90, 0.18);
+  --receita-area: rgba(84, 216, 156, 0.18);
+  --compartilhado: #b69cf7;
+  --compartilhado-fundo: #2c2350;
+  --destaque: #facc15;
+  --destaque-fundo: #3a3108;
+  --sobreposicao: rgba(0, 0, 0, 0.6);
+  --primaria-fundo: #1f3463;
+}
+
+@theme inline {
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-primaria-hover: var(--primaria-hover);
+  --color-marca-azul: var(--marca-azul);
+  --color-marca-menta: var(--marca-menta);
+  --color-marca-marinho: var(--marca-marinho);
+  --color-receita: var(--receita);
+  --color-receita-grafico: var(--receita-grafico);
+  --color-receita-fundo: var(--receita-fundo);
+  --color-despesa: var(--despesa);
+  --color-despesa-grafico: var(--despesa-grafico);
+  --color-despesa-fundo: var(--despesa-fundo);
+  --color-erro-fundo: var(--erro-fundo);
+  --color-atencao: var(--atencao);
+  --color-atencao-fundo: var(--atencao-fundo);
+  --color-destaque-card: var(--destaque-card);
+  --color-sobre-destaque-card: var(--sobre-destaque-card);
+  --color-investimento: var(--investimento);
+  --color-investimento-fundo: var(--investimento-fundo);
+  --color-destaque-borda: var(--destaque-borda);
+  --color-destaque-positivo: var(--destaque-positivo);
+  --color-destaque-negativo: var(--destaque-negativo);
+  --color-destaque-icone-positivo: var(--destaque-icone-positivo);
+  --color-destaque-icone-negativo: var(--destaque-icone-negativo);
+  --color-despesa-area: var(--despesa-area);
+  --color-receita-area: var(--receita-area);
+  --color-compartilhado: var(--compartilhado);
+  --color-compartilhado-fundo: var(--compartilhado-fundo);
+  --color-destaque: var(--destaque);
+  --color-destaque-fundo: var(--destaque-fundo);
+  --color-sobreposicao: var(--sobreposicao);
+  --color-primaria-fundo: var(--primaria-fundo);
+  --radius-sm: 8px;
+  --radius-campo: 12px;
+  --radius-icone: 12px;
+  --radius-card: 18px;
+  --radius-grande: 24px;
+  --radius-pilula: 999px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  .tabular-nums,
+  [data-valor] {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+}
+
+/* ==========================================================================
+ * Complementos do front (não fazem parte do bloco gerado).
+ * Valores copiados de ../Documentação/design/ds/project/tokens.css; nenhum valor novo.
+ * ========================================================================== */
+
+:root {
+  --sombra-card: 0 1px 2px rgba(12, 24, 48, 0.06), 0 4px 16px rgba(12, 24, 48, 0.06);
+  --sombra-flutuante: 0 8px 32px rgba(12, 24, 48, 0.18);
+  /* No tokens.css este token se chama --sidebar, nome que o shadcn já usa para a COR da sidebar. */
+  --largura-sidebar: 256px;
+  --largura-trilho: 72px;
+  --conteudo-max: 1200px;
+  --barra-inferior: 64px;
+}
+
+.dark {
+  --sombra-card: none;
+  --sombra-flutuante: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+@theme inline {
+  /* sombras: shadow-card, shadow-flutuante */
+  --shadow-card: var(--sombra-card);
+  --shadow-flutuante: var(--sombra-flutuante);
+
+  /* medidas: w-sidebar, w-trilho, pl-trilho, max-w-conteudo, h-barra-inferior… */
+  --spacing-sidebar: var(--largura-sidebar);
+  --spacing-trilho: var(--largura-trilho);
+  --spacing-barra-inferior: var(--barra-inferior);
+  --container-conteudo: var(--conteudo-max);
+
+  /* estilos de texto do Design System: text-display, text-titulo-1… (tamanho, altura de linha, peso e espaçamento) */
+  --text-display: 36px;
+  --text-display--line-height: 42px;
+  --text-display--font-weight: 800;
+  --text-display--letter-spacing: -0.02em;
+  --text-titulo-1: 26px;
+  --text-titulo-1--line-height: 32px;
+  --text-titulo-1--font-weight: 800;
+  --text-titulo-1--letter-spacing: -0.01em;
+  --text-titulo-2: 20px;
+  --text-titulo-2--line-height: 28px;
+  --text-titulo-2--font-weight: 700;
+  --text-titulo-3: 17px;
+  --text-titulo-3--line-height: 24px;
+  --text-titulo-3--font-weight: 700;
+  --text-rotulo-secao: 12px;
+  --text-rotulo-secao--line-height: 16px;
+  --text-rotulo-secao--font-weight: 700;
+  --text-rotulo-secao--letter-spacing: 0.06em;
+  --text-corpo: 15px;
+  --text-corpo--line-height: 22px;
+  --text-corpo--font-weight: 500;
+  --text-corpo-forte: 15px;
+  --text-corpo-forte--line-height: 22px;
+  --text-corpo-forte--font-weight: 700;
+  --text-legenda: 13px;
+  --text-legenda--line-height: 18px;
+  --text-legenda--font-weight: 500;
+  --text-rotulo-campo: 13px;
+  --text-rotulo-campo--line-height: 18px;
+  --text-rotulo-campo--font-weight: 600;
+  --text-mini: 11px;
+  --text-mini--line-height: 14px;
+  --text-mini--font-weight: 700;
+  --text-valor-destaque: 34px;
+  --text-valor-destaque--line-height: 40px;
+  --text-valor-destaque--font-weight: 800;
+  --text-valor-destaque--letter-spacing: -0.02em;
+  --text-valor-tile: 22px;
+  --text-valor-tile--line-height: 28px;
+  --text-valor-tile--font-weight: 800;
+  --text-valor-linha: 16px;
+  --text-valor-linha--line-height: 22px;
+  --text-valor-linha--font-weight: 700;
+
+  /* movimento */
+  --default-transition-duration: 120ms; /* duracao-rapida */
+}
+
+/*
+ * `trilho:` = a sidebar está no modo trilho de ícones (72px). Vale dentro do AppShellTemplate:
+ * - tablet (768–1023px): sempre, a não ser que a sidebar esteja aberta por cima (data-sidebar-aberta);
+ * - computador (≥ 1024px): quando a pessoa recolheu (data-sidebar-recolhida).
+ * Use no organismo da sidebar: `trilho:sr-only` no nome do item, `trilho:justify-center` etc.
+ */
+@custom-variant trilho {
+  @media (width >= 48rem) and (width < 64rem) {
+    &:where([data-slot='app-shell']:not([data-sidebar-aberta='true']) *) {
+      @slot;
+    }
+  }
+  @media (width >= 64rem) {
+    &:where([data-slot='app-shell'][data-sidebar-recolhida='true'] *) {
+      @slot;
+    }
+  }
+}

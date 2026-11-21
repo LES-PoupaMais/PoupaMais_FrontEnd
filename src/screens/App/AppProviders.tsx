@@ -1,0 +1,69 @@
+'use client'
+
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ThemeProvider } from 'next-themes'
+import { useState, type ReactNode } from 'react'
+import { Toaster } from '@/components/atoms/sonner'
+import { TooltipProvider } from '@/components/atoms/tooltip'
+import { ErroApi } from '@/lib/http'
+import { limparDadosOffline } from '@/lib/service-worker'
+import { RegistroServiceWorker } from './RegistroServiceWorker'
+
+// Sessão vencida (401 vindo do BFF): volta para o login de qualquer tela, guardando o destino.
+export function tratarNaoAutenticado(erro: unknown) {
+  if (erro instanceof ErroApi && erro.status === 401) {
+    const voltar = encodeURIComponent(window.location.pathname + window.location.search)
+    void limparDadosOffline() // PWA: apaga os dados guardados no aparelho (a mensagem sai antes de navegar)
+    // Navegação completa de propósito: descarta o cache e o estado da sessão vencida (fora do React, sem useRouter)
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`/login?voltar=${voltar}&sessao=vencida`) // tela Sessão vencida
+  }
+}
+
+/** Repete uma vez só falha de rede ou do servidor; 4xx (404, 422…) é resposta definitiva e não se repete */
+export function deveRepetir(falhas: number, erro: unknown): boolean {
+  if (erro instanceof ErroApi && erro.status >= 400 && erro.status < 500) return false
+  return falhas < 1
+}
+
+/**
+ * Cache das consultas: o dado vale por 5 min (voltar a uma tela ou repetir um filtro não busca de novo; o foco na janela
+ * só recarrega o que já venceu) e some da memória 10 min depois de ninguém usar. Depois de uma mutação, as consultas
+ * afetadas recarregam pelo mapa de `lib/invalidacoes`. Risco aceito: mudança feita em outro aparelho aparece em até 5 min.
+ */
+export const CACHE = { staleTime: 5 * 60_000, gcTime: 10 * 60_000 } as const
+
+export function criarQueryClient() {
+  return new QueryClient({
+    queryCache: new QueryCache({ onError: tratarNaoAutenticado }),
+    mutationCache: new MutationCache({ onError: tratarNaoAutenticado }),
+    // offlineFirst: sem internet a consulta ainda tenta uma vez, e o service worker (PWA) responde com os dados
+    // guardados; sem cópia guardada, fica pausada como antes. As mutations continuam exigindo internet.
+    defaultOptions: {
+      queries: { staleTime: CACHE.staleTime, gcTime: CACHE.gcTime, retry: deveRepetir, networkMode: 'offlineFirst' },
+    },
+  })
+}
+
+/**
+ * Providers da aplicação inteira, usados só pelo `app/layout.tsx`:
+ * tema (next-themes, classe `dark` no <html>, padrão = sistema), TanStack Query, tooltips e toasts.
+ */
+export function AppProviders({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(criarQueryClient)
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <RegistroServiceWorker />
+        <TooltipProvider>{children}</TooltipProvider>
+        {/* Toast: 5 s, embaixo à direita no computador e acima da barra inferior no celular (DS, Toast) */}
+        <Toaster
+          position="bottom-right"
+          duration={5000}
+          mobileOffset={{ bottom: 'calc(var(--barra-inferior) + env(safe-area-inset-bottom) + 16px)' }}
+        />
+      </QueryClientProvider>
+    </ThemeProvider>
+  )
+}

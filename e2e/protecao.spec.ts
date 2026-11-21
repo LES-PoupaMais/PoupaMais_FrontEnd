@@ -17,7 +17,7 @@ test.describe('proteção de rotas', () => {
     await page.goto('/dashboard')
 
     await expect(page).toHaveURL(/\/dashboard$/)
-    await expect(page.getByRole('heading', { name: 'Dashboard Financeiro' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible()
   })
 
   test('com sessão, o login redireciona para o dashboard', async ({ page, context }) => {

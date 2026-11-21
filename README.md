@@ -9,49 +9,113 @@ A API (Spring Boot) fica em [LES-PoupaMais/PoupaMais_BackEnd](https://github.com
 
 ## Telas
 
-Landing page · Login · Criar conta · Esqueci/Redefinir senha · Dashboard financeiro · Lançamentos (filtros, lixeira, importação e
-exportação) · Novo/Editar lançamento (com criação e edição de categorias no próprio campo) · Perfil · Política de Privacidade.
+- **Pública:** Landing page · Política de Privacidade.
+- **Acesso:** Login · Criar conta · Esqueci a senha · Redefinir senha (link do e-mail).
+- **Área logada:** Dashboard financeiro do mês · Lançamentos (busca, filtros, visualização, "Conta no saldo", mover para a
+  lixeira com Desfazer, exportar em CSV/Excel) · Lixeira (restaurar) · Novo/Editar lançamento (com criação e edição de
+  categorias no próprio campo) · Importar CSV (resumo das linhas ignoradas e download delas em CSV) · Categorias · Perfil (foto,
+  senha, tema, baixar meus dados, excluir conta).
+- **Gerais:** Página não encontrada (404) · Erro geral · Sem internet (faixa de aviso e consulta do que já foi aberto).
+
+Todas as telas têm tema claro e escuro (segue o sistema; dá para escolher no Perfil) e funcionam no celular, no tablet e no
+computador.
 
 ## Tecnologias
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · **shadcn/ui** (sobre Radix UI) · TanStack Query ·
-React Hook Form + Zod · Recharts · lucide-react · Vitest, Testing Library e MSW · Playwright · ESLint + Prettier · GitHub Actions
+Next.js 16 (App Router, `cacheComponents`) · React 19 · TypeScript · Tailwind CSS 4 · **shadcn/ui** (sobre Radix UI) ·
+next-themes · TanStack Query · React Hook Form + Zod · Recharts · lucide-react · sonner · PWA (manifest + service worker
+próprio) · Vitest, Testing Library e MSW · Playwright · ESLint + Prettier · GitHub Actions
 
 ## Arquitetura
 
-- **Atomic Design + shadcn/ui**: `components/atoms` → `molecules` → `organisms` → `templates` → páginas em `app/`. Os componentes
-  do shadcn **são os átomos** (`npx shadcn@latest add <nome>` grava em `components/atoms`). Um nível só importa o mesmo nível ou os
-  de baixo; o ESLint (`eslint-plugin-boundaries`) garante a regra.
+- **Rotas limpas → telas → componentes**: `src/app/` só tem as rotas (`page.tsx` monta o Provider e a View da tela). Cada tela
+  fica numa pasta de `src/screens/<Tela>/`, com o **Context** (dados, estado, ações e toasts), a **View** (monta o template e os
+  organismos) e o esqueleto de carregamento. Uma tela não importa outra.
+- **Atomic Design + shadcn/ui**: `components/atoms` → `molecules` → `organisms` → `templates`. Os componentes são **puros** (só
+  props). Os do shadcn **são os átomos** (`npx shadcn@latest add <nome>` grava em `components/atoms`). Um nível só importa o mesmo
+  nível ou os de baixo; o ESLint (`eslint-plugin-boundaries`) garante as regras.
 - **Arquivos** no padrão shadcn: kebab-case soltos na pasta do nível, com o teste ao lado (`atoms/button.tsx` + `button.test.tsx`,
-  `organisms/lancamentos-table.tsx`).
-- **Tema**: tokens do PoupaMais nas variáveis CSS do shadcn (`src/app/globals.css`); telas públicas e de autenticação no tema escuro
-  (`.dark`), área logada no claro.
-- **Rotas no App Router** com grupos: `(public)`, `(auth)` e `(app)` (área logada, protegida pelo `src/proxy.ts`).
+  `organisms/transaction-table.tsx`). Em `screens/`, pastas e arquivos em PascalCase (`DashboardView.tsx`).
+- **Dados**: `lib/http` → `services/` → `hooks/` (TanStack Query, cache de 5 min) → **Context da tela** → props dos organismos.
+  Nenhum componente monta URL nem chama `fetch`. Depois de cada alteração, as consultas afetadas recarregam pelo mapa de
+  `lib/invalidacoes.ts`.
+- **Tema**: tokens do Design System nas variáveis CSS do shadcn (`src/styles/globals.css`). Claro e escuro em **todas** as telas,
+  seguindo o sistema por padrão (classe `dark` no `<html>` pelo `next-themes`).
+- **Rotas no App Router** com grupos: `(public)`, `(auth)` e `(app)` (área logada, protegida pelo `src/proxy.ts`). O mês escolhido
+  fica na URL (`?mes=11&ano=2026`).
 - **BFF**: o navegador chama só o próprio Next (`/api/*`), que repassa para a API com o token. O token JWT fica em cookie `httpOnly`,
-  invisível para o JavaScript da página.
-- Dados: `lib/http` → `services/` → `hooks/` (TanStack Query) → organismos.
+  invisível para o JavaScript da página. Login, cadastro, troca de senha e exclusão de conta são Server Actions.
+- **PWA**: `src/app/manifest.ts` e o service worker `public/sw.js` (ver "PWA" abaixo).
+
+Regras detalhadas, contrato da API e decisões de design: [`CLAUDE.md`](CLAUDE.md).
 
 ## Como rodar
 
-Pré-requisitos: **Node pela `.nvmrc`** (`nvm use`) e a API rodando (ver o README do backend).
+### Recomendado: tudo junto pelo PoupaMais_Development
+
+O repositório [PoupaMais_Development](https://github.com/LES-PoupaMais/PoupaMais_Development) sobe banco, e-mail (Mailpit), API,
+front e Nginx com um comando. Com os três repositórios lado a lado na mesma pasta:
 
 ```bash
-nvm use
+cd ../PoupaMais_Development
+npm run dev     # app em http://localhost:8000 (hot reload do front), painel em http://localhost:9000
+npm run prod    # "como produção", em HTTPS: https://poupamais.localhost:8443
+```
+
+Detalhes (portas, certificado, abrir pelo celular) no README de lá.
+
+### Só o front, com a API rodando à parte
+
+Pré-requisitos: **Node pela `.nvmrc`** (`nvm use`) e a API no ar (README do backend: `docker compose up -d --build` lá).
+
+```bash
+nvm use                       # Node da .nvmrc
 npm install
-cp .env.example .env.local    # API_URL=http://localhost:8080
+cp .env.example .env.local    # API_URL=http://localhost:8080 (só o servidor do Next lê; sem NEXT_PUBLIC_)
 npm run dev                   # http://localhost:3000
 ```
+
+Build de produção: `npm run build && npm run start` (também em http://localhost:3000).
 
 ## Testes
 
 ```bash
-npm test                 # unitários e de componente (Vitest + Testing Library + MSW)
-npm run test:coverage    # o mesmo, com piso de cobertura
-npm run test:e2e         # end-to-end com Playwright (Chromium e Firefox)
+npm test                   # unitários e de componente (Vitest + Testing Library + MSW)
+npm run test:coverage      # o mesmo, com piso de cobertura (o que o CI roda)
+npm run test:e2e           # end-to-end com Playwright (Chromium e Firefox), com a API simulada
+npm run test:e2e:api-real  # end-to-end contra a API real (Chromium), pela pilha E2E do PoupaMais_Development
 ```
 
 Antes do primeiro E2E: `npx playwright install --with-deps chromium firefox`.
-Os testes E2E simulam a API no navegador, então não precisam do backend rodando.
+O `test:e2e` sobe o build de produção e simula a API no navegador (e uma API falsa para as Server Actions), então não precisa
+do backend rodando.
+
+### E2E contra a API real (`e2e/api-real/`)
+
+Roda o roteiro da demo de ponta a ponta com o Spring, o Postgres e o Mailpit de verdade:
+
+```bash
+cd ../PoupaMais_Development && npm run e2e:up              # API 8580, Mailpit 8525, banco 5435 (127.0.0.1)
+cd ../PoupaMais_FrontEnd && npm run test:e2e:api-real     # build de produção do Next em PORT=3130 (padrão)
+cd ../PoupaMais_Development && npm run e2e:down            # o banco (tmpfs) some junto
+```
+
+Cada teste cria um usuário novo (e-mail único) e monta os dados pela API (`e2e/api-real/apoio/`), então não depende de ordem
+nem de banco limpo. O "esqueci a senha" lê o link do e-mail pela API HTTP do Mailpit. Se a pilha não estiver de pé, a suíte
+para logo com a instrução para subir. Firefox também: `npx playwright test -c playwright.api-real.config.ts --project=firefox`.
+Esta suíte ainda não roda no CI.
+
+## PWA
+
+O PoupaMais instala como app no celular e no computador (ícone na tela inicial, janela própria). Sem internet, abre as telas já
+visitadas e mostra os últimos dados guardados, só para consulta: gravar exige internet. Ao sair, os dados guardados são apagados.
+
+- O service worker só é registrado no **build de produção** (`npm run build && npm run start`); no `npm run dev` não há.
+- O navegador só oferece instalar em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x`) não instala. Para
+  testar no celular, use o modo "como produção" do PoupaMais_Development (`https://poupamais.localhost:8443`, com a CA local
+  confiada).
+- Conferir: Chrome → DevTools → **Application** (Manifest e Service workers) e Lighthouse. Detalhes na seção "PWA" do
+  [`CLAUDE.md`](CLAUDE.md).
 
 ## Pipeline (CI)
 
@@ -71,7 +135,8 @@ PR só é integrado (na `development` ou na `main`) com o CI verde.
 | `lint` / `format` / `format:check`      | ESLint e Prettier                             |
 | `typecheck`                             | Checagem de tipos                             |
 | `test` / `test:watch` / `test:coverage` | Vitest                                        |
-| `test:e2e`                              | Playwright                                    |
+| `test:e2e`                              | Playwright (API simulada)                     |
+| `test:e2e:api-real`                     | Playwright contra a API real (pilha E2E)      |
 
 ## Fluxo de branches (Gitflow)
 
