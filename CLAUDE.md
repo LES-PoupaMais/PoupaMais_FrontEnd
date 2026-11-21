@@ -264,7 +264,8 @@ tokens, estados e acessibilidade. Passo a passo: skill `componente-atomic`.
   multi-select, segmentado) e `register` para Input/PasswordField (repassam o `ref`).
 - **DatePicker:** `apresentacao="popover"` (computador) ou `"folha"` (celular): quem decide é a tela (`useMediaQuery` no Context/View), o
   componente não lê a largura. O calendário é o átomo próprio `calendar` (três visões e teclado do DS, sem react-day-picker); `modo="mes"`
-  serve ao MonthNavigator. A folha (`drawer`) usa o Dialog do Radix (sem `vaul`, que não desmonta no jsdom): fecha pelo ×, véu ou Esc.
+  serve ao MonthNavigator (`seletor="popover"|"folha"`). A folha (`drawer`) usa o Dialog do Radix (sem `vaul`, que não desmonta no
+  jsdom): fecha pelo ×, véu ou Esc. Só a folha Criar (`create-sheet`) fecha também ao arrastar para baixo.
 - Variantes via `cva`; cores só por token (`bg-primary`, `text-receita`, `bg-despesa-fundo`, `text-atencao`…), nunca hex.
 - `'use client'` só onde há estado, efeito ou **evento** (ex.: o `AppShellTemplate`, que repassa o clique do véu e o Esc).
 
@@ -616,10 +617,10 @@ reservado (cores, navegação, casca de visualização) para crescer sem refazer
 
 Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
 
-1. **Navegação (sobras do B2):**
-   - O nome do mês do `MonthNavigator` só vira botão com `onEscolherMes`; nenhuma tela liga ainda. Ligar ao `date-picker` no modo mês
-     (o `calendar` já tem `modo="mes"`).
-   - Folha Criar sem "arrastar para baixo para fechar" (o `sheet` do Radix não arrasta; fecha por ×, véu, Esc e ao escolher).
+1. **Navegação (sobras do B2): feito em 20/11.** O nome do mês do `MonthNavigator` abre o calendário no modo mês (prop
+   `seletor`: `popover` no cabeçalho do Dashboard e na `FilterBar`, `folha` na TopBar do celular; a folha usa o título
+   "Mês exibido", o `aria-label` do DS). A folha Criar fecha ao arrastar para baixo pela alça ou pelo título (pointer events,
+   80px ou um gesto rápido; com `prefers-reduced-motion` não acompanha o dedo, só fecha).
 2. **Mensagens do schema × DS: decidido e feito em 20/11.** `schemas/lancamento.schema.ts` usa as frases do DS e da prancheta
    `novo-erros-celular` ("A descrição é obrigatória.", "A descrição deve ter no máximo 100 caracteres.", "Escolha Receita ou Despesa.",
    "Informe uma data válida, no formato dd/mm/aaaa.", "Informe um valor maior que zero." para vazio e zero, "O valor máximo é

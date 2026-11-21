@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
 // O jsdom não tem matchMedia. `simularLargura(1280)` responde às consultas min-width/max-width como um navegador
-// daquela largura e avisa os ouvintes quando muda.
+// daquela largura (as outras consultas dão false) e avisa os ouvintes quando muda.
 type Ouvinte = (evento: MediaQueryListEvent) => void
 let largura = 390
 const ouvintes = new Set<{ consulta: string; ouvinte: Ouvinte }>()
@@ -9,6 +9,8 @@ const ouvintes = new Set<{ consulta: string; ouvinte: Ouvinte }>()
 function casa(consulta: string) {
   const min = /min-width:\s*(\d+)px/.exec(consulta)
   const max = /max-width:\s*(\d+)px/.exec(consulta)
+  // Consultas sem largura (prefers-reduced-motion, prefers-color-scheme…) respondem "não", como um navegador padrão
+  if (!min && !max) return false
   return (!min || largura >= Number(min[1])) && (!max || largura <= Number(max[1]))
 }
 

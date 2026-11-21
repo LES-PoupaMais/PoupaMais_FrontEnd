@@ -1,8 +1,19 @@
 'use client'
 
 import { cva, type VariantProps } from 'class-variance-authority'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useState } from 'react'
+import { Button } from '@/components/atoms/button'
+import { Calendar } from '@/components/atoms/calendar'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/atoms/drawer'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/atoms/popover'
 import { cn } from '@/lib/cn'
 import { ANO_MAXIMO, ANO_MINIMO } from '@/lib/data'
 import { MESES } from '@/lib/format'
@@ -10,8 +21,9 @@ import { deslocarMes } from '@/lib/periodo'
 import type { MesAno } from '@/types/api'
 
 // "‹ Novembro 2026 ›" (DS: MonthNavigator). Puro: recebe o mês e avisa a troca por `onChange`; quem guarda na URL
-// (`?mes=11&ano=2026`) é o Context da tela. O nome do mês abre o DatePicker no modo mês quando a tela passa
-// `onEscolherMes`; sem ele, o nome é só texto.
+// (`?mes=11&ano=2026`) é o Context da tela. Com `seletor`, o nome do mês vira botão que abre o calendário do DatePicker no
+// modo mês (começa nos meses, sem a visão de dias): "popover" (computador) ou "folha" (celular), como o DatePicker. Quem
+// escolhe é a tela; sem `seletor`, o nome é só texto.
 const navegadorVariants = cva('inline-flex items-center', {
   variants: {
     variante: {
@@ -40,8 +52,10 @@ export type MonthNavigatorProps = Omit<React.ComponentProps<'nav'>, 'onChange'> 
     mes: number
     ano: number
     onChange: (periodo: MesAno) => void
-    /** Abre o DatePicker no modo mês (DS). Sem isto, o nome do mês não é botão. */
-    onEscolherMes?: () => void
+    /** O nome do mês abre o calendário no modo mês (DS): "popover" (computador) ou "folha" (celular). Sem isto, é só texto. */
+    seletor?: 'popover' | 'folha'
+    /** Hoje em ISO, para o "Hoje" do calendário (padrão: hoje no fuso local). Útil nos testes. */
+    hoje?: string
   }
 
 const extenso = ({ mes, ano }: MesAno) => `${MESES[mes - 1]} de ${ano}`
@@ -51,13 +65,15 @@ export function MonthNavigator({
   mes,
   ano,
   onChange,
-  onEscolherMes,
+  seletor,
+  hoje,
   variante = 'padrao',
   contornado = false,
   className,
   ...props
 }: MonthNavigatorProps) {
   const [anuncio, setAnuncio] = useState('')
+  const [aberto, setAberto] = useState(false)
   const atual = { mes, ano }
   const anterior = deslocarMes(atual, -1)
   const proximo = deslocarMes(atual, 1)
@@ -66,6 +82,77 @@ export function MonthNavigator({
   function irPara(novo: MesAno) {
     setAnuncio(`Mostrando ${extenso(novo)}`)
     onChange(novo)
+  }
+
+  function escolher(novoMes: number, novoAno: number) {
+    setAberto(false)
+    if (novoMes !== mes || novoAno !== ano) irPara({ mes: novoMes, ano: novoAno })
+  }
+
+  const calendario = (
+    <Calendar
+      modo="mes"
+      selecionado={`${String(ano).padStart(4, '0')}-${String(mes).padStart(2, '0')}-01`}
+      onSelecionarMes={escolher}
+      hoje={hoje}
+      focarAoAbrir
+    />
+  )
+
+  const botaoNome = (
+    <button
+      type="button"
+      aria-haspopup="dialog"
+      aria-expanded={aberto}
+      aria-label={`${extenso(atual)}. Escolher outro mês`}
+      className={cn(nomeDoMes, 'hover:bg-secondary')}
+      onClick={seletor === 'folha' ? () => setAberto(true) : undefined}
+    >
+      {nome}
+    </button>
+  )
+
+  let centro: React.ReactNode
+  if (seletor === 'popover') {
+    centro = (
+      <Popover open={aberto} onOpenChange={setAberto}>
+        <PopoverTrigger asChild>{botaoNome}</PopoverTrigger>
+        <PopoverContent
+          align="center"
+          aria-label="Mês exibido"
+          className="w-[min(328px,calc(100vw-2rem))]"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          {calendario}
+        </PopoverContent>
+      </Popover>
+    )
+  } else if (seletor === 'folha') {
+    centro = (
+      <>
+        {botaoNome}
+        <Drawer open={aberto} onOpenChange={setAberto}>
+          <DrawerContent onOpenAutoFocus={(e) => e.preventDefault()}>
+            <DrawerHeader>
+              <DrawerTitle>Mês exibido</DrawerTitle>
+              <DrawerDescription className="sr-only">Escolha o mês e o ano no calendário.</DrawerDescription>
+              <DrawerClose asChild>
+                <Button variant="texto" size="icone" aria-label="Fechar">
+                  <X aria-hidden="true" />
+                </Button>
+              </DrawerClose>
+            </DrawerHeader>
+            <div className="px-5 pb-5">{calendario}</div>
+          </DrawerContent>
+        </Drawer>
+      </>
+    )
+  } else {
+    centro = (
+      <span className={nomeDoMes} aria-label={extenso(atual)}>
+        {nome}
+      </span>
+    )
   }
 
   return (
@@ -85,21 +172,7 @@ export function MonthNavigator({
       >
         <ChevronLeft className="size-5" aria-hidden="true" />
       </button>
-      {onEscolherMes ? (
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-label={`${extenso(atual)}. Escolher outro mês`}
-          className={cn(nomeDoMes, 'hover:bg-secondary')}
-          onClick={onEscolherMes}
-        >
-          {nome}
-        </button>
-      ) : (
-        <span className={nomeDoMes} aria-label={extenso(atual)}>
-          {nome}
-        </span>
-      )}
+      {centro}
       <button
         type="button"
         aria-label="Próximo mês"

@@ -209,7 +209,14 @@ export function FilterBar({
           </div>
           <div className="flex flex-none flex-col gap-1.5">
             <span className="text-rotulo-campo">Mês</span>
-            <MonthNavigator variante="compacto" contornado mes={periodo.mes} ano={periodo.ano} onChange={onMudarMes} />
+            <MonthNavigator
+              variante="compacto"
+              contornado
+              seletor="popover"
+              mes={periodo.mes}
+              ano={periodo.ano}
+              onChange={onMudarMes}
+            />
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
