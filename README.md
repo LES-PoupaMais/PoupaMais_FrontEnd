@@ -7,6 +7,8 @@ do superendividamento (ODS 1 e 8). Projeto da disciplina de Laboratório de Enge
 
 A API (Spring Boot) fica em [LES-PoupaMais/PoupaMais_BackEnd](https://github.com/LES-PoupaMais/PoupaMais_BackEnd).
 
+**No ar:** https://poupamais-one.vercel.app (instala como app no celular; ver [Deploy](#deploy)).
+
 ## Telas
 
 - **Pública:** Landing page · Política de Privacidade.
@@ -111,11 +113,31 @@ O PoupaMais instala como app no celular e no computador (ícone na tela inicial,
 visitadas e mostra os últimos dados guardados, só para consulta: gravar exige internet. Ao sair, os dados guardados são apagados.
 
 - O service worker só é registrado no **build de produção** (`npm run build && npm run start`); no `npm run dev` não há.
-- O navegador só oferece instalar em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x`) não instala. Para
-  testar no celular, use o modo "como produção" do PoupaMais_Development (`https://poupamais.localhost:8443`, com a CA local
-  confiada).
+- O navegador só oferece instalar em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x`) não instala. No
+  celular, instale pelo site publicado (https://poupamais-one.vercel.app): Android/Chrome, menu ⋮ → _Instalar app_;
+  iPhone/Safari, Compartilhar → _Adicionar à Tela de Início_. No computador, também pelo modo "como produção" do
+  PoupaMais_Development (`https://poupamais.localhost:8443`, com a CA local confiada).
 - Conferir: Chrome → DevTools → **Application** (Manifest e Service workers) e Lighthouse. Detalhes na seção "PWA" do
   [`CLAUDE.md`](CLAUDE.md).
+
+## Deploy
+
+| Peça                     | Onde                                        | Endereço                               |
+| ------------------------ | ------------------------------------------- | -------------------------------------- |
+| Front (este repositório) | **Vercel** (plano Hobby)                    | https://poupamais-one.vercel.app       |
+| API                      | **Render** (Web Service Docker, plano Free) | https://poupamais-backend.onrender.com |
+| Banco                    | **Neon** (Postgres 17, AWS US East)         | acessado só pela API                   |
+| E-mail (redefinir senha) | **Brevo** (SMTP na porta 2525)              | —                                      |
+
+- A Vercel publica a branch **`main`** a cada merge (as outras branches e os PRs ganham uma URL de prévia). A configuração é a
+  padrão de Next.js (`npm run build`), com **uma** variável de ambiente: `API_URL=https://poupamais-backend.onrender.com` (sem
+  barra no fim). Ela fica só no servidor da Vercel: o navegador fala com o próprio Next (BFF), que chama a API.
+- Cabeçalhos de segurança (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) saem do
+  `next.config.ts`; o HSTS é da Vercel.
+- O plano Free do Render dorme depois de ~15 min sem uso, e a API leva de 2 a 3 min para acordar. Um job no
+  [cron-job.org](https://cron-job.org) chama `GET /actuator/health` a cada 10 min para mantê-la acordada.
+- Passo a passo completo (contas, variáveis de cada serviço e problemas comuns): seção "Deploy" do README do
+  [PoupaMais_Development](https://github.com/LES-PoupaMais/PoupaMais_Development#deploy).
 
 ## Pipeline (CI)
 
