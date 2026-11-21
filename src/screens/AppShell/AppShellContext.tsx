@@ -7,6 +7,7 @@ import { MIDIA, useMediaQuery } from '@/hooks/use-media-query'
 import { useOnline } from '@/hooks/use-online'
 import { fotoDoUsuario, useUsuario } from '@/hooks/use-usuario'
 import { comPeriodo, lerPeriodo } from '@/lib/periodo'
+import { limparDadosOffline } from '@/lib/service-worker'
 import { gravarSidebarRecolhida } from '@/lib/sidebar-cookie'
 import type { MesAno, Usuario } from '@/types/api'
 import { useNovaCategoria } from './useNovaCategoria'
@@ -76,8 +77,13 @@ export function AppShellProvider({ sidebarRecolhida, children }: { sidebarRecolh
   const irParaMes = (novo: MesAno) =>
     router.replace(`${caminho}?${comPeriodo(parametros.toString(), novo)}`, { scroll: false })
 
-  // O redirect da action leva para /login; o cookie httpOnly só pode ser apagado no servidor
-  const sair = () => iniciarSaida(() => logoutAction())
+  // O redirect da action leva para /login; o cookie httpOnly só pode ser apagado no servidor.
+  // Antes, o service worker (PWA) apaga os dados guardados no aparelho.
+  const sair = () =>
+    iniciarSaida(async () => {
+      await limparDadosOffline()
+      await logoutAction()
+    })
 
   const valor: AppShellContextValue = {
     caminho,

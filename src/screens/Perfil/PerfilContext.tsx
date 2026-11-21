@@ -17,6 +17,7 @@ import { useAtualizarNome, useBaixarMeusDados, useRemoverFoto, useTrocarFoto } f
 import { fotoDoUsuario, useUsuario } from '@/hooks/use-usuario'
 import { salvarArquivo } from '@/lib/baixar-arquivo'
 import { traduzirErro } from '@/lib/http'
+import { limparDadosOffline } from '@/lib/service-worker'
 import { validarFoto, type TrocarSenhaInput } from '@/schemas/perfil.schema'
 import type { Usuario } from '@/types/api'
 import { useHidratado } from '@/hooks/use-hidratado'
@@ -166,8 +167,9 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
       setErroSenhaExcluir(null)
       const resultado = await excluirContaAction({ senha })
       if (resultado.ok) {
-        // A conta não existe mais: nada da sessão pode ficar no cache
+        // A conta não existe mais: nada da sessão pode ficar no cache (nem no service worker do PWA)
         queryClient.clear()
+        void limparDadosOffline()
         toast.success('Sua conta foi excluída.')
         router.replace(ROTAS.inicio)
       } else if (resultado.status === 401) {
@@ -227,7 +229,11 @@ export function PerfilProvider({ children }: { children: ReactNode }) {
     excluindo,
     erroSenhaExcluir,
 
-    sair: () => iniciarSaida(() => logoutAction()),
+    sair: () =>
+      iniciarSaida(async () => {
+        await limparDadosOffline() // PWA: apaga os dados guardados no aparelho antes de sair
+        await logoutAction()
+      }),
     saindo,
   }
 

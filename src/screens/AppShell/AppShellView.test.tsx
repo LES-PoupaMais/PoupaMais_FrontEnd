@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '@/components/atoms/sonner'
 import { server } from '@/test/msw/server'
 import { simularLargura } from '@/test/media'
+import { simularServiceWorker } from '@/test/service-worker'
 import { renderComProviders } from '@/test/utils'
 import { AppShell } from './AppShell'
 import { AppShellSkeleton } from './AppShellSkeleton'
@@ -260,6 +261,21 @@ describe('AppShell (Context + View)', () => {
     await usuario.click(sidebar().getByRole('button', { name: 'Sair' }))
 
     expect(acoes.logoutAction).toHaveBeenCalledOnce()
+  })
+
+  it('Sair pede ao service worker que apague os dados guardados antes da logoutAction', async () => {
+    simularLargura(1280)
+    const sw = simularServiceWorker()
+    acoes.logoutAction.mockImplementationOnce(async () => {
+      expect(sw.postMessage).toHaveBeenCalledWith({ tipo: 'limpar-dados' }, expect.any(Array))
+    })
+    const { usuario } = renderizar()
+
+    await usuario.click(sidebar().getByRole('button', { name: 'Sair' }))
+
+    await vi.waitFor(() => expect(acoes.logoutAction).toHaveBeenCalledOnce())
+    expect(sw.postMessage).toHaveBeenCalledOnce()
+    sw.desfazer()
   })
 
   it('no tablet, com a sidebar aberta o Tab fica preso nela', async () => {

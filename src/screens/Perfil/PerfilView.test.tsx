@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { http } from '@/lib/http'
 import { lancamentosDemo, server, usuarioDemo } from '@/test/msw/server-e-dados'
+import { simularServiceWorker } from '@/test/service-worker'
 import { renderComProviders } from '@/test/utils'
 import { PerfilProvider, usePerfilContext } from './PerfilContext'
 import { PerfilSkeleton } from './PerfilSkeleton'
@@ -262,21 +263,27 @@ describe('Perfil', () => {
 
     acoes.excluirConta.mockResolvedValueOnce({ ok: true })
     const limpar = vi.spyOn(queryClient, 'clear')
+    const sw = simularServiceWorker()
     await usuario.click(within(dialogo).getByRole('button', { name: 'Excluir conta' }))
     await waitFor(() => expect(rota.replace).toHaveBeenCalledWith('/'))
     expect(acoes.excluirConta).toHaveBeenLastCalledWith({ senha: 'errada' })
     expect(limpar).toHaveBeenCalled()
+    expect(sw.postMessage).toHaveBeenCalledWith({ tipo: 'limpar-dados' }, expect.any(Array))
     expect(avisos.success).toHaveBeenCalledWith('Sua conta foi excluída.')
+    sw.desfazer()
   })
 
-  it('cancelar o diálogo fecha; "Sair da conta" chama o logout', async () => {
+  it('cancelar o diálogo fecha; "Sair da conta" limpa os dados do service worker e chama o logout', async () => {
+    const sw = simularServiceWorker()
     const { usuario } = renderizar()
     await usuario.click(await screen.findByRole('button', { name: /Excluir minha conta/ }))
     await usuario.click(screen.getByRole('button', { name: 'Cancelar' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
 
     await usuario.click(screen.getByRole('button', { name: 'Sair da conta' }))
-    expect(acoes.logout).toHaveBeenCalled()
+    await waitFor(() => expect(acoes.logout).toHaveBeenCalled())
+    expect(sw.postMessage).toHaveBeenCalledWith({ tipo: 'limpar-dados' }, expect.any(Array))
+    sw.desfazer()
   })
 
   it('sem conexão: faixa de aviso e os botões que gravam desabilitados com o motivo', async () => {
