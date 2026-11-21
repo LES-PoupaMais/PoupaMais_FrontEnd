@@ -673,8 +673,8 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      fica só em Lançamentos. Exportar a lixeira não está no escopo: a prop `lixeira` do `export-dialog` saiu (feito em 20/11, com
      os testes dela) e a dica ficou só "A lixeira fica de fora."
    - Visualização: a auditoria usa a `timeline` ("Histórico") no lugar das duas linhas "Criado em / Alterado em" da prancheta.
-   - Celular `/lancamentos/[id]`: o "‹" é o da TopBar da casca (sempre "Lançamentos"); a prancheta `lixeira-detalhe-celular` volta para a
-     Lixeira. O conteúdo já mostra "‹ Lixeira" a partir de 768px; no celular, ajustar `constants/navegacao` se a casca puder saber o status.
+   - ~~Celular `/lancamentos/[id]`: o "‹" sempre "Lançamentos"~~: resolvido no PR #21 (a rota não tem TopBar, `semTopBar`; a
+     tela desenha "‹ Lançamentos" ou "‹ Lixeira" pelo status, como na prancheta `lixeira-detalhe-celular`).
    - Textos sem prancheta: aprovados em 19/11 (seção "Textos fora do DS"); falta registrar no DS. Os toasts de Conta no saldo e
      lixeira ainda se repetem nos Contexts de Lançamentos, Lixeira, visualização e formulário: juntar em `constants/textos` se mudarem.
    - **Restaurar volta ao status anterior (v1.2.0): decidido e feito em 20/11.** Os textos ficaram neutros, sem prometer status:
@@ -719,7 +719,9 @@ Débito conhecido (registre aqui o que ficar de fora e tire quando resolver):
      ("Esqueci minha senha", "Criar conta", "Entrar", "Ler a Política de privacidade", rodapé do acesso) levam `underline`.
      Botões e links de navegação ("Voltar para o início", links do rodapé do site e do topo) ficam sem, como nas pranchetas.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
-   - Sem `global-error.tsx` (erro no próprio layout raiz): só `error.tsx` na raiz e em `(app)`.
+   - **`global-error.tsx`: feito em 20/11.** Erro no próprio layout raiz: `<html>`/`<body>` próprios com a fonte e o CSS global,
+     e a `ErroGlobalView` (`screens/ErroGeral`), que repõe o tema com um `ThemeProvider` só dela e mostra o mesmo erro da área
+     pública ("Tentar de novo" e "Voltar ao início").
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`, `esqueci-senha-enviado`,
      `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`, `landing-passos`,
      `landing-dados`, `politica-privacidade`.
