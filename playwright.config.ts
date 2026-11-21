@@ -25,6 +25,9 @@ export default defineConfig({
     locale: 'pt-BR',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // O service worker do PWA (build de produção) passaria na frente do page.route('**/api/**') das fixtures.
+    // Bloqueado em todos os testes, menos no e2e/pwa.spec.ts, que liga com test.use({ serviceWorkers: 'allow' }).
+    serviceWorkers: 'block',
   },
   // Chromium e Firefox: navegadores exigidos pela RNF016 (Edge usa o motor do Chromium)
   projects: [
