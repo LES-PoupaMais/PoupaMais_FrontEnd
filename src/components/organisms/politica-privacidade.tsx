@@ -5,7 +5,9 @@ import { FunctionIcon } from '@/components/atoms/function-icon'
 
 // Política de privacidade (pranchetas privacidade-celular e privacidade-computador): índice "Nesta página" fixo à esquerda
 // no computador e o texto num card; no celular, o texto direto na página. Linguagem simples, sem prometer o que o sistema
-// não faz. A seção "Contato" é PROVISÓRIA: o canal do encarregado (DPO) ainda não foi definido (Pendências do CLAUDE.md).
+// não faz. A seção "Contato" traz o e-mail do encarregado pelo tratamento de dados (DPO).
+const EMAIL_ENCARREGADO = 'poupamaisods18@gmail.com'
+
 export type PoliticaPrivacidadeProps = { hrefInicio: string; hrefLogin: string }
 
 type Secao = { id: string; titulo: string; Icone: LucideIcon; corpo: ReactNode }
@@ -133,8 +135,14 @@ const SECOES: Secao[] = [
     Icone: Mail,
     corpo: (
       <p>
-        O canal de contato do encarregado pelo tratamento de dados (LGPD) ainda está sendo definido e será publicado
-        aqui. Enquanto isso, tudo o que a lei garante a você já pode ser feito pelo Perfil.
+        Para falar com o encarregado pelo tratamento de dados (LGPD), escreva para{' '}
+        <a
+          href={`mailto:${EMAIL_ENCARREGADO}`}
+          className="text-corpo-forte text-primary hover:text-primaria-hover break-all underline"
+        >
+          {EMAIL_ENCARREGADO}
+        </a>
+        . Tudo o que a lei garante a você também pode ser feito pelo Perfil.
       </p>
     ),
   },
@@ -172,7 +180,7 @@ export function PoliticaPrivacidade({ hrefInicio, hrefLogin }: PoliticaPrivacida
         <div className="lg:hidden">{voltar}</div>
         <div className="flex flex-col gap-2">
           <h1 className="text-titulo-1 lg:text-[32px] lg:leading-10">Política de privacidade</h1>
-          <p className="text-legenda text-muted-foreground">Atualizada em 18 de novembro de 2026</p>
+          <p className="text-legenda text-muted-foreground">Atualizada em 21 de novembro de 2026</p>
           <p className="text-corpo text-muted-foreground mt-2 lg:text-base lg:leading-6">
             Este texto explica, em linguagem simples, quais dados o PoupaMais guarda, por que guarda e o que você pode
             fazer com eles.
