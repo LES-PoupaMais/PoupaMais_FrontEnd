@@ -508,6 +508,43 @@ A exportação CSV/XLSX acrescenta a coluna `status`; no XLSX a data é célula 
   Nunca PR de `feat/*` direto para a `main` e nunca commit direto na `development` ou na `main`. Conventional Commits em português
   (`feat(dashboard): ...`).
 
+## PWA (instalar como app no celular)
+
+O PoupaMais instala como app (tela inicial do celular, janela própria sem barra do navegador). Peças:
+
+- **Manifest:** `src/app/manifest.ts` (o Next serve em `/manifest.webmanifest`): nome "PoupaMais", abre em `/dashboard`,
+  `display: standalone`, cores do DS (`fundo` claro `#F4F6F8` e `primaria` `#2B68D6`) e os ícones de `public/icons/`
+  (`icon-192.png`, `icon-512.png` e `icon-maskable-512.png`, o porquinho a 70% sobre branco, para o recorte do Android).
+  `app/icon.png`, `app/apple-icon.png` (ícone do iPhone) e `app/favicon.ico` continuam como estavam.
+- **Metas** (`app/layout.tsx`): `applicationName`, `appleWebApp` (instalar pelo Safari) e `viewport.themeColor` com o `fundo` de
+  cada tema (claro `#F4F6F8`, escuro `#111A2F`).
+- **Service worker:** `public/sw.js`, escrito à mão (sem bibliotecas), com a constante `VERSAO` (suba-a ao mudar regras ou
+  arquivos: o `activate` apaga os caches antigos). O `next.config.ts` serve o `/sw.js` com `Cache-Control: no-cache`.
+  - Arquivos fixos (`/_next/static/*`: JS, CSS e fontes; `/icons/`, `/logos/`, manifest e ícones): **cache-first**.
+  - Páginas (navegação): **network-first**; sem internet, a última cópia guardada (o app abre offline).
+  - `GET /api/*`: **network-first**; sem internet, a última resposta guardada (consulta só de leitura). As consultas do
+    TanStack Query usam `networkMode: 'offlineFirst'` (`AppProviders`) para tentar mesmo offline e receber essa cópia; a tela
+    mostra os dados guardados e a faixa "Sem internet agora…", e os botões que gravam continuam desabilitados.
+  - **Fora do cache:** POST/PUT/PATCH/DELETE e Server Actions (header `Next-Action`); respostas que não são 200,
+    redirecionamentos e downloads (`Content-Disposition: attachment`: exportar, modelo CSV); `/api/usuarios/me/dados`; as
+    rotas de acesso (`/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` e `/api/auth/*`); outras origens.
+  - **Limpeza:** "Sair" (casca e Perfil), sessão vencida (401 no `AppProviders`) e conta excluída mandam
+    `{tipo: 'limpar-dados'}` (`lib/service-worker.limparDadosOffline`), que apaga as respostas da API e as páginas guardadas;
+    qualquer 401 de `/api/*` também limpa no próprio service worker. Nada de uma pessoa fica no aparelho para a próxima.
+- **Registro:** `screens/App/RegistroServiceWorker` (no `AppProviders`) chama `lib/service-worker.registrarServiceWorker`, que só
+  registra com `NODE_ENV=production` e `'serviceWorker' in navigator`. No `npm run dev` não há service worker.
+- **Onde instala:** só em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x:3000`) o navegador não registra o
+  service worker nem oferece instalar. Para testar no celular: o modo "como produção" do PoupaMais_Development
+  (`https://poupamais.localhost:8443`) ou, de verdade, depois do deploy com HTTPS.
+- **Como testar:** `npm run build && npm run start`, abrir `http://localhost:3000` no Chrome → DevTools > **Application**
+  (Manifest: nome, ícones e "Installable"; Service workers: ativo; Cache storage: `poupamais-*`; marque "Offline" e recarregue
+  uma tela já visitada) e **Lighthouse** (categoria PWA / "Installable"). No celular (Chrome Android): menu ⋮ > "Instalar app";
+  no iPhone (Safari): Compartilhar > "Adicionar à Tela de Início".
+- **Testes:** `src/test/sw.test.ts` roda o próprio `public/sw.js` num contexto isolado do Node (estratégias, o que não entra no
+  cache, limpeza, 401, install/activate); `lib/service-worker.test.ts` e `RegistroServiceWorker.test.tsx` (registra só em produção,
+  manda `limpar-dados`); `e2e/pwa.spec.ts` no build de produção (manifest e ícones respondem, SW registra). Os outros E2E rodam com
+  `serviceWorkers: 'block'` (`playwright.config.ts`), porque o service worker passaria na frente do `page.route('**/api/**')`.
+
 ## Testes
 
 Guia detalhado: skill `testes-frontend`.
