@@ -2,11 +2,12 @@
 
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
-import { useState, type ReactNode } from 'react'
+import { Suspense, useState, type ReactNode } from 'react'
 import { Toaster } from '@/components/atoms/sonner'
 import { TooltipProvider } from '@/components/atoms/tooltip'
 import { ErroApi } from '@/lib/http'
 import { limparDadosOffline } from '@/lib/service-worker'
+import { GuardarTelaOffline } from './GuardarTelaOffline'
 import { RegistroServiceWorker } from './RegistroServiceWorker'
 
 // Sessão vencida (401 vindo do BFF): volta para o login de qualquer tela, guardando o destino.
@@ -56,6 +57,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <RegistroServiceWorker />
+        <Suspense fallback={null}>
+          <GuardarTelaOffline />
+        </Suspense>
         <TooltipProvider>{children}</TooltipProvider>
         {/* Toast: 5 s, embaixo à direita no computador e acima da barra inferior no celular (DS, Toast) */}
         <Toaster

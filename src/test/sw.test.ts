@@ -30,8 +30,12 @@ class CachesFalsos {
       addAll: async (urls: string[]) => urls.forEach((url) => cache.set(chave(url), new Response(url))),
     }
   }
-  async match(alvo: Requisicao, { cacheName }: { cacheName: string }) {
-    return this.guardados.get(cacheName)?.get(chave(alvo))?.clone()
+  async match(alvo: Requisicao, { cacheName, ignoreSearch = false }: { cacheName: string; ignoreSearch?: boolean }) {
+    const cache = this.guardados.get(cacheName)
+    if (!ignoreSearch) return cache?.get(chave(alvo))?.clone()
+    const semQuery = (url: string) => url.split('?')[0]
+    const achada = [...(cache ?? [])].find(([url]) => semQuery(url) === semQuery(chave(alvo)))
+    return achada?.[1].clone()
   }
   async delete(nome: string) {
     return this.guardados.delete(nome)
@@ -51,7 +55,7 @@ function carregarServiceWorker() {
     skipWaiting: vi.fn(async () => {}),
     clients: { claim: vi.fn(async () => {}) },
   }
-  const contexto = vm.createContext({ self, caches, fetch, Response, Headers, URL })
+  const contexto = vm.createContext({ self, caches, fetch, Request, Response, Headers, URL })
   const regras = vm.runInContext(`${codigo}\n;({ estrategia, podeGuardar, CACHES_ATUAIS })`, contexto) as {
     estrategia: (requisicao: Requisicao) => string | null
     podeGuardar: (resposta: Response) => boolean
@@ -61,7 +65,11 @@ function carregarServiceWorker() {
   /** Dispara um `fetch` no service worker; devolve a resposta dele, ou `null` se ele não interceptar */
   async function buscar(alvo: Requisicao): Promise<Response | null> {
     let resposta: Promise<Response> | null = null
-    ouvintes.fetch({ request: alvo, respondWith: (promessa: Promise<Response>) => (resposta = promessa) })
+    ouvintes.fetch({
+      request: alvo,
+      respondWith: (promessa: Promise<Response>) => (resposta = promessa),
+      waitUntil: () => {},
+    })
     return resposta
   }
   async function esperar(tipo: string, extra: Record<string, unknown> = {}) {
@@ -74,6 +82,8 @@ function carregarServiceWorker() {
 }
 
 const json = (corpo: unknown, init: ResponseInit = {}) => new Response(JSON.stringify(corpo), { status: 200, ...init })
+const html = (corpo: string, init: ResponseInit = {}) =>
+  new Response(corpo, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' }, ...init })
 
 describe('public/sw.js', () => {
   let sw: ReturnType<typeof carregarServiceWorker>
@@ -192,6 +202,22 @@ describe('public/sw.js', () => {
     expect(porta.postMessage).toHaveBeenCalledWith({ tipo: 'dados-limpos' })
   })
 
+  it('resposta que chega depois do "limpar-dados" não é guardada (pedido feito antes do Sair)', async () => {
+    let entregar: (resposta: Response) => void = () => {}
+    sw.fetch.mockReturnValueOnce(new Promise<Response>((ok) => (entregar = ok)))
+    const emAndamento = sw.buscar(requisicao('/api/dashboard?mes=11&ano=2026'))
+
+    await sw.esperar('message', { data: { tipo: 'limpar-dados' }, ports: [] })
+    entregar(json({ saldo: 10 }))
+
+    expect(await (await emAndamento)!.json()).toEqual({ saldo: 10 }) // a tela ainda recebe a resposta
+    expect(await sw.caches.keys()).not.toContain(sw.CACHE_API) // mas nada fica no aparelho
+
+    sw.fetch.mockResolvedValueOnce(json({ saldo: 20 }))
+    await sw.buscar(requisicao('/api/dashboard?mes=11&ano=2026'))
+    expect(await sw.caches.keys()).toContain(sw.CACHE_API) // pedidos feitos depois da limpeza voltam a ser guardados
+  })
+
   it('ignora outras mensagens', async () => {
     sw.fetch.mockResolvedValueOnce(json({ saldo: 10 }))
     await sw.buscar(requisicao('/api/dashboard'))
@@ -226,5 +252,129 @@ describe('public/sw.js', () => {
 
     expect(await sw.caches.keys()).toEqual([sw.CACHE_ESTATICO, 'outro-site'])
     expect(sw.self.clients.claim).toHaveBeenCalled()
+  })
+
+  describe('telas abertas por link interno ({tipo: "guardar-pagina"} do app)', () => {
+    const guardarPagina = (url: string) => sw.esperar('message', { data: { tipo: 'guardar-pagina', url }, ports: [] })
+
+    it('busca em segundo plano o HTML completo da tela e guarda no cache de páginas; offline, ele abre', async () => {
+      sw.fetch.mockResolvedValueOnce(html('<html>lancamentos</html>'))
+
+      await guardarPagina(`${ORIGEM}/lancamentos?mes=11&ano=2026`)
+
+      // pede a página completa, mesma origem, com o cookie
+      const pedido = sw.fetch.mock.calls[0][0] as unknown as Request
+      expect(pedido.url).toBe(`${ORIGEM}/lancamentos?mes=11&ano=2026`)
+      expect(pedido.credentials).toBe('same-origin')
+      expect(pedido.headers.get('Accept')).toBe('text/html')
+
+      // sem internet, o Next faz a navegação completa e o service worker devolve a cópia
+      sw.fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      const offline = await sw.buscar(requisicao('/lancamentos?mes=11&ano=2026', { mode: 'navigate' }))
+      expect(await offline!.text()).toBe('<html>lancamentos</html>')
+    })
+
+    it('vale para todas as telas da área logada, inclusive subtelas; tira o _rsc e o #', async () => {
+      for (const caminho of [
+        '/dashboard?_rsc=abc',
+        '/lancamentos/7#topo',
+        '/lancamentos/novo',
+        '/categorias',
+        '/perfil',
+      ]) {
+        sw.fetch.mockResolvedValueOnce(html(`<html>${caminho}</html>`))
+        await guardarPagina(caminho)
+      }
+      expect([...sw.caches.guardados.get(sw.CACHE_PAGINAS)!.keys()]).toEqual([
+        `${ORIGEM}/dashboard`,
+        `${ORIGEM}/lancamentos/7`,
+        `${ORIGEM}/lancamentos/novo`,
+        `${ORIGEM}/categorias`,
+        `${ORIGEM}/perfil`,
+      ])
+    })
+
+    it('ignora rotas fora da área logada, rotas de acesso, outra origem e endereço inválido', async () => {
+      for (const url of [
+        '/',
+        '/privacidade',
+        '/login?voltar=%2Fdashboard',
+        '/dashboardx',
+        'https://outro.example.com/dashboard',
+        'http://[',
+      ]) {
+        await guardarPagina(url)
+      }
+      expect(sw.fetch).not.toHaveBeenCalled()
+    })
+
+    it('a navegação do Next (RSC) e o prefetch continuam indo direto para a rede, sem cache', async () => {
+      expect(await sw.buscar(requisicao('/dashboard?_rsc=1', { headers: { RSC: '1' } }))).toBeNull()
+      expect(
+        await sw.buscar(requisicao('/dashboard?_rsc=2', { headers: { RSC: '1', 'Next-Router-Prefetch': '1' } })),
+      ).toBeNull()
+      expect(sw.fetch).not.toHaveBeenCalled()
+    })
+
+    it('não guarda redirecionamento (sessão sem cookie → /login), erro nem resposta que não é HTML', async () => {
+      const redirecionada = Object.defineProperty(html('<html>login</html>'), 'redirected', { value: true })
+      sw.fetch.mockResolvedValueOnce(redirecionada)
+      sw.fetch.mockResolvedValueOnce(html('<html>404</html>', { status: 404 }))
+      sw.fetch.mockResolvedValueOnce(new Response('0:{}', { headers: { 'Content-Type': 'text/x-component' } }))
+
+      await guardarPagina('/dashboard')
+      await guardarPagina('/lancamentos/999')
+      await guardarPagina('/categorias')
+
+      expect(sw.caches.guardados.get(sw.CACHE_PAGINAS)?.size ?? 0).toBe(0)
+    })
+
+    it('sem internet, a busca em segundo plano falha em silêncio e a cópia anterior fica', async () => {
+      sw.fetch.mockResolvedValueOnce(html('<html>v1</html>'))
+      await guardarPagina('/perfil')
+      sw.fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+
+      await expect(guardarPagina('/perfil')).resolves.toBeUndefined()
+
+      sw.fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      expect(await (await sw.buscar(requisicao('/perfil', { mode: 'navigate' })))!.text()).toBe('<html>v1</html>')
+    })
+
+    it('não guarda a página que chega depois do "limpar-dados" (pedido feito antes do Sair)', async () => {
+      let entregar: (resposta: Response) => void = () => {}
+      sw.fetch.mockReturnValueOnce(new Promise<Response>((ok) => (entregar = ok)))
+      const emAndamento = guardarPagina('/dashboard')
+
+      await sw.esperar('message', { data: { tipo: 'limpar-dados' }, ports: [] })
+      entregar(html('<html>dados de quem saiu</html>'))
+      await emAndamento
+
+      expect(await sw.caches.keys()).not.toContain(sw.CACHE_PAGINAS)
+    })
+
+    it('não busca de novo o mesmo endereço enquanto a busca anterior não termina', async () => {
+      let entregar: (resposta: Response) => void = () => {}
+      sw.fetch.mockReturnValueOnce(new Promise<Response>((ok) => (entregar = ok)))
+      const primeira = guardarPagina('/categorias')
+      const segunda = guardarPagina('/categorias')
+      entregar(html('<html>categorias</html>'))
+      await Promise.all([primeira, segunda])
+
+      expect(sw.fetch).toHaveBeenCalledOnce()
+    })
+  })
+
+  it('páginas offline: sem a cópia do endereço exato, abre a da mesma tela com outra query; API não', async () => {
+    sw.fetch.mockResolvedValueOnce(html('<html>outubro</html>'))
+    await sw.buscar(requisicao('/lancamentos?mes=10&ano=2026', { mode: 'navigate' }))
+    sw.fetch.mockResolvedValueOnce(json({ saldo: 10 }))
+    await sw.buscar(requisicao('/api/dashboard?mes=10&ano=2026'))
+    sw.fetch.mockRejectedValue(new TypeError('Failed to fetch'))
+
+    const pagina = await sw.buscar(requisicao('/lancamentos?mes=11&ano=2026', { mode: 'navigate' }))
+    expect(await pagina!.text()).toBe('<html>outubro</html>')
+    expect((await sw.buscar(requisicao('/lancamentos/novo', { mode: 'navigate' })))!.type).toBe('error')
+    // na API, outra query é outro dado: sem cópia exata, continua "sem conexão"
+    expect((await sw.buscar(requisicao('/api/dashboard?mes=11&ano=2026')))!.type).toBe('error')
   })
 })

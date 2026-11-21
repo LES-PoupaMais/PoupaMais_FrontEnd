@@ -19,7 +19,7 @@ O contrato está repetido abaixo; se mudar aqui, mude lá também.
 
 O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, switch "ATIVO") **não vale mais**: use o Design System e as pranchetas.
 
-## Estado atual (20/11/2026)
+## Estado atual (21/11/2026)
 
 - **Telas prontas e integradas:** as 9 linhas da seção "Telas" (acesso, Dashboard, Lançamentos com visualização e Lixeira,
   Novo/Editar, Importar e Exportar, Categorias, Perfil, Landing, Privacidade, 404 e erro), na arquitetura
@@ -34,7 +34,7 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
   `maioresDespesas` e a rota de saúde `GET /actuator/health`.
 - **Entregue em 20/11 (PRs #14 a #26):**
   - senhas fora do log do `next dev` (`logging.serverFunctions: false`);
-  - suíte E2E contra a API real (`e2e/api-real`, fora do CI);
+  - suíte E2E contra a API real (`e2e/api-real`; no CI desde 21/11, job `api-real`);
   - decisões da Fase C (confirmação ao excluir categoria, sem Exportar na Lixeira, data nas maiores despesas, mensagens do
     schema iguais às do DS, textos neutros do restaurar);
   - revisão visual contra as pranchetas (área logada, parte pública, acesso e conferência final) e favicon do porquinho;
@@ -43,13 +43,29 @@ O protótipo antigo do Figma (telas escuras, MÊS/ANO no formulário, donut, swi
   - "Baixar linhas ignoradas (.csv)" no resultado da importação;
   - PWA: instala como app, com consulta offline só de leitura (seção "PWA");
   - escolher o mês pelo calendário, folha Criar que fecha ao arrastar, `global-error.tsx` e prévia de categorias da Landing.
+- **Entregue em 21/11:** PWA offline também nas telas abertas por link interno (seção "PWA", `VERSAO` `v3`); saída
+  `standalone` do Next só quando `NEXT_OUTPUT=standalone` (imagem do modo "como produção" do PoupaMais_Development de
+  ~1,15 GB para ~0,3 GB; a Vercel e o `next start` do CI continuam com o build normal); suíte `e2e/api-real` no CI (job
+  "Testes contra a API real"); e-mail do encarregado (DPO) na Privacidade; textos "Mês exibido" e os da importação aprovados.
 - **Próximo passo:** ensaio do roteiro da demo no modo "como produção" (HTTPS) do PoupaMais_Development e as releases (o líder
   faz). As Pendências abaixo ficam para depois, salvo decisão nova.
 - Leia também o `AGENTS.md` (gerado pelo Next): o Next 16 tem mudanças grandes; a documentação da versão instalada está em
   `node_modules/next/dist/docs/`. Consulte antes de usar API do Next que você não viu neste repo.
-- Entrega do código no GitHub até **26/11/2026**. Sem deploy (decisão de 12/11/2026): roda localmente. O jeito mais simples é
-  subir tudo pelo PoupaMais_Development (`npm run dev` lá, app em `http://localhost:8000`); sem ele, a API com
-  `docker compose up -d --build` no backend e o front com `npm run dev` (`API_URL=http://localhost:8080`).
+- Entrega do código no GitHub até **26/11/2026**. Para desenvolver, o jeito mais simples é subir tudo pelo
+  PoupaMais_Development (`npm run dev` lá, app em `http://localhost:8000`); sem ele, a API com `docker compose up -d --build`
+  no backend e o front com `npm run dev` (`API_URL=http://localhost:8080`).
+- **Deploy (21/11/2026; a decisão de 12/11 de não publicar foi revista):** front na **Vercel**
+  (https://poupamais-one.vercel.app, publica a `main` a cada merge, variável `API_URL`), API no **Render**
+  (https://poupamais-backend.onrender.com, Docker, plano Free que dorme sem uso; um job do cron-job.org chama
+  `/actuator/health` a cada 10 min), banco no **Neon** e e-mail pelo **Brevo**. Passo a passo no README do
+  PoupaMais_Development (seção "Deploy"). Cabeçalhos de segurança no `next.config.ts` (`CABECALHOS_DE_SEGURANCA`, todas as
+  rotas; o HSTS é da Vercel e, no modo "como produção", do nginx, que esconde os do Next e põe os dele).
+- **Saída `standalone` (21/11):** o `next.config.ts` só liga `output: 'standalone'` com `NEXT_OUTPUT=standalone`, que o
+  `config/front/Dockerfile` do PoupaMais_Development define no build (imagem com `.next/standalone` + `.next/static` +
+  `public`, `node server.js`, usuário `node`: de ~1,15 GB para ~0,3 GB). Sem a variável, o build é o normal: é o que a Vercel
+  publica e o que o `next start` do CI e dos E2E serve (o `next start` não serve a saída standalone; o Next avisa para usar
+  `node .next/standalone/server.js`). Não ligue o standalone fixo no config. Arquivo novo na raiz que o build precise entra
+  na lista de `COPY` daquele Dockerfile.
 
 ### Roteiro da demo: o front precisa suportar exatamente isto (os E2E cobrem)
 
@@ -349,7 +365,8 @@ Regras de navegação e layout (DS, `Navegacao-e-layout.md`):
 
 ## Textos fora do DS, aprovados em 19/11
 
-Textos escolhidos nas telas, sem prancheta nem frase no Design System. O líder aprovou mantê-los em 19/11/2026: não troque
+Textos escolhidos nas telas, sem prancheta nem frase no Design System. O líder aprovou mantê-los em 19/11/2026 (e os da
+última linha da lista em 21/11/2026): não troque
 sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas ficam em `constants/textos.ts`.
 
 - **Toasts de lançamento:** "Lançamento salvo", "Lançamento fora do saldo. Ele continua na lista.", "Lançamento de volta ao
@@ -359,8 +376,9 @@ sem decisão nova (e, se trocar, registre no DS). Os que se repetem entre telas 
   renomeada/inativada/reativada/excluída".
 - **Toasts do Perfil e do acesso:** "Nome salvo", "Foto atualizada", "Foto removida", "Senha alterada", "Seus dados foram
   baixados", "Sua conta foi excluída.", "Conta criada. Este é o seu mês.", "Senha nova salva. Entre com ela.".
-- **Importar (D3, 20/11, aguardando aprovação):** botão "Baixar linhas ignoradas (.csv)" no `import-result` e o toast "Linhas
-  ignoradas baixadas".
+- **Aprovados em 21/11:** título "Mês exibido" da folha do mês no celular (`month-navigator`, também o rótulo da navegação
+  do mês) e, na importação (D3), o botão "Baixar linhas ignoradas (.csv)" no `import-result` e o toast "Linhas ignoradas
+  baixadas".
 - **Erros genéricos de cada tela** (quando a API não manda mensagem ou é 5xx, regra de `lib/http`): "Não foi possível …"
   (salvar, mover para a lixeira, restaurar, mudar Conta no saldo, exportar, baixar o modelo, criar a categoria, enviar e
   remover a foto, salvar o nome, alterar a senha, baixar seus dados, excluir a conta), "Não foi possível salvar. O que você
@@ -468,11 +486,13 @@ PoupaMais_Development). Não segue o formato de erro abaixo (é o formato do act
   - `GET` vem em ordem alfabética (sem diferenciar maiúsculas); sem filtro, **ativas primeiro**. `PUT`/`PATCH` → `200 {id, descricao, ativa}`.
     Descrição: trim, obrigatória, ≤ 255 (`400` com `erros[]`); duplicada no `PUT` → `409`; categoria de outro usuário → `404`.
   - `quantidadeLancamentos`: lançamentos ATIVO + INATIVO daquele mês (DELETADO não conta); sem `mes`/`ano`, o mês atual. `mes`/`ano` não filtram
-    as categorias nem mudam a ordem; inválidos → `400`. `POST`/`PUT`/`PATCH` não trazem a contagem.
+    as categorias nem mudam a ordem; inválidos → `400` (`?mes=abc`/`?ativa=x` → `400 VALIDACAO` com `erros[]`, back #37). `POST`/`PUT`/`PATCH` não trazem a contagem.
   - No lançamento: categoria inativa → `422`; inexistente/de outro usuário → `404`.
 - Lista de lançamentos ordenada por data desc, id desc; `POST`/`PUT`/`PATCH`/`restaurar` devolvem o lançamento; `DELETE` de já deletado → `422`.
 - `GET /lancamentos?descricao=&mes=&ano=&tipo=&status=&categoriaId=&pagina=&tamanho=` (sem `status` = ATIVO + INATIVO; `status=DELETADO` = Lixeira)
   → `{itens: [<lançamento>], pagina, tamanho, total, totalPaginas}`. `pagina` desde 0 (padrão 0), `tamanho` 1–100 (padrão 12); fora disso → `400`.
+  Filtro que não converte (`?pagina=abc`, `?tipo=XPTO`, `?status=X`) → `400 VALIDACAO` com `erros[]` por campo (back #37; vale
+  também para `/lancamentos/exportar`, `GET /categorias` e `GET /dashboard`; frases logo depois da tabela de códigos, abaixo).
   "Mostrar mais" com `useInfiniteQuery`; o contador "Mostrando 12 de 30" vem de `total`. A exportação ignora a paginação.
 - `GET /lancamentos/{id}` · `POST /lancamentos` · `PUT /lancamentos/{id}`, com body `{descricao, tipo, data: "2026-11-05", valor, categoriaIds, status?}`
   (`data` ISO; o front mostra dd/mm/aaaa). Dia que não existe (`2026-02-31`) ou formato errado → `400` no campo `data`; fora de 2000–2100 → `422`.
@@ -504,7 +524,7 @@ aceita. Tabela completa ("Padrão de erro") no `CLAUDE.md` do back; resumo:
 
 | Status | Códigos |
 | --- | --- |
-| 400 | `VALIDACAO` (com `erros[]`), `CORPO_INVALIDO`, `FORMATO_EXPORTACAO_INVALIDO`, `REQUISICAO_INVALIDA`, `PARAMETRO_INVALIDO`, `PARAMETRO_AUSENTE` |
+| 400 | `VALIDACAO` (com `erros[]`; também filtro de query que não converte em `GET /lancamentos`, `/lancamentos/exportar`, `/categorias` e `/dashboard`, back #37), `CORPO_INVALIDO`, `FORMATO_EXPORTACAO_INVALIDO`, `REQUISICAO_INVALIDA`, `PARAMETRO_INVALIDO`, `PARAMETRO_AUSENTE` |
 | 401 | `NAO_AUTENTICADO` (sem token, expirado, sessão derrubada), `CREDENCIAIS_INVALIDAS` (login) |
 | 403 | `ACESSO_NEGADO` (reservado) |
 | 404 | `NAO_ENCONTRADO` (rota), `CATEGORIA_NAO_ENCONTRADA`, `LANCAMENTO_NAO_ENCONTRADO`, `FOTO_NAO_ENCONTRADA` |
@@ -515,7 +535,12 @@ aceita. Tabela completa ("Padrão de erro") no `CLAUDE.md` do back; resumo:
 | 422 | arquivos: `ARQUIVO_GRANDE_DEMAIS` (413 se o servidor recusar antes), `ARQUIVO_VAZIO`, `ARQUIVO_INVALIDO`, `CABECALHO_INVALIDO`, `ARQUIVO_LINHAS_DEMAIS`, `SEM_DADOS_EXPORTACAO`; conta: `ACEITE_TERMOS_OBRIGATORIO`, `DADOS_CONTA_INVALIDOS`, `SENHA_ATUAL_INCORRETA`, `SENHA_IGUAL_A_ATUAL`, `SENHA_INCORRETA`, `TOKEN_INVALIDO`, `FOTO_TIPO_INVALIDO`; categorias: `CATEGORIA_INVALIDA`, `CATEGORIA_INATIVA`, `CATEGORIA_VINCULADA`; lançamentos: `LANCAMENTO_INVALIDO`, `LANCAMENTO_NA_LIXEIRA`, `LANCAMENTO_JA_EXCLUIDO`, `LANCAMENTO_NAO_EXCLUIDO`, `STATUS_INVALIDO`, `TRANSICAO_STATUS_INVALIDA` |
 | 500 | `ERRO_INTERNO` (sem detalhes) |
 
-Rota inexistente (com token) → `404` "Recurso não encontrado"; método não suportado → `405`. Parâmetro de rota/query/header com tipo errado → `400 PARAMETRO_INVALIDO`; parâmetro, part ou header obrigatório ausente →
+Rota inexistente (com token) → `404` "Recurso não encontrado"; método não suportado → `405`. **Filtro de query que não
+converte** (`?pagina=abc`, `?mes=abc`, `?tipo=XPTO`…) em `GET /lancamentos`, `/lancamentos/exportar`, `/categorias` e
+`/dashboard` → `400 VALIDACAO` (back #37, mesmo status e código de sempre), com um item em `erros[]` por campo e a
+`mensagem` em português: "Informe um número inteiro" (campo numérico), "Valor inválido. Use: RECEITA ou DESPESA" /
+"Valor inválido. Use: ATIVO, INATIVO ou DELETADO" (enum) e "Valor inválido" (outros). Nos demais casos, parâmetro de
+rota/query/header com tipo errado → `400 PARAMETRO_INVALIDO`; parâmetro, part ou header obrigatório ausente →
 `400 PARAMETRO_AUSENTE` (os dois sem `erros[]`); `Accept` sem formato que a rota produz → `406 TIPO_RESPOSTA_NAO_ACEITO` (back #32, 20/11).
 Fica fora do padrão, por decisão de 20/11: a recusa de CORS do Spring (`403` texto puro; o navegador não chama a API direto).
 
@@ -550,27 +575,52 @@ O PoupaMais instala como app (tela inicial do celular, janela própria sem barra
 - **Service worker:** `public/sw.js`, escrito à mão (sem bibliotecas), com a constante `VERSAO` (suba-a ao mudar regras ou
   arquivos: o `activate` apaga os caches antigos). O `next.config.ts` serve o `/sw.js` com `Cache-Control: no-cache`.
   - Arquivos fixos (`/_next/static/*`: JS, CSS e fontes; `/icons/`, `/logos/`, manifest e ícones): **cache-first**.
-  - Páginas (navegação): **network-first**; sem internet, a última cópia guardada (o app abre offline).
+  - Páginas (navegação): **network-first**; sem internet, a última cópia guardada (o app abre offline). Sem a cópia do
+    endereço exato, vale a da mesma tela com outra query (`ignoreSearch`: `/lancamentos?mes=11&ano=2026` abre a cópia de
+    `/lancamentos?mes=10&ano=2026`; a tela lê o mês da URL e mostra os dados guardados desse mês ou o "sem conexão"). Só nas
+    páginas: na API, outra query é outro dado.
+  - **Telas abertas por link interno** (desde 21/11, `VERSAO` `v3`): a navegação do cliente do Next não carrega a página
+    inteira (só RSC), então o service worker não via a página passar e ela não abria offline. Agora
+    `screens/App/GuardarTelaOffline` (no `AppProviders`, dentro de um `<Suspense>` porque lê `useSearchParams`) manda
+    `{tipo: 'guardar-pagina', url}` (`lib/service-worker.guardarPaginaOffline`) a cada troca de caminho ou de query; o
+    service worker aceita só endereço da própria origem e da área logada (as rotas do `proxy.ts`: `/dashboard`,
+    `/lancamentos/**`, `/categorias`, `/perfil`), busca em segundo plano o HTML completo (sem `_rsc` nem `#`, mesma
+    origem, com o cookie) e guarda no cache de páginas com as mesmas regras (só 200 de HTML, sem redirecionamento, que é o
+    caso da sessão sem cookie indo para o `/login`, e a regra da `geracao`). Um mesmo endereço não é buscado duas vezes ao
+    mesmo tempo. Na página carregada inteira não há pedido (a navegação já passou pelo service worker), salvo na primeira
+    visita, quando ele ainda não controlava a página: o pedido sai no `controllerchange`. Sem internet, o RSC falha, o Next
+    faz a navegação completa ("Falling back to browser navigation") e o service worker devolve a cópia.
+    **Por que não pelo RSC no service worker** (a primeira ideia: ver a requisição `RSC: 1` sem `Next-Router-Prefetch` e
+    buscar a página): conferido no navegador com o build de produção, com `cacheComponents` + `partialPrefetching` o Next
+    16 faz o prefetch completo da tela (`Next-Router-Prefetch: 3`) e navega **sem** nenhuma requisição RSC de navegação, então
+    o service worker nunca a via; tratar o prefetch buscaria a página de todo link visível. Custo aceito: cada troca de tela
+    com internet gera um pedido a mais da página (inclusive mudar mês ou busca, que mudam a query).
   - `GET /api/*`: **network-first**; sem internet, a última resposta guardada (consulta só de leitura). As consultas do
     TanStack Query usam `networkMode: 'offlineFirst'` (`AppProviders`) para tentar mesmo offline e receber essa cópia; a tela
     mostra os dados guardados e a faixa "Sem internet agora…", e os botões que gravam continuam desabilitados.
-  - **Fora do cache:** POST/PUT/PATCH/DELETE e Server Actions (header `Next-Action`); respostas que não são 200,
+  - **Fora do cache:** POST/PUT/PATCH/DELETE e Server Actions (header `Next-Action`); as requisições RSC e o
+    prefetch do Next (só a página completa é guardada); respostas que não são 200,
     redirecionamentos e downloads (`Content-Disposition: attachment`: exportar, modelo CSV); `/api/usuarios/me/dados`; as
     rotas de acesso (`/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` e `/api/auth/*`); outras origens.
   - **Limpeza:** "Sair" (casca e Perfil), sessão vencida (401 no `AppProviders`) e conta excluída mandam
     `{tipo: 'limpar-dados'}` (`lib/service-worker.limparDadosOffline`), que apaga as respostas da API e as páginas guardadas;
     qualquer 401 de `/api/*` também limpa no próprio service worker. Nada de uma pessoa fica no aparelho para a próxima.
+    Cada limpeza sobe a `geracao` do service worker: resposta de um pedido feito **antes** da limpeza e que chega **depois**
+    (ex.: as consultas que o app refaz quando a internet volta, se a pessoa sai logo em seguida) vai para a tela, mas não é
+    guardada (achado no ensaio do deploy, 21/11; `VERSAO` passou a `v2`).
 - **Registro:** `screens/App/RegistroServiceWorker` (no `AppProviders`) chama `lib/service-worker.registrarServiceWorker`, que só
   registra com `NODE_ENV=production` e `'serviceWorker' in navigator`. No `npm run dev` não há service worker.
 - **Onde instala:** só em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x:3000`) o navegador não registra o
   service worker nem oferece instalar. Para testar no celular: o modo "como produção" do PoupaMais_Development
-  (`https://poupamais.localhost:8443`) ou, de verdade, depois do deploy com HTTPS.
+  (`https://poupamais.localhost:8443`) ou o site publicado (https://poupamais-one.vercel.app).
 - **Como testar:** `npm run build && npm run start`, abrir `http://localhost:3000` no Chrome → DevTools > **Application**
   (Manifest: nome, ícones e "Installable"; Service workers: ativo; Cache storage: `poupamais-*`; marque "Offline" e recarregue
   uma tela já visitada) e **Lighthouse** (categoria PWA / "Installable"). No celular (Chrome Android): menu ⋮ > "Instalar app";
   no iPhone (Safari): Compartilhar > "Adicionar à Tela de Início".
 - **Testes:** `src/test/sw.test.ts` roda o próprio `public/sw.js` num contexto isolado do Node (estratégias, o que não entra no
-  cache, limpeza, 401, install/activate); `lib/service-worker.test.ts` e `RegistroServiceWorker.test.tsx` (registra só em produção,
+  cache, limpeza, 401, install/activate, `guardar-pagina` e a cópia da mesma tela com outra query);
+  `GuardarTelaOffline.test.tsx` (pede a cada troca de tela, não na página carregada inteira, e na primeira visita quando o
+  service worker assume); `lib/service-worker.test.ts` e `RegistroServiceWorker.test.tsx` (registra só em produção,
   manda `limpar-dados`); `e2e/pwa.spec.ts` no build de produção (manifest e ícones respondem, SW registra). Os outros E2E rodam com
   `serviceWorkers: 'block'` (`playwright.config.ts`), porque o service worker passaria na frente do `page.route('**/api/**')`.
 
@@ -589,7 +639,8 @@ Guia detalhado: skill `testes-frontend`.
 - **E2E sem backend (`npm run test:e2e`):** sessão pelo cookie `pm_token` (o `proxy.ts` só confere a presença) e API simulada no navegador com
   `page.route('**/api/**')` (`e2e/fixtures/`). Cobrir o roteiro da demo.
 - **E2E contra a API real (`npm run test:e2e:api-real`, `e2e/api-real/` + `playwright.api-real.config.ts`):** o roteiro da demo
-  inteiro com Spring, Postgres e Mailpit de verdade, só no Chromium (Firefox: `--project=firefox`), fora do CI por enquanto.
+  inteiro com Spring, Postgres e Mailpit de verdade, só no Chromium (Firefox: `--project=firefox`). Roda também no CI (job
+  `api-real`, ver Pipeline).
   - Subir a pilha: `cd ../PoupaMais_Development && E2E_FRONT_PORT=3130 npm run e2e:up` (API `127.0.0.1:8580`, Mailpit `8525`,
     banco `5435`, projeto docker `poupamais-e2e`); derrubar com `npm run e2e:down`. Não mexe na pilha dev (`poupamais`).
   - O config sobe `next build && next start` em `PORT` (padrão **3130**) com `API_URL=http://localhost:8580` (build de produção,
@@ -616,12 +667,15 @@ Arquivo: `.github/workflows/ci.yml`. Roda em push na `development` e na `main` e
 |---|---|---|
 | `qualidade` (Lint, tipos, testes e build) | `npm ci` · `lint` · `format:check` · `typecheck` · `test:coverage` · `build` · publica `coverage/` | erro de lint/arquitetura, formatação, tipo, teste, cobertura abaixo do piso ou build quebrado |
 | `e2e` (Testes end-to-end), depois de `qualidade` | `npm ci` · `npx playwright install --with-deps chromium firefox` · `npm run test:e2e` · publica `playwright-report/` se falhar | qualquer fluxo E2E quebrado |
+| `api-real` (Testes contra a API real), depois de `qualidade` | checkout deste repo, do `PoupaMais_BackEnd` e do `PoupaMais_Development` (branch `development` dos dois) em pastas irmãs · `npm run e2e:up` no Development (constrói a API e sobe a pilha E2E) · `npm ci` · `npx playwright install --with-deps chromium` · `npm run test:e2e:api-real` · logs da API e `playwright-report-api-real/` se falhar · `npm run e2e:down` | qualquer passo do roteiro da demo contra a API real quebrado (ou a API da `development` do back não subir) |
 
+- O job `api-real` usa a `development` do back e do Development: uma mudança de contrato no back que quebre o front aparece
+  aqui. Localmente: seção "Testes" (`npm run e2e:up` no PoupaMais_Development e `npm run test:e2e:api-real`).
 - Rodar o mesmo localmente: skill `pipeline-local`. O Vitest usa metade dos núcleos (`maxWorkers: '50%'` no `vitest.config.mts`;
   com todos, testes de tela passavam do timeout de 5 s com a máquina ocupada). Localmente o Playwright usa 3 workers (com mais, o Firefox estoura o tempo no WSL).
   Com várias worktrees ao mesmo tempo, use uma porta por worktree (`PORT=3101 npm run test:e2e`): o `reuseExistingServer` reaproveita
   qualquer servidor que já esteja na porta e testaria o build de outra pasta.
-- **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. Sem deploy: a entrega roda localmente.
+- **Regra da equipe:** PR só é integrado com o CI verde e 1 aprovação. A Vercel publica a `main` sozinha depois do merge.
 
 ## Claude Code: skills e plugins
 
@@ -643,14 +697,10 @@ reservado (cores, navegação, casca de visualização) para crescer sem refazer
 
 ## Pendências
 
-Débito conhecido (registre aqui o que ficar de fora e tire quando resolver). Revisada em 20/11/2026: o que foi resolvido saiu;
-as decisões de 20/11 estão nas seções de cada assunto.
+Débito conhecido (registre aqui o que ficar de fora e tire quando resolver). Revisada em 21/11/2026: o que foi resolvido saiu;
+as decisões de 20/11 e 21/11 estão nas seções de cada assunto.
 
 1. **Infraestrutura e testes:**
-   - `output: 'standalone'` no `next.config.ts` ainda não foi feito: a imagem do front no modo "como produção" do
-     PoupaMais_Development fica com cerca de 1,1 GB.
-   - A suíte `e2e/api-real` roda só localmente. Falta decidir se entra no CI (precisa subir a pilha E2E do PoupaMais_Development
-     no runner: Docker + build do back).
    - Opcionais: `@vitest/ui` (painel visual dos testes unitários) e investigar o modo `--ui` do Playwright, que travou na subida do
      servidor.
 2. **Registrar no Design System** (textos e comportamentos aprovados que ainda não estão lá):
@@ -699,8 +749,6 @@ as decisões de 20/11 estão nas seções de cada assunto.
    - Sem prancheta de tablet do Perfil: a 834px fica em 1 coluna (as 2 colunas só aparecem com 420px cada, como o `auto-fit` da
      prancheta do computador).
 8. **Telas de acesso e públicas:**
-   - **Privacidade:** a seção "Contato" é **provisória** (o canal do encarregado/DPO ainda não foi definido): trocar o texto quando
-     houver.
    - Privacidade no celular usa o topo do site (a prancheta usa a TopBar com "‹"), com "Voltar para o início" acima do título.
    - Componentes criados fora da tabela do Atomic Design: molécula `email-field`; organismos `esqueci-senha-form`,
      `esqueci-senha-enviado`, `redefinir-senha-form`, `link-expirado`, `cadastro-lateral`, `landing-hero`, `landing-beneficios`,

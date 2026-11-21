@@ -41,3 +41,25 @@ export function limparDadosOffline(esperaMs = 1000): Promise<void> {
     servico.postMessage(MENSAGEM_LIMPAR_DADOS, [canal.port2])
   })
 }
+
+/**
+ * Pede ao service worker que guarde a página completa deste endereço para abrir sem internet. Serve às telas abertas
+ * por link interno: a navegação do cliente do Next não carrega a página inteira, então o service worker não a vê
+ * passar. Ele só guarda telas da área logada, com as regras de sempre. Sem service worker ativo, não faz nada.
+ */
+export function guardarPaginaOffline(url: string): void {
+  const servico = temServiceWorker() ? navigator.serviceWorker.controller : null
+  servico?.postMessage({ tipo: 'guardar-pagina', url })
+}
+
+/**
+ * Chama `aoAtivar` quando um service worker passar a controlar a página (primeira visita: ela abriu antes de ele
+ * existir). Se já há um controlando, ou não há suporte, não chama. Devolve a função que cancela.
+ */
+export function quandoServiceWorkerAssumir(aoAtivar: () => void): () => void {
+  if (!temServiceWorker() || navigator.serviceWorker.controller) return () => {}
+  const container = navigator.serviceWorker
+  const ouvinte = () => aoAtivar()
+  container.addEventListener('controllerchange', ouvinte, { once: true })
+  return () => container.removeEventListener('controllerchange', ouvinte)
+}

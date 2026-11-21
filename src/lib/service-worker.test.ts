@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { simularServiceWorker } from '@/test/service-worker'
-import { limparDadosOffline, registrarServiceWorker } from './service-worker'
+import {
+  guardarPaginaOffline,
+  limparDadosOffline,
+  quandoServiceWorkerAssumir,
+  registrarServiceWorker,
+} from './service-worker'
 
 describe('registrarServiceWorker', () => {
   let desfazer = () => {}
@@ -75,5 +80,46 @@ describe('limparDadosOffline', () => {
     vi.advanceTimersByTime(500)
 
     await expect(pedido).resolves.toBeUndefined()
+  })
+})
+
+describe('guardarPaginaOffline e quandoServiceWorkerAssumir', () => {
+  let desfazer = () => {}
+  afterEach(() => desfazer())
+
+  it('manda {tipo: "guardar-pagina", url} ao service worker ativo; sem ele, não faz nada', () => {
+    expect(() => guardarPaginaOffline('/dashboard')).not.toThrow()
+    const inativo = simularServiceWorker({ ativo: false })
+    guardarPaginaOffline('/dashboard')
+    expect(inativo.postMessage).not.toHaveBeenCalled()
+    inativo.desfazer()
+
+    const sw = simularServiceWorker()
+    desfazer = sw.desfazer
+    guardarPaginaOffline('https://poupamais.test/categorias')
+    expect(sw.postMessage).toHaveBeenCalledWith({ tipo: 'guardar-pagina', url: 'https://poupamais.test/categorias' })
+  })
+
+  it('chama quando um service worker assume a página; não chama se já havia um, nem depois de cancelar', () => {
+    const aoAtivar = vi.fn()
+    const ativo = simularServiceWorker()
+    quandoServiceWorkerAssumir(aoAtivar)()
+    ativo.assumir()
+    expect(aoAtivar).not.toHaveBeenCalled()
+    ativo.desfazer()
+
+    const sw = simularServiceWorker({ ativo: false })
+    desfazer = sw.desfazer
+    const cancelar = quandoServiceWorkerAssumir(aoAtivar)
+    sw.assumir()
+    expect(aoAtivar).toHaveBeenCalledOnce()
+
+    const outro = vi.fn()
+    const sw2 = simularServiceWorker({ ativo: false })
+    desfazer = sw2.desfazer
+    quandoServiceWorkerAssumir(outro)()
+    sw2.assumir()
+    expect(outro).not.toHaveBeenCalled()
+    cancelar()
   })
 })

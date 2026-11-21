@@ -7,6 +7,8 @@ do superendividamento (ODS 1 e 8). Projeto da disciplina de Laboratório de Enge
 
 A API (Spring Boot) fica em [LES-PoupaMais/PoupaMais_BackEnd](https://github.com/LES-PoupaMais/PoupaMais_BackEnd).
 
+**No ar:** https://poupamais-one.vercel.app (instala como app no celular; ver [Deploy](#deploy)).
+
 ## Telas
 
 - **Pública:** Landing page · Política de Privacidade.
@@ -103,19 +105,47 @@ cd ../PoupaMais_Development && npm run e2e:down            # o banco (tmpfs) som
 Cada teste cria um usuário novo (e-mail único) e monta os dados pela API (`e2e/api-real/apoio/`), então não depende de ordem
 nem de banco limpo. O "esqueci a senha" lê o link do e-mail pela API HTTP do Mailpit. Se a pilha não estiver de pé, a suíte
 para logo com a instrução para subir. Firefox também: `npx playwright test -c playwright.api-real.config.ts --project=firefox`.
-Esta suíte ainda não roda no CI.
+No CI ela roda no job "Testes contra a API real" (ver Pipeline).
 
 ## PWA
 
 O PoupaMais instala como app no celular e no computador (ícone na tela inicial, janela própria). Sem internet, abre as telas já
 visitadas e mostra os últimos dados guardados, só para consulta: gravar exige internet. Ao sair, os dados guardados são apagados.
 
+- "Telas já visitadas" inclui as abertas por link interno (sem recarregar a página): a cada troca de tela, o app pede ao
+  service worker (`screens/App/GuardarTelaOffline`) que guarde a página completa dessa tela da área logada, buscada em
+  segundo plano. Sem internet, o Next faz a navegação completa e o service worker devolve a cópia; se não houver a do
+  endereço exato, vale a da mesma tela com outro mês na URL.
+
 - O service worker só é registrado no **build de produção** (`npm run build && npm run start`); no `npm run dev` não há.
-- O navegador só oferece instalar em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x`) não instala. Para
-  testar no celular, use o modo "como produção" do PoupaMais_Development (`https://poupamais.localhost:8443`, com a CA local
-  confiada).
+- O navegador só oferece instalar em **HTTPS** ou em `localhost`. Pelo IP da rede (`http://192.168.x.x`) não instala. No
+  celular, instale pelo site publicado (https://poupamais-one.vercel.app): Android/Chrome, menu ⋮ → _Instalar app_;
+  iPhone/Safari, Compartilhar → _Adicionar à Tela de Início_. No computador, também pelo modo "como produção" do
+  PoupaMais_Development (`https://poupamais.localhost:8443`, com a CA local confiada).
 - Conferir: Chrome → DevTools → **Application** (Manifest e Service workers) e Lighthouse. Detalhes na seção "PWA" do
   [`CLAUDE.md`](CLAUDE.md).
+
+## Deploy
+
+| Peça                     | Onde                                        | Endereço                               |
+| ------------------------ | ------------------------------------------- | -------------------------------------- |
+| Front (este repositório) | **Vercel** (plano Hobby)                    | https://poupamais-one.vercel.app       |
+| API                      | **Render** (Web Service Docker, plano Free) | https://poupamais-backend.onrender.com |
+| Banco                    | **Neon** (Postgres 17, AWS US East)         | acessado só pela API                   |
+| E-mail (redefinir senha) | **Brevo** (SMTP na porta 2525)              | —                                      |
+
+- A Vercel publica a branch **`main`** a cada merge (as outras branches e os PRs ganham uma URL de prévia). A configuração é a
+  padrão de Next.js (`npm run build`), com **uma** variável de ambiente: `API_URL=https://poupamais-backend.onrender.com` (sem
+  barra no fim). Ela fica só no servidor da Vercel: o navegador fala com o próprio Next (BFF), que chama a API.
+- Cabeçalhos de segurança (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) saem do
+  `next.config.ts`; o HSTS é da Vercel.
+- Saída `standalone` do Next só com `NEXT_OUTPUT=standalone` (a imagem Docker do modo "como produção" do
+  PoupaMais_Development define, e fica com ~0,3 GB em vez de ~1,15 GB). Sem a variável, o build é o normal: o da Vercel e o
+  do `npm run start` (o `next start` não serve a saída standalone).
+- O plano Free do Render dorme depois de ~15 min sem uso, e a API leva de 2 a 3 min para acordar. Um job no
+  [cron-job.org](https://cron-job.org) chama `GET /actuator/health` a cada 10 min para mantê-la acordada.
+- Passo a passo completo (contas, variáveis de cada serviço e problemas comuns): seção "Deploy" do README do
+  [PoupaMais_Development](https://github.com/LES-PoupaMais/PoupaMais_Development#deploy).
 
 ## Pipeline (CI)
 
@@ -123,7 +153,10 @@ O GitHub Actions (`.github/workflows/ci.yml`) roda em todo Pull Request e em pus
 
 1. **Lint, tipos, testes e build**: ESLint (com as regras do Atomic Design), Prettier, TypeScript, Vitest com piso de cobertura e build
    de produção.
-2. **Testes end-to-end**: Playwright em Chromium e Firefox sobre o build de produção.
+2. **Testes end-to-end**: Playwright em Chromium e Firefox sobre o build de produção, com a API simulada.
+3. **Testes contra a API real**: faz o checkout do `PoupaMais_BackEnd` e do `PoupaMais_Development` (branch `development`) em
+   pastas irmãs, sobe a pilha E2E (`npm run e2e:up`: API, Postgres e Mailpit) e roda `npm run test:e2e:api-real` no Chromium.
+   Se falhar, publica os logs da API e o relatório do Playwright.
 
 PR só é integrado (na `development` ou na `main`) com o CI verde.
 
