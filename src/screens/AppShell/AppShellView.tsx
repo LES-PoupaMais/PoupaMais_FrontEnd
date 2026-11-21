@@ -75,7 +75,13 @@ export function AppShellView({ children }: { children: ReactNode }) {
             usuario={topo.semAvatar ? undefined : usuario && { nome: usuario.nome, fotoUrl }}
             mes={
               topo.mostrarMes && (
-                <MonthNavigator variante="compacto" mes={periodo.mes} ano={periodo.ano} onChange={irParaMes} />
+                <MonthNavigator
+                  variante="compacto"
+                  seletor="folha"
+                  mes={periodo.mes}
+                  ano={periodo.ano}
+                  onChange={irParaMes}
+                />
               )
             }
           />

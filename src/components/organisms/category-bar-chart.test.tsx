@@ -27,6 +27,21 @@ describe('CategoryBarChart', () => {
     expect(secao).toHaveTextContent('Tocar numa categoria abre Lançamentos filtrados por ela.')
   })
 
+  it('previa (Landing): mesmas barras, sem links, sem total, sem dica e título h3', () => {
+    render(<CategoryBarChart previa dados={dados} total={3882.35} mes={11} ano={2026} aria-label="Prévia de exemplo" />)
+    const secao = screen.getByRole('region', { name: 'Prévia de exemplo' })
+
+    expect(within(secao).queryAllByRole('link')).toHaveLength(0)
+    expect(within(secao).getByRole('heading', { level: 3, name: 'Despesas por categoria' })).toBeInTheDocument()
+    expect(
+      within(secao)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent?.replace(/\s/g, ' ')),
+    ).toEqual(['AluguelR$ 2.200,00', 'MercadoR$ 1.480,35', 'OutrosR$ 202,00'])
+    expect(secao).not.toHaveTextContent('Total de despesas')
+    expect(secao).not.toHaveTextContent('Tocar numa categoria')
+  })
+
   it('sem despesas mostra o estado vazio e nenhuma barra', () => {
     render(<CategoryBarChart dados={[]} total={0} mes={11} ano={2026} />)
     expect(screen.getByRole('heading', { name: 'Não há informações disponíveis para o período' })).toBeInTheDocument()

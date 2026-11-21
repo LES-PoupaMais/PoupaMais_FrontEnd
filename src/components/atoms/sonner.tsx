@@ -42,7 +42,7 @@ const Toaster = ({ style, toastOptions, ...props }: ToasterProps) => {
         ...toastOptions,
         classNames: {
           toast: `cn-toast w-(--width) max-w-[420px] ${CAIXA}`,
-          error: 'not-has-[[data-slot=undo-toast]]:border-destructive',
+          error: 'not-has-[[data-slot=undo-toast]]:border-destructive [&_[data-icon]]:text-destructive',
           icon: 'flex flex-none text-primary [&_svg]:size-5',
           success: '[&_[data-icon]]:text-receita',
           content: 'min-w-0 flex-1',

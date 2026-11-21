@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, Download, FileSpreadsheet, FileText, Sheet as IconePlanilha } from 'lucide-react'
+import { ChevronLeft, Download, FileSpreadsheet, FileText, Sheet as IconePlanilha, X } from 'lucide-react'
 import { useId } from 'react'
 import { Button } from '@/components/atoms/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/atoms/dialog'
@@ -68,9 +68,9 @@ export function ExportDialog({
     <Dialog open={aberto} onOpenChange={onAbertoChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex flex-col gap-0 overflow-y-auto p-0 max-md:top-0 max-md:left-0 max-md:h-dvh max-md:max-h-dvh max-md:w-full max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:border-0 max-md:shadow-none md:max-w-[640px]"
+        className="max-md:bg-background flex flex-col gap-0 overflow-y-auto p-0 max-md:top-0 max-md:left-0 max-md:h-dvh max-md:max-h-dvh max-md:w-full max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:border-0 max-md:shadow-none md:max-w-[640px]"
       >
-        <div className="border-border flex min-h-14 items-center gap-1 border-b px-2 md:hidden">
+        <div className="border-border bg-card flex min-h-14 items-center gap-1 border-b px-2 md:hidden">
           <DialogClose asChild>
             <Button variant="texto" size="icone" aria-label="Voltar para Lançamentos">
               <ChevronLeft aria-hidden="true" />
@@ -81,11 +81,19 @@ export function ExportDialog({
           </span>
         </div>
         <div className="flex flex-col gap-5 p-5 md:p-6">
-          <div className="flex flex-col gap-1 max-md:sr-only">
-            <DialogTitle className="text-titulo-1">Exportar lançamentos</DialogTitle>
-            <DialogDescription className="text-corpo text-muted-foreground">
-              Baixe os lançamentos da lista para abrir numa planilha.
-            </DialogDescription>
+          {/* Computador: título (titulo-2, como a prancheta exportar-computador) com o × de fechar no canto */}
+          <div className="flex items-start justify-between gap-3 max-md:contents">
+            <div className="flex flex-col gap-1 max-md:sr-only">
+              <DialogTitle className="text-titulo-2">Exportar lançamentos</DialogTitle>
+              <DialogDescription className="text-corpo text-muted-foreground">
+                Baixe os lançamentos da lista para abrir numa planilha.
+              </DialogDescription>
+            </div>
+            <DialogClose asChild>
+              <Button variant="texto" size="icone" aria-label="Fechar" className="-mt-2 -mr-3 shrink-0 max-md:hidden">
+                <X aria-hidden="true" />
+              </Button>
+            </DialogClose>
           </div>
           <ActionBanner
             texto={`O arquivo segue os filtros ativos: ${filtrosAtivos}`}
@@ -103,7 +111,7 @@ export function ExportDialog({
           </div>
           <section
             aria-labelledby={idResumo}
-            className="border-border max-md:rounded-card flex flex-col gap-3 max-md:border max-md:p-4 md:border-t md:pt-4"
+            className="border-border max-md:rounded-card max-md:bg-card max-md:shadow-card flex flex-col gap-3 max-md:border max-md:p-4 md:border-t md:pt-4"
           >
             <h2 id={idResumo} className="text-rotulo-secao text-muted-foreground uppercase">
               O que vai no arquivo

@@ -41,7 +41,7 @@ export function DashboardView() {
           {ola}. {subtitulo}
         </p>
       </div>
-      <MonthNavigator mes={periodo.mes} ano={periodo.ano} onChange={irParaMes} />
+      <MonthNavigator seletor="popover" mes={periodo.mes} ano={periodo.ano} onChange={irParaMes} />
     </>
   )
 

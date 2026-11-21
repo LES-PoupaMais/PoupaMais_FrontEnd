@@ -1,4 +1,4 @@
-import { ArrowLeft, Database, Mail, Share2, Target, UserCog, UserRound, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Database, Lock, Mail, Scale, ShieldCheck, User, type LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { FunctionIcon } from '@/components/atoms/function-icon'
@@ -54,7 +54,7 @@ const SECOES: Secao[] = [
   {
     id: 'finalidade',
     titulo: 'Para que usamos',
-    Icone: Target,
+    Icone: Scale,
     corpo: (
       <>
         <Lista>
@@ -70,7 +70,7 @@ const SECOES: Secao[] = [
   {
     id: 'compartilhamento',
     titulo: 'Não compartilhamos seus dados',
-    Icone: Share2,
+    Icone: Lock,
     corpo: (
       <p>
         Os seus dados não são vendidos, alugados nem compartilhados com outras empresas. Cada pessoa só vê os próprios
@@ -81,7 +81,7 @@ const SECOES: Secao[] = [
   {
     id: 'direitos',
     titulo: 'Seus direitos (LGPD)',
-    Icone: UserRound,
+    Icone: ShieldCheck,
     corpo: (
       <>
         <p>Pela Lei Geral de Proteção de Dados, você pode:</p>
@@ -105,7 +105,7 @@ const SECOES: Secao[] = [
   {
     id: 'perfil',
     titulo: 'Como exercer no Perfil',
-    Icone: UserCog,
+    Icone: User,
     corpo: (
       <>
         <p>
@@ -185,7 +185,7 @@ export function PoliticaPrivacidade({ hrefInicio, hrefLogin }: PoliticaPrivacida
             aria-labelledby={`${id}-titulo`}
             className="text-corpo flex scroll-mt-6 flex-col gap-3"
           >
-            <h2 id={`${id}-titulo`} className="text-titulo-2 flex items-center gap-3">
+            <h2 id={`${id}-titulo`} className="text-titulo-3 lg:text-titulo-2 flex items-center gap-3">
               <FunctionIcon funcao="primaria" icone={Icone} />
               {titulo}
             </h2>

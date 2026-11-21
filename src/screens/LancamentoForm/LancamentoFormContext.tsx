@@ -1,6 +1,6 @@
 'use client'
 
-import { RotateCw, WifiOff } from 'lucide-react'
+import { RotateCcw, WifiOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { toast } from 'sonner'
@@ -192,7 +192,7 @@ export function LancamentoFormProvider({ modo, id, children }: LancamentoFormPro
       action: {
         label: (
           <>
-            <RotateCw aria-hidden="true" />
+            <RotateCcw aria-hidden="true" />
             Tentar de novo
           </>
         ),

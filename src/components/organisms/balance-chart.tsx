@@ -91,7 +91,7 @@ function BalanceChart({ dados, carregando = false, ...props }: BalanceChartProps
       {...props}
     >
       <figure aria-labelledby="grafico-saldo-mensal" className="flex flex-1 flex-col justify-center gap-3">
-        <ChartContainer config={config} className="aspect-auto h-56 w-full md:h-64">
+        <ChartContainer config={config} className="aspect-auto h-56 w-full md:h-52 lg:h-64">
           <BarChart
             data={linhas}
             margin={{ top: 20, right: 8, bottom: 0, left: 0 }}

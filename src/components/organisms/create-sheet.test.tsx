@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Tag } from 'lucide-react'
 import { useState } from 'react'
@@ -78,6 +78,67 @@ describe('CreateSheet', () => {
     await userEvent.click(screen.getByRole('button', { name: /Ação/ }))
     expect(onSelect).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('arrastar para baixo pela alça fecha; arrasto curto volta ao lugar', async () => {
+    render(<ComGatilho />)
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+    const folha = screen.getByRole('dialog', { name: 'Criar' })
+    const alca = folha.querySelector<HTMLElement>('[data-slot="create-sheet-alca"]')!
+
+    fireEvent.pointerDown(alca, { pointerId: 1, button: 0, clientY: 500 })
+    fireEvent.pointerMove(alca, { pointerId: 1, clientY: 508 })
+    expect(folha.style.transform).toBe('translateY(8px)')
+    fireEvent.pointerUp(alca, { pointerId: 1, clientY: 508 })
+    expect(folha.style.transform).toBe('')
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+
+    fireEvent.pointerDown(alca, { pointerId: 2, button: 0, clientY: 500 })
+    fireEvent.pointerMove(alca, { pointerId: 2, clientY: 560 })
+    fireEvent.pointerMove(alca, { pointerId: 2, clientY: 620 })
+    fireEvent.pointerUp(alca, { pointerId: 2, clientY: 620 })
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('arrastar para cima ou cancelar o gesto não fecha; apertar no × não começa arrasto', async () => {
+    render(<ComGatilho />)
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+    const folha = screen.getByRole('dialog', { name: 'Criar' })
+    const alca = folha.querySelector<HTMLElement>('[data-slot="create-sheet-alca"]')!
+
+    fireEvent.pointerDown(alca, { pointerId: 1, button: 0, clientY: 500 })
+    fireEvent.pointerMove(alca, { pointerId: 1, clientY: 300 })
+    fireEvent.pointerUp(alca, { pointerId: 1, clientY: 300 })
+    fireEvent.pointerDown(alca, { pointerId: 2, button: 0, clientY: 500 })
+    fireEvent.pointerMove(alca, { pointerId: 2, clientY: 700 })
+    fireEvent.pointerCancel(alca, { pointerId: 2 })
+    expect(folha.style.transform).toBe('')
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Fechar' }), { pointerId: 3, button: 0, clientY: 500 })
+    fireEvent.pointerMove(alca, { pointerId: 3, clientY: 700 })
+    fireEvent.pointerUp(alca, { pointerId: 3, clientY: 700 })
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+  })
+
+  it('com prefers-reduced-motion a folha não acompanha o dedo, mas o gesto longo fecha', async () => {
+    const original = window.matchMedia
+    window.matchMedia = ((consulta: string) => ({
+      ...original(consulta),
+      matches: consulta.includes('prefers-reduced-motion'),
+    })) as typeof window.matchMedia
+    try {
+      render(<ComGatilho />)
+      await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+      const folha = screen.getByRole('dialog', { name: 'Criar' })
+      const alca = folha.querySelector<HTMLElement>('[data-slot="create-sheet-alca"]')!
+
+      fireEvent.pointerDown(alca, { pointerId: 1, button: 0, clientY: 500 })
+      fireEvent.pointerMove(alca, { pointerId: 1, clientY: 600 })
+      expect(folha.style.transform).toBe('')
+      fireEvent.pointerUp(alca, { pointerId: 1, clientY: 600 })
+      expect(screen.queryByRole('dialog')).toBeNull()
+    } finally {
+      window.matchMedia = original
+    }
   })
 
   it('fica travada nos primeiros 300 ms depois de abrir', async () => {

@@ -43,6 +43,8 @@ describe('Toaster', () => {
 
     const item = (await screen.findByText('Não foi possível salvar.')).closest('[data-sonner-toast]')
     expect(item).toHaveClass('not-has-[[data-slot=undo-toast]]:border-destructive')
+    // ícone na cor de erro (--erro), inclusive o de sem conexão que a tela troca
+    expect(item).toHaveClass('[&_[data-icon]]:text-destructive')
     expect(screen.queryByRole('button', { name: 'Fechar aviso' })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }))
     expect(tentar).toHaveBeenCalled()

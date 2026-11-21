@@ -47,6 +47,26 @@ test.describe('dashboard', () => {
     await expect(page.getByText('Acima do limite')).toBeVisible()
   })
 
+  test('o nome do mês abre o calendário de meses (popover no computador, folha no celular)', async ({ page }) => {
+    await simularDashboard(page)
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto('/dashboard?mes=11&ano=2026')
+    await expect(page.getByRole('article', { name: 'Saldo do mês de novembro de 2026' })).toBeVisible({
+      timeout: 15_000,
+    })
+
+    await page.getByRole('main').getByRole('button', { name: 'Novembro de 2026. Escolher outro mês' }).click()
+    await page.getByRole('dialog', { name: 'Mês exibido' }).getByRole('button', { name: 'julho de 2026' }).click()
+    await expect(page).toHaveURL(/mes=7&ano=2026/)
+    await expect(page.getByRole('article', { name: 'Saldo do mês de julho de 2026' })).toContainText('− R$ 750,40')
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.getByRole('banner').getByRole('button', { name: 'Julho de 2026. Escolher outro mês' }).click()
+    await page.getByRole('dialog', { name: 'Mês exibido' }).getByRole('button', { name: 'agosto de 2026' }).click()
+    await expect(page).toHaveURL(/mes=8&ano=2026/)
+    await expect(page.getByRole('article', { name: 'Saldo do mês de agosto de 2026' })).toContainText('R$ 3.579,60')
+  })
+
   test('mês sem lançamentos mostra o primeiro passo', async ({ page }) => {
     await simularDashboard(page)
     await page.setViewportSize({ width: 390, height: 844 })

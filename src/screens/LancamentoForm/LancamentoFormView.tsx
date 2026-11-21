@@ -120,7 +120,6 @@ export function LancamentoFormView() {
           Aguarde: os campos voltam quando terminar.
         </p>
       )}
-      {semConexao && <OfflineMotivo id={ID_MOTIVO_OFFLINE} className="md:hidden" />}
     </div>
   )
 
@@ -150,6 +149,14 @@ export function LancamentoFormView() {
         <Link href={hrefLista}>Cancelar</Link>
       </Button>
       {botaoSalvar}
+      {/* Sem internet: o motivo fica abaixo dos botões que gravam, no celular (abaixo de Salvar; a lista é invertida, por
+          isso `order-first`) e no computador (linha inteira, à direita), como nas pranchetas sem-internet-* */}
+      {semConexao && (
+        <OfflineMotivo
+          id={ID_MOTIVO_OFFLINE}
+          className="max-md:order-first md:basis-full md:justify-end md:text-right"
+        />
+      )}
     </>
   )
 

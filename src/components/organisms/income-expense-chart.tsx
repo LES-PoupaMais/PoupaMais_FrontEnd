@@ -60,7 +60,7 @@ function IncomeExpenseChart({ dados, carregando = false, ...props }: IncomeExpen
             Despesas
           </li>
         </ul>
-        <ChartContainer config={config} className="aspect-auto h-56 w-full md:h-64">
+        <ChartContainer config={config} className="aspect-auto h-56 w-full md:h-52 lg:h-64">
           <AreaChart data={linhas} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
             <YAxis

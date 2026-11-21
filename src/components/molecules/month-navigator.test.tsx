@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { MonthNavigator } from './month-navigator'
@@ -19,18 +19,42 @@ describe('MonthNavigator', () => {
     expect(onChange).toHaveBeenLastCalledWith({ mes: 2, ano: 2026 })
   })
 
-  it('compacto abrevia o mês; com onEscolherMes o nome vira botão que abre o seletor', async () => {
-    const onEscolherMes = vi.fn()
-    render(<MonthNavigator variante="compacto" mes={11} ano={2026} onChange={vi.fn()} onEscolherMes={onEscolherMes} />)
+  it('compacto abrevia o mês; com seletor "folha" o nome abre a folha do calendário na visão de meses', async () => {
+    const onChange = vi.fn()
+    render(
+      <MonthNavigator variante="compacto" seletor="folha" mes={11} ano={2026} onChange={onChange} hoje="2026-11-20" />,
+    )
 
     const nome = screen.getByRole('button', { name: 'Novembro de 2026. Escolher outro mês' })
     expect(nome).toHaveTextContent('Nov 2026')
     expect(nome).toHaveAttribute('aria-haspopup', 'dialog')
     await userEvent.click(nome)
-    expect(onEscolherMes).toHaveBeenCalledOnce()
+
+    const folha = screen.getByRole('dialog', { name: 'Mês exibido' })
+    await userEvent.click(within(folha).getByRole('button', { name: /março/i }))
+    expect(onChange).toHaveBeenLastCalledWith({ mes: 3, ano: 2026 })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Mês exibido' })).toHaveTextContent('Mostrando Março de 2026')
   })
 
-  it('sem onEscolherMes, o nome é só texto', () => {
+  it('com seletor "popover" troca de ano e de mês; escolher o mesmo mês só fecha', async () => {
+    const onChange = vi.fn()
+    render(<MonthNavigator seletor="popover" mes={11} ano={2026} onChange={onChange} hoje="2026-11-20" />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Novembro de 2026. Escolher outro mês' }))
+    let painel = screen.getByRole('dialog', { name: 'Mês exibido' })
+    await userEvent.click(within(painel).getByRole('button', { name: /novembro/i }))
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Novembro de 2026. Escolher outro mês' }))
+    painel = screen.getByRole('dialog', { name: 'Mês exibido' })
+    await userEvent.click(within(painel).getByRole('button', { name: 'Próximo ano' }))
+    await userEvent.click(within(painel).getByRole('button', { name: /janeiro/i }))
+    expect(onChange).toHaveBeenLastCalledWith({ mes: 1, ano: 2027 })
+  })
+
+  it('sem seletor, o nome é só texto', () => {
     render(<MonthNavigator mes={11} ano={2026} onChange={vi.fn()} contornado />)
 
     expect(screen.getAllByRole('button')).toHaveLength(2)

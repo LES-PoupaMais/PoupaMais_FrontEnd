@@ -35,6 +35,12 @@ describe('ExportDialog', () => {
     expect(onBaixar).toHaveBeenCalled()
   })
 
+  it('o × do computador fecha', async () => {
+    const { onAbertoChange } = renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+    expect(onAbertoChange).toHaveBeenCalledWith(false)
+  })
+
   it('sem dados: avisa e não baixa; Excel muda a ajuda', async () => {
     const { onBaixar } = renderizar({ total: 0, formato: 'xlsx' })
     expect(screen.getByText(SEM_DADOS_PARA_EXPORTAR)).toBeInTheDocument()

@@ -16,6 +16,8 @@ type DashboardSecaoProps = Omit<React.ComponentProps<'section'>, 'title'> & {
   cartao?: 'sempre' | 'a-partir-do-tablet'
   /** Título só para leitor de tela (esqueleto: a prancheta dashboard-carregando não mostra o título) */
   tituloOculto?: boolean
+  /** Nível do título (padrão h2; h3 quando a seção fica dentro de outra, como a prévia da Landing) */
+  nivelTitulo?: 'h2' | 'h3'
 }
 
 const SUPERFICIE = 'rounded-grande border border-border bg-card text-card-foreground shadow-card p-6'
@@ -28,6 +30,7 @@ function DashboardSecao({
   lado,
   cartao = 'sempre',
   tituloOculto = false,
+  nivelTitulo: Titulo = 'h2',
   className,
   children,
   ...props
@@ -35,14 +38,15 @@ function DashboardSecao({
   return (
     <section
       data-slot="dashboard-secao"
-      aria-labelledby={idTitulo}
+      // Com `aria-label` (prévia da Landing), o nome da seção é ele; senão, o título
+      aria-labelledby={props['aria-label'] ? undefined : idTitulo}
       className={cn('flex h-full min-w-0 flex-col', cartao === 'sempre' ? SUPERFICIE : SUPERFICIE_TABLET, className)}
       {...props}
     >
       <div className={cn('mb-3 flex min-h-5 items-center justify-between gap-3', tituloOculto && 'sr-only')}>
-        <h2 id={idTitulo} className="text-rotulo-secao text-muted-foreground uppercase">
+        <Titulo id={idTitulo} className="text-rotulo-secao text-muted-foreground uppercase">
           {titulo}
-        </h2>
+        </Titulo>
         {typeof lado === 'string' ? <span className="text-legenda text-muted-foreground">{lado}</span> : lado}
       </div>
       {children}
