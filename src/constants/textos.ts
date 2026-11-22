@@ -1,6 +1,6 @@
 import type { StatusLancamento } from '@/types/api'
 
-// Textos repetidos em mais de uma tela: um lugar só (CLAUDE.md "Textos fora do DS, aprovados em 19/11").
+// Textos repetidos em mais de uma tela: um lugar só (doc/textos-aprovados.md).
 
 /** Toast do Restaurar (Lixeira, visualização e Editar). Desde a v1.2.0 o lançamento volta ao status de antes da lixeira. */
 export const TOAST_RESTAURADO: Record<Exclude<StatusLancamento, 'DELETADO'>, string> = {

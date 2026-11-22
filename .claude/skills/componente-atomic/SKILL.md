@@ -5,7 +5,7 @@ description: Use ao criar, mover ou alterar um componente React do PoupaMais em 
 
 # Componente no Atomic Design (com shadcn/ui)
 
-Leia antes: seções "Arquitetura", "Atomic Design" e "Design" do `CLAUDE.md` deste repo e, no Design System,
+Leia antes: `doc/arquitetura.md`, `doc/atomic-design.md` e `doc/design.md` deste repo e, no Design System,
 `../Documentação/design/ds/project/components/<Nome>/README.md` e `preview.html` do componente.
 
 ## 0. A regra que não muda: componente é PURO
@@ -34,7 +34,7 @@ sabe de onde vêm os dados. Estado só de interface (aberto/fechado, campo digit
                            └── Não → ÁTOMO próprio no estilo shadcn (ex.: money-text, logo)
 ```
 
-A tabela "Atomic Design" do `CLAUDE.md` já diz o nível de cada componente do Design System (B2). Antes de criar, procure se já existe:
+A tabela de `doc/atomic-design.md` já diz o nível de cada componente do Design System (B2). Antes de criar, procure se já existe:
 uma variante nova num átomo resolve melhor que um componente novo (`npx shadcn@latest search <termo>`).
 
 ## 2. Arquivos (padrão shadcn em todos os níveis)
@@ -78,7 +78,7 @@ Pacotes externos (`lucide-react`, `next/link`, `next/image`, `radix-ui`, `react-
   `shadow-flutuante`; `h-barra-inferior`, `w-sidebar`, `w-trilho`, `max-w-conteudo`. Token novo desses tipos → ensine o `cn` em `lib/cn.ts`.
 - Valor monetário: sempre `MoneyText`. Data: `lib/data.ts`. Ícones Lucide com `aria-hidden` (decorativo) ou `aria-label` (sozinho).
 - Os dois temas vêm dos tokens; use `dark:` só quando o token não resolve (ex.: trocar a imagem do logo).
-- Na sidebar, use a variante `trilho:` para o modo de ícones (ver "Casca da área logada" no `CLAUDE.md`).
+- Na sidebar, use a variante `trilho:` para o modo de ícones (ver "Casca da área logada" em `doc/arquitetura.md`).
 - Layout que depende da largura é CSS (`md:`, `lg:`), nunca `matchMedia` no componente.
 - Variantes com `cva` + `cn()`. Props tipadas e exportadas (`export type XxxProps`); repasse `className` e `...props` quando fizer sentido.
 

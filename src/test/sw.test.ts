@@ -5,7 +5,7 @@ import vm from 'node:vm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Regras de cache do service worker do PWA (public/sw.js), testadas no próprio arquivo: ele roda aqui num contexto
-// isolado do Node com `self`, `caches` e `fetch` falsos. CLAUDE.md, seção "PWA".
+// isolado do Node com `self`, `caches` e `fetch` falsos. Ver doc/pwa.md.
 
 const ORIGEM = 'https://poupamais.test'
 const codigo = readFileSync(join(process.cwd(), 'public/sw.js'), 'utf8')

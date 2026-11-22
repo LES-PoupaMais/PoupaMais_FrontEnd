@@ -25,3 +25,6 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 .vercel
+
+# Passagem de trabalho entre agentes de IA (local, não versionar)
+HANDOFF.md

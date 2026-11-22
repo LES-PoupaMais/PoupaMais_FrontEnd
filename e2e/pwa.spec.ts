@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-// PWA no build de produção: manifest, ícones e service worker registrado (CLAUDE.md, seção "PWA")
+// PWA no build de produção: manifest, ícones e service worker registrado (doc/pwa.md)
 test.use({ serviceWorkers: 'allow' })
 
 test('o manifest responde com nome, início e ícones, e os ícones respondem', async ({ request }) => {

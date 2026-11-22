@@ -133,7 +133,7 @@ export const http = {
 // - a API não mandou mensagem → a frase da tela para o status (`porStatus`) ou a genérica da tela (`padrao`), senão a
 //   frase do status abaixo, senão a genérica do app;
 // - sem conexão (0), sessão vencida (401) e erro do servidor (5xx) → sempre as frases do front.
-// As mensagens entre back e front ainda vão ser repensadas (Pendências do CLAUDE.md): mude aqui, não nas telas.
+// As mensagens entre back e front ainda vão ser repensadas (doc/pendencias.md): mude aqui, não nas telas.
 
 /**
  * Frase de cada status quando a API não mandou mensagem. A do 401 é do Design System; as demais foram aprovadas pelo
