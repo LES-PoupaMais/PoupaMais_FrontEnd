@@ -21,7 +21,7 @@ npm run test:e2e            # 6. Playwright, Chromium e Firefox (ver abaixo)
   (navegadores já em `~/.cache/ms-playwright`; não use `--with-deps`). Em outra máquina: `npx playwright install --with-deps chromium firefox`.
 - Várias worktrees rodando E2E ao mesmo tempo: dê uma porta para cada (`PORT=3101 npm run test:e2e`). Sem isso, o
   `reuseExistingServer` do Playwright reaproveita o servidor de outra worktree que estiver na 3000 e testa o build errado.
-- Lint `boundaries/dependencies` ("Arquitetura: X não pode importar Y"): veja a tabela de regras na seção "Arquitetura" do `CLAUDE.md`.
+- Lint `boundaries/dependencies` ("Arquitetura: X não pode importar Y"): veja a tabela de regras em `doc/arquitetura.md`.
   Organismo pedindo hook/service/action → o dado vem por props do Context da tela (skills `componente-atomic` e `tela-next`).
 - Cobertura abaixo do piso: veja `coverage/index.html` e escreva os testes que faltam.
 - E2E falhou: `npx playwright show-report` mostra o passo, o print e o trace.

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 // PWA: o Next serve isto em /manifest.webmanifest. Cores = tokens do Design System (`fundo` claro e `primaria`);
-// ícones do porquinho em public/icons/. Regras no CLAUDE.md, seção "PWA".
+// ícones do porquinho em public/icons/. Regras em doc/pwa.md.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'PoupaMais',

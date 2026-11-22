@@ -6,7 +6,7 @@ import { guardarPaginaOffline, quandoServiceWorkerAssumir } from '@/lib/service-
 
 /**
  * PWA: a cada troca de tela pela navegação interna do Next (link, `router.push`/`replace`), pede ao service worker que
- * guarde a página completa, para ela abrir sem internet (CLAUDE.md, seção "PWA"). A página carregada inteira já passa
+ * guarde a página completa, para ela abrir sem internet (doc/pwa.md). A página carregada inteira já passa
  * pelo service worker; só na primeira visita (aberta antes de ele assumir) o pedido sai quando ele assumir.
  * Lê a URL com `useSearchParams`: fica dentro de um `<Suspense>` (AppProviders). Não desenha nada.
  */
