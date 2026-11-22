@@ -5,7 +5,7 @@ description: Use ao criar ou alterar uma tela/rota do PoupaMais no Next.js (App 
 
 # Nova tela: fluxo de 4 etapas
 
-Leia antes, no `CLAUDE.md`: "Arquitetura" (árvore e regras), "Telas" (rota e pranchetas), "Regras de negócio" e "Contrato da API".
+Leia antes, em `doc/`: `arquitetura.md` (árvore e regras), `telas.md` (rota e pranchetas), `regras-de-negocio.md` e `contrato-api.md`.
 Abra as pranchetas da tela em `../Documentação/design/telas/project/<tela>-*.dc.html` (celular, tablet, computador, escuro e cada estado).
 
 ```text
@@ -21,9 +21,9 @@ src/components/…                     ← 1. componentes puros (skill component
 
 ## 0. Conferir antes de começar
 
-- Ache a tela e as RN no `CLAUDE.md`. Se o pedido contradiz uma regra, o Design System ou o contrato, pare e use a skill
+- Ache a tela e as RN em `doc/telas.md` e `doc/regras-de-negocio.md`. Se o pedido contradiz uma regra, o Design System ou o contrato, pare e use a skill
   `mudanca-de-regra` (raiz do workspace).
-- Endpoint que não existe no contrato: **não invente**. Combine e atualize os dois `CLAUDE.md` (este e `../PoupaMais_BackEnd/CLAUDE.md`).
+- Endpoint que não existe no contrato: **não invente**. Combine com o back e atualize o contrato lá (`doc/contrato-api.md` do PoupaMais_BackEnd) e o resumo aqui (`doc/contrato-api.md`).
 - O que a tela precisa já existe em `types/api.ts`, `services/`, `hooks/`, `schemas/`? Se faltar um hook (ex.: `useImportarCsv`),
   crie em `hooks/` seguindo `use-mutacoes-lancamento.ts` (mutation que invalida com `invalidarDadosFinanceiros`), com teste em `hooks/`.
 

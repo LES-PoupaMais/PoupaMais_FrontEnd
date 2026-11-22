@@ -9,3 +9,15 @@ public
 next-env.d.ts
 CLAUDE.md
 AGENTS.md
+# Guia dos agentes movido do CLAUDE.md (mesmo tratamento do CLAUDE.md/AGENTS.md)
+doc/arquitetura.md
+doc/atomic-design.md
+doc/contrato-api.md
+doc/design.md
+doc/historico.md
+doc/pendencias.md
+doc/pwa.md
+doc/regras-de-negocio.md
+doc/telas.md
+doc/testes-e-pipeline.md
+doc/textos-aprovados.md

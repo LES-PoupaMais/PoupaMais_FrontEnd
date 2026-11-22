@@ -58,7 +58,7 @@ description: 'Use ao escrever, corrigir ou revisar testes do front do PoupaMais:
 - **Contra a API real** (`e2e/api-real/`, `npm run test:e2e:api-real`): sobe antes a pilha E2E
   (`cd ../PoupaMais_Development && E2E_FRONT_PORT=3130 npm run e2e:up`; depois `npm run e2e:down`). Use o `test` de
   `e2e/api-real/apoio/teste.ts` (fixtures `usuario`/`logado`: usuário novo por teste) e monte os dados por `apoio/api.ts`,
-  nunca por `page.route`. E-mails pelo Mailpit (`apoio/mailpit.ts`). Detalhes no `CLAUDE.md`, seção Testes.
+  nunca por `page.route`. E-mails pelo Mailpit (`apoio/mailpit.ts`). Detalhes em `doc/testes-e-pipeline.md`.
 
 ## Cobertura
 

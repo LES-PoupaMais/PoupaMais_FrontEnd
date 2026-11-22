@@ -1,4 +1,4 @@
-// PWA: registro do service worker (public/sw.js) e limpeza dos dados guardados nele. Regras no CLAUDE.md, seção "PWA".
+// PWA: registro do service worker (public/sw.js) e limpeza dos dados guardados nele. Regras em doc/pwa.md.
 
 export const CAMINHO_SERVICE_WORKER = '/sw.js'
 

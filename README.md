@@ -49,7 +49,7 @@ próprio) · Vitest, Testing Library e MSW · Playwright · ESLint + Prettier ·
   invisível para o JavaScript da página. Login, cadastro, troca de senha e exclusão de conta são Server Actions.
 - **PWA**: `src/app/manifest.ts` e o service worker `public/sw.js` (ver "PWA" abaixo).
 
-Regras detalhadas, contrato da API e decisões de design: [`CLAUDE.md`](CLAUDE.md).
+Guia do projeto (para pessoas e agentes de IA): [`AGENTS.md`](AGENTS.md), com o índice de `doc/` (regras, contrato da API e decisões de design).
 
 ## Como rodar
 
@@ -122,8 +122,8 @@ visitadas e mostra os últimos dados guardados, só para consulta: gravar exige 
   celular, instale pelo site publicado (https://poupamais-one.vercel.app): Android/Chrome, menu ⋮ → _Instalar app_;
   iPhone/Safari, Compartilhar → _Adicionar à Tela de Início_. No computador, também pelo modo "como produção" do
   PoupaMais_Development (`https://poupamais.localhost:8443`, com a CA local confiada).
-- Conferir: Chrome → DevTools → **Application** (Manifest e Service workers) e Lighthouse. Detalhes na seção "PWA" do
-  [`CLAUDE.md`](CLAUDE.md).
+- Conferir: Chrome → DevTools → **Application** (Manifest e Service workers) e Lighthouse. Detalhes em
+  [`doc/pwa.md`](doc/pwa.md).
 
 ## Deploy
 
@@ -189,7 +189,7 @@ Ninguém faz commit direto na `development` nem na `main`. A `main` contém só 
 - Uma branch por card do Trello (`feat/<card>`, a partir da `development`), Conventional Commits (`feat(dashboard): ...`) e Pull
   Request para a `development`.
 - Toda tela ou componente vem com testes. Rode `npm run lint`, `npm run typecheck` e `npm run test:coverage` antes do PR.
-- Telas, design, regras de negócio e contrato da API: [`CLAUDE.md`](CLAUDE.md).
+- Telas, design, regras de negócio e contrato da API: [`AGENTS.md`](AGENTS.md) e `doc/`.
 
 ## Licença
 

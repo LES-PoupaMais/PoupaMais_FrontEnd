@@ -1,4 +1,4 @@
-// Tipos que espelham os DTOs da API v1.1.0 (seção "Contrato da API" do CLAUDE.md). JSON em camelCase.
+// Tipos que espelham os DTOs da API v1.1.0 (doc/contrato-api.md). JSON em camelCase.
 // Datas: `DataIso` = "2026-11-05" (dia do lançamento, sem hora); `InstanteIso` = "2026-08-03T09:30:15Z" (auditoria, UTC).
 
 export type DataIso = string
